@@ -55,6 +55,7 @@ import { NotificationService } from '../service/notification.ts';
 import { S3Service } from '../service/s3.ts';
 import { drizzle } from 'drizzle-orm/d1';
 import { schema } from '../schema/index.ts';
+import { loadEnvironmentVariables } from '../lib/secrets.ts';
 
 
 export class Server {
@@ -83,6 +84,10 @@ export class Server {
     });
 
     const api = this.app.basePath('/v1');
+
+    // Load environment variables
+    const config = loadEnvironmentVariables(env);
+    console.log(config);
 
     // Initialize drizzle database connection
     const db = drizzle(env.DB, { schema: schema });

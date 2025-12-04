@@ -3,6 +3,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "baseUrl": "./",
+    "allowImportingTsExtensions": true,
     "paths": {
       "$utils/*": [
         "packages/utils/*"

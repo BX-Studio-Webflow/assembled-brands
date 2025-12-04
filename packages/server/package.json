@@ -4,7 +4,9 @@
 	"private": true,
 	"scripts": {
 		"deploy": "wrangler deploy",
-		"dev": "wrangler dev",
+		"dev": "wrangler dev --env development --remote",
+		"deploy:development": "wrangler deploy --minify --env development",
+		"deploy:production": "wrangler deploy --minify --env production",
 		"check": "tsc --noEmit",
 		"check:fix": "tsc",
 		"start": "wrangler dev",

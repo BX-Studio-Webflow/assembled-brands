@@ -6,7 +6,7 @@ import type { UserService } from '../../service/user.js';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { BusinessService } from '../../service/business.js';
 import { logger } from '../../lib/logger.js';
-import { BusinessBody, UploadBusinessLogoBody } from '../validator/business.js';
+import { type BusinessBody, type UploadBusinessLogoBody } from '../validator/business.js';
 
 export class BusinessController {
   private service: BusinessService;

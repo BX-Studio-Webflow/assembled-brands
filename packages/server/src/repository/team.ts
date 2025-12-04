@@ -7,7 +7,7 @@ import {
   userSchema,
   schema,
 } from '../schema/schema.ts';
-import { TeamQuery } from '../web/validator/team.ts';
+import { type TeamQuery } from '../web/validator/team.ts';
 
 export class TeamRepository {
   private db: DrizzleD1Database<typeof schema>;
