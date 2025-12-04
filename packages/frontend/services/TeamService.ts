@@ -1,5 +1,6 @@
+import type { GetTeamsResponse } from '../types/team'
 import ApiService from './ApiService'
-import type { GetTeamsResponse } from '@/@types/team'
+
 
 export async function apiGetTeamDashboard() {
     return ApiService.fetchDataWithAxios<GetTeamsResponse>({
