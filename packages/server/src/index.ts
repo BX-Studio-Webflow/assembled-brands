@@ -1,6 +1,6 @@
+import { Hono } from 'hono';
 
 import { Server } from './web/server';
-import { Hono } from 'hono';
 
 const app = new Hono();
 const server = new Server(app);

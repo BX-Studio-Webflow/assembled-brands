@@ -8,7 +8,8 @@
 		"deploy:development": "wrangler deploy --minify --env development",
 		"deploy:production": "wrangler deploy --minify --env production",
 		"check": "tsc --noEmit",
-		"check:fix": "tsc",
+		"lint": "eslint ./src",
+		"lint:fix": "eslint ./src --fix",
 		"start": "wrangler dev",
 		"test": "vitest",
 		"cf-typegen": "wrangler types",
@@ -21,8 +22,11 @@
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.19",
+		"@finsweet/eslint-config": "^3.0.3",
 		"drizzle-kit": "^0.31.7",
+		"eslint": "^9.19.0",
 		"typescript": "^5.5.2",
+		"typescript-eslint": "^8.23.0",
 		"vitest": "~3.2.0",
 		"wrangler": "^4.52.1"
 	},

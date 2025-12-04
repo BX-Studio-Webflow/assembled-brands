@@ -5,55 +5,49 @@ import { businessSchema, schema } from '../schema/schema.js';
 import type { BusinessQuery } from '../web/validator/business.ts';
 
 export class BusinessRepository {
-  private db: DrizzleD1Database<typeof schema>;
+	private db: DrizzleD1Database<typeof schema>;
 
-  constructor(db: DrizzleD1Database<typeof schema>) {
-    this.db = db;
-  }
+	constructor(db: DrizzleD1Database<typeof schema>) {
+		this.db = db;
+	}
 
-  async create(business: typeof businessSchema.$inferInsert) {
-    const result = await this.db.insert(businessSchema).values(business).returning();
-    return await this.findById(result[0].id);
-  }
+	async create(business: typeof businessSchema.$inferInsert) {
+		const result = await this.db.insert(businessSchema).values(business).returning();
+		return await this.findById(result[0].id);
+	}
 
-  async findById(id: number) {
-    const result = await this.db.select().from(businessSchema).where(eq(businessSchema.id, id)).limit(1);
-    return result[0];
-  }
+	async findById(id: number) {
+		const result = await this.db.select().from(businessSchema).where(eq(businessSchema.id, id)).limit(1);
+		return result[0];
+	}
 
-  async findByUserId(userId: number) {
-    const result = await this.db
-      .select()
-      .from(businessSchema)
-      .where(eq(businessSchema.user_id, userId))
-      .limit(1);
-    return result[0];
-  }
+	async findByUserId(userId: number) {
+		const result = await this.db.select().from(businessSchema).where(eq(businessSchema.user_id, userId)).limit(1);
+		return result[0];
+	}
 
-  async findAll(query?: BusinessQuery) {
-    const { page = 1, limit = 10, search } = query || {};
-    const offset = (page - 1) * limit;
+	async findAll(query?: BusinessQuery) {
+		const { page = 1, limit = 10, search } = query || {};
+		const offset = (page - 1) * limit;
 
-    const whereConditions = [];
-    if (search) {
-      whereConditions.push(like(businessSchema.name, `%${search}%`));
-    }
+		const whereConditions = [];
+		if (search) {
+			whereConditions.push(like(businessSchema.name, `%${search}%`));
+		}
 
-    const businesses = await this.db
-      .select()
-      .from(businessSchema)
-      .where(whereConditions.length ? and(...whereConditions) : undefined)
-      .limit(limit)
-      .offset(offset)
-      .orderBy(desc(businessSchema.created_at));
+		const businesses = await this.db
+			.select()
+			.from(businessSchema)
+			.where(whereConditions.length ? and(...whereConditions) : undefined)
+			.limit(limit)
+			.offset(offset)
+			.orderBy(desc(businessSchema.created_at));
 
+		return { businesses, total: businesses.length };
+	}
 
-
-    return { businesses, total: businesses.length };
-  }
-
-  async update(id: number, business: Partial<typeof businessSchema.$inferSelect>) {
-    await this.db.update(businessSchema).set(business).where(eq(businessSchema.id, id));
-    return await this.findById(id);
-  }
+	async update(id: number, business: Partial<typeof businessSchema.$inferSelect>) {
+		await this.db.update(businessSchema).set(business).where(eq(businessSchema.id, id));
+		return await this.findById(id);
+	}
 }

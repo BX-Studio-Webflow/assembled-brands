@@ -1,246 +1,186 @@
-
-import type { EmailRepository } from '../repository/email.ts';
-import type {
-  Business,
-  Email,
-  NewEmail,
-  User,
-} from '../schema/schema.ts';
 import { sendTransactionalEmail } from '../lib/email-processor.ts';
 import { logger } from '../lib/logger.ts';
-
+import type { EmailRepository } from '../repository/email.ts';
+import type { Email, NewEmail } from '../schema/schema.ts';
 
 export class EmailService {
-  private repository: EmailRepository;
+	private repository: EmailRepository;
 
-  constructor(repository: EmailRepository) {
-    this.repository = repository;
-  }
+	constructor(repository: EmailRepository) {
+		this.repository = repository;
+	}
 
-  /**
-   * Creates a new email template in the system
-   * @param {NewEmail} data - The email data to create
-   * @returns {Promise<number>} The ID of the created email
-   * @throws {Error} When email creation fails
-   */
-  public async createEmail(data: NewEmail): Promise<number> {
-    try {
-      const email = await this.repository.createEmail(data);
-      // Queue the email for processing
-      await sendTransactionalEmail(data.email, data.email.split('@')[0], 12, {
-        subject: data.subject,
-        title: data.title,
-        subtitle: data.subtitle,
-        body: data.body,
-        buttonText: data.button_text,
-        buttonLink: data.button_link,
-      });
-      return email[0].id;
-    } catch (error) {
-      logger.error(error);
-      throw error;
-    }
-  }
+	/**
+	 * Creates a new email template in the system
+	 * @param {NewEmail} data - The email data to create
+	 * @returns {Promise<number>} The ID of the created email
+	 * @throws {Error} When email creation fails
+	 */
+	public async createEmail(data: NewEmail): Promise<number> {
+		try {
+			const email = await this.repository.createEmail(data);
+			// Queue the email for processing
+			await sendTransactionalEmail(data.email, data.email.split('@')[0], 12, {
+				subject: data.subject,
+				title: data.title,
+				subtitle: data.subtitle,
+				body: data.body,
+				buttonText: data.button_text,
+				buttonLink: data.button_link,
+			});
+			return email[0].id;
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
 
-  /**
-   * Bulk adds emails to the database
-   * @param {NewEmail[]} data - The email data to bulk add
-   * @returns {Promise<number>} The number of emails added
-   * @throws {Error} When email bulk addition fails
-   */
-  public async bulkAddEmails(
-    bulkEmails: NewEmail[],
-    user: User,
-    business: Business,
-  ): Promise<{ count: number; emails: string[] }> {
-    try {
-      // Check if we have any emails to process
-      if (!bulkEmails || bulkEmails.length === 0) {
-        throw new Error('No emails to process');
-      }
+	/**
+	 * Bulk adds emails to the database
+	 * @param {NewEmail[]} data - The email data to bulk add
+	 * @returns {Promise<number>} The number of emails added
+	 * @throws {Error} When email bulk addition fails
+	 */
 
-      //record only only one single email from the bulk data for record keeping
-      await this.repository.createEmail({
-        email: user.email,
-        subject: bulkEmails[0].subject,
-        title: bulkEmails[0].title,
-        subtitle: bulkEmails[0].subtitle,
-        body: bulkEmails[0].body,
-        button_text: bulkEmails[0].button_text,
-        button_link: bulkEmails[0].button_link,
-        host_id: bulkEmails[0].host_id,
-      });
-      // Queue each email for processing
-      const promises = bulkEmails.map((email) =>
-        sendTransactionalEmail(email.email, email.email.split('@')[0], 12, {
-          subject: email.subject,
-          title: email.title,
-          subtitle: email.subtitle,
-          body: email.body,
-          buttonText: email.button_text,
-          buttonLink: email.button_link,
-        }),
-      );
-      await Promise.all(promises);
-      return {
-        count: bulkEmails.length,
-        emails: bulkEmails.map((email) => email.email),
-      };
-    } catch (error) {
-      logger.error(error);
-      throw error;
-    }
-  }
+	public async bulkSendFollowUpEmails(
+		data: {
+			email: string;
+			name: string;
+			params: Record<string, string>;
+			templateId: number;
+		}[],
+	): Promise<number> {
+		try {
+			// Queue each email for processing
+			const promises = data.map((item) =>
+				sendTransactionalEmail(item.email, item.name, item.templateId, {
+					subject: item.params.subject,
+					title: item.params.title,
+					subtitle: item.params.subtitle,
+					body: item.params.body,
+					buttonText: item.params.button_text,
+					buttonLink: item.params.button_link,
+				}),
+			);
+			await Promise.all(promises);
+			return data.length;
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
 
-  /**
-   * Bulk adds emails to the database
-   * @param {NewEmail[]} data - The email data to bulk add
-   * @returns {Promise<number>} The number of emails added
-   * @throws {Error} When email bulk addition fails
-   */
+	/**
+	 * Retrieves a specific email template by its ID
+	 * @param {number} id - The ID of the email to retrieve
+	 * @returns {Promise<Email | undefined>} The email template if found, undefined otherwise
+	 * @throws {Error} When email retrieval fails
+	 */
+	public async getEmail(id: number): Promise<Email | undefined> {
+		try {
+			return await this.repository.findEmailById(id);
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
 
-  public async bulkSendFollowUpEmails(
-    data: {
-      email: string;
-      name: string;
-      params: Record<string, string>;
-      templateId: number;
-    }[],
-  ): Promise<number> {
-    try {
-      // Queue each email for processing
-      const promises = data.map((item) =>
-        sendTransactionalEmail(item.email, item.name, item.templateId, {
-          subject: item.params.subject,
-          title: item.params.title,
-          subtitle: item.params.subtitle,
-          body: item.params.body,
-          buttonText: item.params.button_text,
-          buttonLink: item.params.button_link,
-        }),
-      );
-      await Promise.all(promises);
-      return data.length;
-    } catch (error) {
-      logger.error(error);
-      throw error;
-    }
-  }
+	/**
+	 * Retrieves all email templates for a specific host
+	 * @param {number} hostId - The ID of the host
+	 * @returns {Promise<Email[]>} Array of email templates
+	 * @throws {Error} When email retrieval fails
+	 */
+	public async getEmails(hostId: number): Promise<Email[]> {
+		try {
+			return await this.repository.findEmailsByHostId(hostId);
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
 
-  /**
-   * Retrieves a specific email template by its ID
-   * @param {number} id - The ID of the email to retrieve
-   * @returns {Promise<Email | undefined>} The email template if found, undefined otherwise
-   * @throws {Error} When email retrieval fails
-   */
-  public async getEmail(id: number): Promise<Email | undefined> {
-    try {
-      return await this.repository.findEmailById(id);
-    } catch (error) {
-      logger.error(error);
-      throw error;
-    }
-  }
+	/**
+	 * Retrieves all email templates for a specific host
+	 * @param {number} hostId - The ID of the host
+	 * @returns {Promise<Email[]>} Array of email templates
+	 * @throws {Error} When email retrieval fails
+	 */
+	public async getEmailsByHostId(hostId: number): Promise<Email[]> {
+		try {
+			return await this.repository.findEmailsByHostId(hostId);
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
 
-  /**
-   * Retrieves all email templates for a specific host
-   * @param {number} hostId - The ID of the host
-   * @returns {Promise<Email[]>} Array of email templates
-   * @throws {Error} When email retrieval fails
-   */
-  public async getEmails(hostId: number): Promise<Email[]> {
-    try {
-      return await this.repository.findEmailsByHostId(hostId);
-    } catch (error) {
-      logger.error(error);
-      throw error;
-    }
-  }
+	/**
+	 * Updates an existing email template
+	 * @param {number} id - The ID of the email to update
+	 * @param {Partial<Email>} data - The updated email data
+	 * @returns {Promise<void>}
+	 * @throws {Error} When email update fails
+	 */
+	public async updateEmail(id: number, data: Partial<Email>): Promise<void> {
+		try {
+			await this.repository.updateEmail(id, data);
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
 
-  /**
-   * Retrieves all email templates for a specific host
-   * @param {number} hostId - The ID of the host
-   * @returns {Promise<Email[]>} Array of email templates
-   * @throws {Error} When email retrieval fails
-   */
-  public async getEmailsByHostId(hostId: number): Promise<Email[]> {
-    try {
-      return await this.repository.findEmailsByHostId(hostId);
-    } catch (error) {
-      logger.error(error);
-      throw error;
-    }
-  }
+	/**
+	 * Deletes an email template from the system
+	 * @param {number} id - The ID of the email to delete
+	 * @returns {Promise<void>}
+	 * @throws {Error} When email deletion fails
+	 */
+	public async deleteEmail(id: number): Promise<void> {
+		try {
+			await this.repository.deleteEmail(id);
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
 
-  /**
-   * Updates an existing email template
-   * @param {number} id - The ID of the email to update
-   * @param {Partial<Email>} data - The updated email data
-   * @returns {Promise<void>}
-   * @throws {Error} When email update fails
-   */
-  public async updateEmail(id: number, data: Partial<Email>): Promise<void> {
-    try {
-      await this.repository.updateEmail(id, data);
-    } catch (error) {
-      logger.error(error);
-      throw error;
-    }
-  }
+	/**
+	 * Soft deletes an email template from the system (marks as deleted but preserves the record)
+	 * @param {number} id - The ID of the email to soft delete
+	 * @returns {Promise<void>}
+	 * @throws {Error} When email soft deletion fails
+	 */
+	public async softDeleteEmail(id: number): Promise<void> {
+		try {
+			await this.repository.softDeleteEmail(id);
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
 
-  /**
-   * Deletes an email template from the system
-   * @param {number} id - The ID of the email to delete
-   * @returns {Promise<void>}
-   * @throws {Error} When email deletion fails
-   */
-  public async deleteEmail(id: number): Promise<void> {
-    try {
-      await this.repository.deleteEmail(id);
-    } catch (error) {
-      logger.error(error);
-      throw error;
-    }
-  }
+	/**
+	 * Toggles either the flagged or starred status of a bulk email
+	 * @param {number} id - The ID of the email to toggle
+	 * @param {string} action - The action to perform ('flag' or 'star')
+	 * @returns {Promise<void>}
+	 * @throws {Error} When email toggle fails
+	 */
+	public async toggleBulkEmail(id: number, action: 'flag' | 'star'): Promise<void> {
+		try {
+			const email = await this.repository.findEmailById(id);
+			if (!email) {
+				throw new Error('Email not found');
+			}
 
-  /**
-   * Soft deletes an email template from the system (marks as deleted but preserves the record)
-   * @param {number} id - The ID of the email to soft delete
-   * @returns {Promise<void>}
-   * @throws {Error} When email soft deletion fails
-   */
-  public async softDeleteEmail(id: number): Promise<void> {
-    try {
-      await this.repository.softDeleteEmail(id);
-    } catch (error) {
-      logger.error(error);
-      throw error;
-    }
-  }
+			const updateData = action === 'flag' ? { flagged: !email.flagged } : { starred: !email.starred };
 
-  /**
-   * Toggles either the flagged or starred status of a bulk email
-   * @param {number} id - The ID of the email to toggle
-   * @param {string} action - The action to perform ('flag' or 'star')
-   * @returns {Promise<void>}
-   * @throws {Error} When email toggle fails
-   */
-  public async toggleBulkEmail(id: number, action: 'flag' | 'star'): Promise<void> {
-    try {
-      const email = await this.repository.findEmailById(id);
-      if (!email) {
-        throw new Error('Email not found');
-      }
-
-      const updateData =
-        action === 'flag' ? { flagged: !email.flagged } : { starred: !email.starred };
-
-      await this.repository.updateEmail(id, updateData);
-    } catch (error) {
-      logger.error(error);
-      throw error;
-    }
-  }
-
-
+			await this.repository.updateEmail(id, updateData);
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
 }

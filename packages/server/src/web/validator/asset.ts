@@ -2,113 +2,113 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 
 export const assetQuerySchema = z.object({
-  page: z.coerce.number().optional().default(1),
-  limit: z.coerce.number().optional().default(10),
-  search: z.string().optional(),
-  asset_type: z.enum(['image', 'video', 'audio', 'document']).optional(),
+	page: z.coerce.number().optional().default(1),
+	limit: z.coerce.number().optional().default(10),
+	search: z.string().optional(),
+	asset_type: z.enum(['image', 'video', 'audio', 'document']).optional(),
 });
 
 export const createAssetSchema = z.object({
-  fileName: z.string(),
-  contentType: z.string(),
-  assetType: z.enum(['image', 'video', 'audio', 'document']),
-  fileSize: z.number(),
-  duration: z.number(),
+	fileName: z.string(),
+	contentType: z.string(),
+	assetType: z.enum(['image', 'video', 'audio', 'document']),
+	fileSize: z.number(),
+	duration: z.number(),
 });
 
 export const createMultipartAssetSchema = z.object({
-  fileName: z.string(),
-  contentType: z.string(),
-  assetType: z.enum(['image', 'video', 'audio', 'document']),
-  fileSize: z.number(),
-  duration: z.number(),
-  partSize: z.number(),
+	fileName: z.string(),
+	contentType: z.string(),
+	assetType: z.enum(['image', 'video', 'audio', 'document']),
+	fileSize: z.number(),
+	duration: z.number(),
+	partSize: z.number(),
 });
 
 export const renameAssetSchema = z.object({
-  fileName: z.string().refine((val) => /\.[a-zA-Z0-9]+$/.test(val), {
-    message: 'File name must include an extension',
-  }),
+	fileName: z.string().refine((val) => /\.[a-zA-Z0-9]+$/.test(val), {
+		message: 'File name must include an extension',
+	}),
 });
 
 export const completeMultipartUploadSchema = z.object({
-  parts: z.array(
-    z.object({
-      ETag: z.string(),
-      PartNumber: z.number(),
-    }),
-  ),
+	parts: z.array(
+		z.object({
+			ETag: z.string(),
+			PartNumber: z.number(),
+		}),
+	),
 });
 
 // MediaConvert Webhook Schemas
 export const mediaConvertWebhookSchema = z.object({
-  version: z.string(),
-  id: z.string(),
-  'detail-type': z.literal('MediaConvert Job State Change'),
-  source: z.literal('aws.mediaconvert'),
-  account: z.string(),
-  time: z.string(),
-  region: z.string(),
-  resources: z.array(z.string()),
-  detail: z.object({
-    timestamp: z.number(),
-    accountId: z.string(),
-    queue: z.string(),
-    jobId: z.string(),
-    status: z.enum(['COMPLETE', 'STATUS_UPDATE', 'ERROR', 'PROGRESSING']),
-    userMetadata: z.any(),
-    warnings: z
-      .array(
-        z.object({
-          code: z.number(),
-          count: z.number(),
-        }),
-      )
-      .optional(),
-    outputGroupDetails: z
-      .array(
-        z.object({
-          outputDetails: z.array(
-            z.object({
-              outputFilePaths: z.array(z.string()),
-              durationInMs: z.number(),
-              videoDetails: z
-                .object({
-                  widthInPx: z.number(),
-                  heightInPx: z.number(),
-                  qvbrAvgQuality: z.number(),
-                  qvbrMinQuality: z.number(),
-                  qvbrMaxQuality: z.number(),
-                  qvbrMinQualityLocation: z.number(),
-                  qvbrMaxQualityLocation: z.number(),
-                })
-                .optional(),
-            }),
-          ),
-          type: z.string(),
-        }),
-      )
-      .optional(),
-    paddingInserted: z.number().optional(),
-    blackVideoDetected: z.number().optional(),
-    blackSegments: z
-      .array(
-        z.object({
-          start: z.number(),
-          end: z.number(),
-        }),
-      )
-      .optional(),
-    framesDecoded: z.number().optional(),
-    jobProgress: z
-      .object({
-        phaseProgress: z.any(),
-        jobPercentComplete: z.number(),
-        currentPhase: z.string(),
-        retryCount: z.number(),
-      })
-      .optional(),
-  }),
+	version: z.string(),
+	id: z.string(),
+	'detail-type': z.literal('MediaConvert Job State Change'),
+	source: z.literal('aws.mediaconvert'),
+	account: z.string(),
+	time: z.string(),
+	region: z.string(),
+	resources: z.array(z.string()),
+	detail: z.object({
+		timestamp: z.number(),
+		accountId: z.string(),
+		queue: z.string(),
+		jobId: z.string(),
+		status: z.enum(['COMPLETE', 'STATUS_UPDATE', 'ERROR', 'PROGRESSING']),
+		userMetadata: z.any(),
+		warnings: z
+			.array(
+				z.object({
+					code: z.number(),
+					count: z.number(),
+				}),
+			)
+			.optional(),
+		outputGroupDetails: z
+			.array(
+				z.object({
+					outputDetails: z.array(
+						z.object({
+							outputFilePaths: z.array(z.string()),
+							durationInMs: z.number(),
+							videoDetails: z
+								.object({
+									widthInPx: z.number(),
+									heightInPx: z.number(),
+									qvbrAvgQuality: z.number(),
+									qvbrMinQuality: z.number(),
+									qvbrMaxQuality: z.number(),
+									qvbrMinQualityLocation: z.number(),
+									qvbrMaxQualityLocation: z.number(),
+								})
+								.optional(),
+						}),
+					),
+					type: z.string(),
+				}),
+			)
+			.optional(),
+		paddingInserted: z.number().optional(),
+		blackVideoDetected: z.number().optional(),
+		blackSegments: z
+			.array(
+				z.object({
+					start: z.number(),
+					end: z.number(),
+				}),
+			)
+			.optional(),
+		framesDecoded: z.number().optional(),
+		jobProgress: z
+			.object({
+				phaseProgress: z.any(),
+				jobPercentComplete: z.number(),
+				currentPhase: z.string(),
+				retryCount: z.number(),
+			})
+			.optional(),
+	}),
 });
 
 export const assetQueryValidator = zValidator('query', assetQuerySchema);

@@ -4,17 +4,18 @@ import type { ZodError, ZodObject } from 'zod';
 import { serveUnprocessableEntity } from '../controller/resp/error.js';
 
 const getErrorPhrase = (error: ZodError) => {
-  const path = error.issues[0].path[0];
-  const { message } = error.issues[0];
-  return `${String(path)}: ${message}`;
+	const path = error.issues[0].path[0];
+	const { message } = error.issues[0];
+	return `${String(path)}: ${message}`;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const validateSchema = (c: Context, schema: ZodObject<any>, value: any) => {
-  const parsed = schema.safeParse(value);
-  if (!parsed.success) {
-    return serveUnprocessableEntity(c, getErrorPhrase(parsed.error));
-  }
-  return parsed.data;
+	const parsed = schema.safeParse(value);
+	if (!parsed.success) {
+		return serveUnprocessableEntity(c, getErrorPhrase(parsed.error));
+	}
+	return parsed.data;
 };
 
 export { getErrorPhrase, validateSchema };
