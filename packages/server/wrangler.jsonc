@@ -21,7 +21,8 @@
 					"binding": "DB",
 					"database_name": "assembled-prod",
 					"database_id": "759f912b-f645-499f-8f7f-10f494f22c7f",
-					"remote": true
+					"remote": true,
+					"migrations_dir": "./src/schema/migrations"
 				}
 			],
 			"vars": {
@@ -44,7 +45,8 @@
 					"binding": "DB",
 					"database_name": "assembled-dev",
 					"database_id": "b104f47c-9d4e-478e-9f90-b6f070956f37",
-					"remote": true
+					"remote": true,
+					"migrations_dir": "./src/schema/migrations"
 				},
 			],
 			"vars": {
