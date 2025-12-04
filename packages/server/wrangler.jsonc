@@ -9,7 +9,30 @@
 	"compatibility_date": "2025-12-02",
 	"observability": {
 		"enabled": true
-	}
+	},
+	"vars": {
+		"LOG_LEVEL": "info",
+		"NODE_ENV": "production",
+		"SECRET_KEY": "assembled-brands-secret-key",
+		"BREVO_API_KEY": "xxx",
+		"AWS_REGION": "us-east-1",
+		"AWS_ACCESS_KEY": "xxx",
+		"AWS_SECRET_KEY": "xxx",
+		"S3_BUCKET_NAME": "bucket",
+		"GOOGLE_CLIENT_ID": "xxx",
+		"GOOGLE_CLIENT_SECRET": "xxx",
+		"GOOGLE_CALLBACK_URL": "xxx",
+		"GOOGLE_REDIRECT_URL": "xxx",
+		"FRONTEND_URL": "http://localhost:3000",
+		"BRAND_NAME": "Assembled Brands",
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "assembled",
+			"database_id": "787eb0a9-ab0e-437b-b147-22f320c9444e",
+		},
+	],
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

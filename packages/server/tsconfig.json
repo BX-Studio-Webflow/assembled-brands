@@ -30,6 +30,9 @@
 		"allowSyntheticDefaultImports": true,
 		/* Ensure that casing is correct in imports. */
 		"forceConsistentCasingInFileNames": true,
+		
+		/*Allow importing ts extensions*/
+		"allowImportingTsExtensions": true,
 
 		/* Enable all strict type-checking options. */
 		"strict": true,

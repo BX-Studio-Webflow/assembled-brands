@@ -5,8 +5,8 @@ import { Hono } from 'hono';
 import { jwt } from 'hono/jwt';
 
 
-import { logger } from '../lib/logger.js';
-import { connection } from '../lib/queue.js';
+
+
 
 import {
   assetQueryValidator,
@@ -43,6 +43,13 @@ import { GoogleController } from './controller/google.js';
 import { SubscriptionController } from './controller/subscription.js';
 import { TeamController } from './controller/team.js';
 import { teamAccess } from './middleware/team.js';
+import { StripeService } from '../service/stripe.js';
+import { StripeController } from './controller/stripe.js';
+import { TeamService } from '../service/team.js';
+import { EmailService } from '../service/email.js';
+import { GoogleService } from '../service/google.js';
+import { UserService } from '../service/user.js';
+import { logger } from '../lib/logger.ts';
 
 export class Server {
   private app: Hono;
@@ -84,13 +91,8 @@ export class Server {
     const contactRepo = new ContactRepository();
     const businessRepo = new BusinessRepository();
     const paymentRepo = new PaymentRepository();
-    const callbackRepo = new CallbackRepository();
-    const podcastRepo = new PodcastRepository();
-    const courseRepo = new CourseRepository();
     const emailRepo = new EmailRepository();
-    const telemetryRepo = new TelemetryRepository();
     const notificationRepo = new NotificationRepository();
-    const clickRepo = new ClickRepository();
     // Setup services
     const notificationService = new NotificationService(notificationRepo);
     const contactService = new ContactService(contactRepo);
@@ -100,26 +102,15 @@ export class Server {
     // Initialize Stripe service with AWS Secrets Manager
     await stripeService.initialize();
 
-    const leadService = new LeadService(
-      leadRepo,
-      contactService,
-      stripeService,
-      notificationService,
-    );
+
 
     const assetService = new AssetService(assetRepo, s3Service);
-    const eventService = new EventService(eventRepo, s3Service, leadService, assetService);
-    const bookingRepo = new BookingRepository();
-    const membershipRepo = new MembershipRepository();
-    const membershipService = new MembershipService(membershipRepo);
-    const bookingService = new BookingService(bookingRepo, notificationService);
+
+
 
     const userService = new UserService(
       userRepo,
       stripeService,
-      membershipService,
-      eventService,
-      leadService,
     );
     const subscriptionService = new SubscriptionService(
       subscriptionRepo,
