@@ -1,0 +1,20 @@
+import ApiService from './ApiService'
+import type {
+    GetBusinessResponse,
+    UpdateBusinessRequest,
+} from '@/@types/business'
+
+export const apiGetBusiness = () => {
+    return ApiService.fetchDataWithAxios<GetBusinessResponse>({
+        url: '/business/my',
+        method: 'get',
+    })
+}
+
+export const apiUpdateBusiness = (data: UpdateBusinessRequest) => {
+    return ApiService.fetchDataWithAxios<void>({
+        url: '/business/my',
+        method: 'post',
+        data,
+    })
+}

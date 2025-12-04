@@ -99,7 +99,7 @@ const ERRORS = {
   MEMBERSHIP_NOT_FOUND: 'Membership not found, please check the membership id',
   EVENT_DATE_NOT_FOUND: 'Event date not found',
   CANNOT_DELETE_LAST_DATE: 'Cannot delete the last remaining date for an event',
-  NOT_FOUND: 'Ops, we could not find the resource you are looking for',
+  NOT_FOUND: 'Ops, we could not find the resource you are looking for. (404)',
   BOOKING_FAILED: 'Failed to create booking',
   BOOKING_NOT_FOUND: 'Booking not found',
   NOTIFICATION_FAILED: 'Failed to create notification',

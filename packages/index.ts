@@ -1,4 +1,4 @@
-import { greetUser } from "$utils/greet";
+import { greetUser } from "packages/frontend/utils/greet";
 
 
 

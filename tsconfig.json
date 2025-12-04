@@ -6,7 +6,7 @@
     "allowImportingTsExtensions": true,
     "paths": {
       "$utils/*": [
-        "packages/utils/*"
+        "packages/frontend/utils/*"
       ]
     },
     "types": [

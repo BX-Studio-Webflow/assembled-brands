@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "@finsweet/ts-utils": "^0.40.0",
-    "drizzle": "^1.4.0"
+    "axios": "^1.13.2"
   },
   "engines": {
     "pnpm": ">=10"
