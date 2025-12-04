@@ -15,6 +15,13 @@
       "when": 1764857754196,
       "tag": "0001_closed_alice",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1764861462073,
+      "tag": "0002_clumsy_garia",
+      "breakpoints": true
     }
   ]
 }
