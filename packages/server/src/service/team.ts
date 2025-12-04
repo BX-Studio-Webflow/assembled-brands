@@ -125,6 +125,7 @@ export class TeamService {
 					tempPassword, // User will need to reset this
 					'host',
 					'',
+					'',
 					{ is_verified: true, subscription_status: 'active' },
 				);
 				user = (await this.userService.findByEmail(invitation.invitee_email)) ?? null;

@@ -151,6 +151,56 @@ export const emailsSchema = sqliteTable('emails', {
 	updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 });
 
+export const onboardingApplicationSchema = sqliteTable('onboarding_applications', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	user_id: integer('user_id')
+		.references(() => userSchema.id)
+		.notNull(),
+
+	// Step 1: Company Info
+	legal_name: text('legal_name'),
+	employee_count: text('employee_count', {
+		enum: ['just_me', '2-10', '11-50', '51-100', '101-500', '501+'],
+	}),
+	website: text('website'),
+
+	// Step 2: Business Details
+	years_in_business: text('years_in_business'),
+	asset_type: text('asset_type', {
+		enum: ['inventory', 'accounts_receivable', 'purchase_orders', 'not_sure'],
+	}),
+	desired_loan_amount: text('desired_loan_amount'),
+
+	// Step 3: Qualification
+	company_type: text('company_type', {
+		enum: ['cpg', 'saas', 'consulting', 'distributor_wholesaler', 'other'],
+	}),
+	company_type_other: text('company_type_other'), // Only if company_type is 'other'
+	revenue_qualification: text('revenue_qualification', {
+		enum: ['yes', 'no'],
+	}), // $10MM+ in last 12 months
+
+	// Status tracking
+	current_step: integer('current_step').default(1), // 1, 2, or 3
+	is_qualified: integer('is_qualified', { mode: 'boolean' }).default(false),
+	is_complete: integer('is_complete', { mode: 'boolean' }).default(false),
+	is_rejected: integer('is_rejected', { mode: 'boolean' }).default(false),
+	rejection_reason: text('rejection_reason'),
+
+	created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+	updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+});
+
+export const onboardingApplicationRelations = relations(onboardingApplicationSchema, ({ one }) => ({
+	user: one(userSchema, {
+		fields: [onboardingApplicationSchema.user_id],
+		references: [userSchema.id],
+	}),
+}));
+
+export type OnboardingApplication = typeof onboardingApplicationSchema.$inferSelect;
+export type NewOnboardingApplication = typeof onboardingApplicationSchema.$inferInsert;
+
 export type Email = typeof emailsSchema.$inferSelect;
 export type NewEmail = typeof emailsSchema.$inferInsert;
 
