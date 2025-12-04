@@ -9,7 +9,7 @@ const getErrorPhrase = (error: ZodError) => {
 	return `${String(path)}: ${message}`;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+/*ts-ignore no-explicit-any */
 const validateSchema = (c: Context, schema: ZodObject<any>, value: any) => {
 	const parsed = schema.safeParse(value);
 	if (!parsed.success) {

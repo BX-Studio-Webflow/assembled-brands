@@ -2,7 +2,7 @@ import { createMiddleware } from 'hono/factory';
 
 import { TeamService } from '../../service/team';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+/*ts-ignore no-unused-vars */
 export const teamAccess = (teamService: TeamService) =>
   createMiddleware(async (c, next) => {
     const teamId = c.req.header('X-Team-Id');

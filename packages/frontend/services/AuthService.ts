@@ -1,30 +1,11 @@
+import type { SignInCredential, SignInResponse, SignUpCredential, SignUpResponse, ForgotPassword, ResetPassword, UpdateSettingsNotificationBody, BusinessDetails, UploadProfileImageBody, ResetPasswordInAppBody, InitiateStripeConnectResponse, UpdateUserProfileBody, UpdateUserProfileResponse, DashboardResponse, SaveOauthStateBody, SaveOauthStateResponse } from '../types/auth'
+import type { UploadBusinessLogoRequest } from '../types/business'
 import ApiService from './ApiService'
-import endpointConfig from '@/configs/endpoint.config'
-import type {
-    SignInCredential,
-    SignUpCredential,
-    ForgotPassword,
-    ResetPassword,
-    SignInResponse,
-    SignUpResponse,
-    BusinessDetails,
-    UploadProfileImageBody,
-    ResetPasswordInAppBody,
-    InitiateStripeConnectResponse,
-    GoogleInitiateResponse,
-    GoogleContinueResponse,
-    UpdateUserProfileBody,
-    UpdateUserProfileResponse,
-    DashboardResponse,
-    SaveOauthStateBody,
-    SaveOauthStateResponse,
-    UpdateSettingsNotificationBody,
-} from '@/@types/auth'
-import { UploadBusinessLogoRequest } from '@/@types/business'
+
 
 export async function apiSignIn(data: SignInCredential) {
     return ApiService.fetchDataWithAxios<SignInResponse>({
-        url: endpointConfig.signIn,
+        url: '/auth/sign-in',
         method: 'post',
         data,
     })
@@ -32,7 +13,7 @@ export async function apiSignIn(data: SignInCredential) {
 
 export async function apiSignUp(data: SignUpCredential) {
     return ApiService.fetchDataWithAxios<SignUpResponse>({
-        url: endpointConfig.signUp,
+        url: '/auth/sign-up',
         method: 'post',
         data,
     })
@@ -40,14 +21,14 @@ export async function apiSignUp(data: SignUpCredential) {
 
 export async function apiSignOut() {
     return ApiService.fetchDataWithAxios({
-        url: endpointConfig.signOut,
+        url: '/auth/sign-out',
         method: 'post',
     })
 }
 
 export async function apiForgotPassword<T>(data: ForgotPassword) {
     return ApiService.fetchDataWithAxios<T>({
-        url: endpointConfig.forgotPassword,
+        url: '/auth/forgot-password',
         method: 'post',
         data,
     })
@@ -55,7 +36,7 @@ export async function apiForgotPassword<T>(data: ForgotPassword) {
 
 export async function apiResetPassword<T>(data: ResetPassword) {
     return ApiService.fetchDataWithAxios<T>({
-        url: endpointConfig.resetPassword,
+        url: '/auth/reset-password',
         method: 'post',
         data,
     })
@@ -65,7 +46,7 @@ export async function apiUpdateSettingsNotification<T>(
     data: UpdateSettingsNotificationBody,
 ) {
     return ApiService.fetchDataWithAxios<T>({
-        url: endpointConfig.updateSettingsNotification,
+        url: '/auth/update-settings-notification',
         method: 'put',
         data,
     })
@@ -73,7 +54,7 @@ export async function apiUpdateSettingsNotification<T>(
 
 export async function apiSaveBusinessDetails(data: BusinessDetails) {
     return ApiService.fetchDataWithAxios({
-        url: endpointConfig.saveBusinessDetails,
+        url: '/business/save-business-details',
         method: 'post',
         data,
     })
@@ -81,7 +62,7 @@ export async function apiSaveBusinessDetails(data: BusinessDetails) {
 
 export async function apiGetUserMe<T>() {
     return ApiService.fetchDataWithAxios<T>({
-        url: endpointConfig.saveBusinessDetails,
+        url: '/user/me',
         method: 'get',
     })
 }
@@ -122,20 +103,6 @@ export async function apiGetStripeSubscriptions<T>() {
 export async function apiInitateStripeConnect() {
     return ApiService.fetchDataWithAxios<InitiateStripeConnectResponse>({
         url: '/stripe/connect/oauth',
-        method: 'get',
-    })
-}
-
-export async function apiGoogleInitiate() {
-    return ApiService.fetchDataWithAxios<GoogleInitiateResponse>({
-        url: '/user/auth/google',
-        method: 'get',
-    })
-}
-
-export async function apiGoogleContinue(code: string) {
-    return ApiService.fetchDataWithAxios<GoogleContinueResponse>({
-        url: `/user/auth/google/callback?code=${code}`,
         method: 'get',
     })
 }

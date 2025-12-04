@@ -11,7 +11,7 @@ type UserResponse = {
 	profile_picture: string | null;
 	bio: string | null;
 	subscription_status: string | null;
-	auth_provider: 'local' | 'google';
+	auth_provider: 'local';
 };
 
 export async function serializeUser(user: User): Promise<UserResponse> {

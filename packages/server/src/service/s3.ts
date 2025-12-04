@@ -290,7 +290,7 @@ export class S3Service {
 	 */
 	async listMediaConvertJobs(status?: string, maxResults: number = 50): Promise<Array<{ jobId: string; status: string; createdAt: Date }>> {
 		try {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			/*ts-ignore no-explicit-any */
 			const params: any = { MaxResults: maxResults };
 			if (status) {
 				params.Status = status;

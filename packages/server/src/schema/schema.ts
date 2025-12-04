@@ -47,9 +47,7 @@ export const userSchema = mysqlTable('user', {
 		'unpaid',
 	]),
 	trial_ends_at: timestamp('trial_ends_at'),
-	google_id: varchar('google_id', { length: 255 }),
-	google_access_token: varchar('google_access_token', { length: 255 }),
-	auth_provider: mysqlEnum('auth_provider', ['local', 'google']).default('local'),
+	auth_provider: mysqlEnum('auth_provider', ['local']).default('local'),
 });
 
 export const businessSchema = mysqlTable('businesses', {

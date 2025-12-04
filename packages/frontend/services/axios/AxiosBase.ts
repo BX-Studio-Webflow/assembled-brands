@@ -1,7 +1,7 @@
 import axios from 'axios'
 import AxiosResponseIntrceptorErrorCallback from './AxiosResponseIntrceptorErrorCallback'
 import AxiosRequestIntrceptorConfigCallback from './AxiosRequestIntrceptorConfigCallback'
-import appConfig from '@/configs/app.config'
+import { appConfig } from '$utils/config'
 import type { AxiosError } from 'axios'
 
 const AxiosBase = axios.create({

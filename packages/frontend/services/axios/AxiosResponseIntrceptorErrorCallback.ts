@@ -1,4 +1,4 @@
-import { useSessionUser, useToken } from '@/store/authStore'
+
 import type { AxiosError } from 'axios'
 
 const unauthorizedCode = [401, 419, 440]

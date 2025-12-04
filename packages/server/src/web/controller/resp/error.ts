@@ -20,7 +20,7 @@ const serveUnauthorized = (c: Context) => {
 	return c.json({ error: getReasonPhrase(StatusCodes.UNAUTHORIZED) }, <ContentfulStatusCode>StatusCodes.UNAUTHORIZED);
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+/*ts-ignore no-explicit-any */
 const serveInternalServerError = (c: Context, error: any) => {
 	if (error instanceof HTTPException) {
 		return c.json({ error: error.message }, <ContentfulStatusCode>error.status);
@@ -91,7 +91,6 @@ const ERRORS = {
 	BOOKING_NOT_FOUND: 'Booking not found',
 	NOTIFICATION_FAILED: 'Failed to create notification',
 	NOTIFICATION_NOT_FOUND: 'Notification not found',
-	GOOGLE_AUTH_USER_NOT_FOUND: 'Google authentication failed, user not found',
 	AUTH_FAILED: 'Authentication failed',
 	NO_AUTHORIZATION_CODE: 'No authorization code provided',
 	USER_EXISTS: 'User already exists',
