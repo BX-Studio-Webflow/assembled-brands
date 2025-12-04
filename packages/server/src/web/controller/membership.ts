@@ -1,0 +1,327 @@
+import type { Context } from 'hono';
+
+import { logger } from '../../lib/logger.ts';
+import type { MembershipService } from '../../service/membership.ts';
+import type { TeamService } from '../../service/team.ts';
+import type { UserService } from '../../service/user.ts';
+import type { CreateMembershipBody, UpdateMembershipBody } from '../validator/membership.ts';
+import { ERRORS, serveBadRequest, serveInternalServerError, serveNotFound } from './resp/error.ts';
+
+export class MembershipController {
+  private service: MembershipService;
+  private userService: UserService;
+  private teamService: TeamService;
+
+  constructor(service: MembershipService, userService: UserService, teamService: TeamService) {
+    this.service = service;
+    this.userService = userService;
+    this.teamService = teamService;
+  }
+
+  /**
+   * Retrieves user information from JWT payload
+   * @private
+   * @param {Context} c - The Hono context containing JWT payload
+   * @returns {Promise<User|null>} The user object if found, null otherwise
+   */
+  private async getUser(c: Context) {
+    const { email } = c.get('jwtPayload');
+    const user = await this.userService.findByEmail(email);
+    return user;
+  }
+
+  /**
+   * Retrieves all memberships based on user role and permissions
+   * @param {Context} c - The Hono context containing pagination and search parameters
+   * @returns {Promise<Response>} Response containing list of memberships
+   * @throws {Error} When fetching memberships fails
+   */
+  public getMemberships = async (c: Context) => {
+    try {
+      const user = await this.getUser(c);
+      if (!user) {
+        return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+      }
+
+      const { page, limit, search } = c.req.query();
+      const query = {
+        page: page ? Number.parseInt(page) : undefined,
+        limit: limit ? Number.parseInt(limit) : undefined,
+        search,
+      };
+
+      // Admin users (master/owner) can see all memberships
+      if (user.role === 'master' || user.role === 'owner') {
+        const result = await this.service.getAllMemberships(query);
+        return c.json(result);
+      }
+      // Get hostId from context and if hostId exists (team access), get resources for that host
+      const hostId = c.get('hostId');
+      if (hostId) {
+        const result = await this.service.getMembershipsByUser(hostId, query);
+        return c.json(result);
+      }
+      // Regular users only see their own memberships
+      const result = await this.service.getMembershipsByUser(user.id, query);
+      //sort by dates
+      const sortedPlans = result.plans.sort((a, b) => {
+        const minDateA = Math.min(...(a.dates?.map((d) => parseInt(d.date)) || [0]));
+        const minDateB = Math.min(...(b.dates?.map((d) => parseInt(d.date)) || [0]));
+        return minDateA - minDateB;
+      });
+
+      return c.json({ plans: sortedPlans, total: result.total });
+    } catch (error) {
+      logger.error(error);
+      return serveInternalServerError(c, error);
+    }
+  };
+
+  /**
+   * Retrieves detailed information about a specific membership
+   * @param {Context} c - The Hono context containing membership ID
+   * @returns {Promise<Response>} Response containing membership details
+   * @throws {Error} When fetching membership details fails
+   */
+  public getMembership = async (c: Context) => {
+    try {
+      const planId = Number(c.req.param('id'));
+      const plan = await this.service.getMembership(planId);
+
+      if (!plan) {
+        return serveNotFound(c, ERRORS.MEMBERSHIP_NOT_FOUND);
+      }
+
+      return c.json(plan);
+    } catch (error) {
+      logger.error(error);
+      return serveInternalServerError(c, error);
+    }
+  };
+
+  /**
+   * Creates a new membership plan
+   * @param {Context} c - The Hono context containing membership details
+   * @returns {Promise<Response>} Response containing created membership information
+   * @throws {Error} When membership creation fails
+   */
+  public createMembership = async (c: Context) => {
+    try {
+      const user = await this.getUser(c);
+      if (!user) {
+        return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+      }
+
+      const body: CreateMembershipBody = await c.req.json();
+      if (body.price_point === 'standalone') {
+        if (!body.dates || body.dates.length < 1) {
+          return serveBadRequest(c, ERRORS.EVENT_DATE_REQUIRED);
+        }
+      }
+
+      // Get hostId and teamId from context to determine the actual host for the membership
+      const hostId = c.get('hostId');
+      const teamId = c.get('teamId');
+      let actualHostId = user.id; // Default to current user
+
+      if (hostId && teamId) {
+        // Check if user is a team member or team host
+        const isTeamMember = await this.teamService.isTeamMember(teamId, user.id);
+        const isTeamHost = await this.teamService.isTeamHost(teamId, user.id);
+        if (!isTeamMember && !isTeamHost) {
+          return serveBadRequest(c, ERRORS.TEAM_MEMBER_NOT_ALLOWED);
+        }
+        // Use the team's host ID for the membership
+        actualHostId = hostId;
+      }
+
+      const planId = await this.service.createMembership(
+        {
+          ...body,
+          user_id: actualHostId,
+        },
+        body.dates,
+      );
+      return c.json(
+        {
+          message: 'Membership created successfully',
+          planId: planId,
+        },
+        201,
+      );
+    } catch (error) {
+      logger.error(error);
+      return serveInternalServerError(c, error);
+    }
+  };
+
+  /**
+   * Updates an existing membership plan
+   * @param {Context} c - The Hono context containing updated membership details
+   * @returns {Promise<Response>} Response indicating update status
+   * @throws {Error} When membership update fails
+   */
+  public updateMembership = async (c: Context) => {
+    try {
+      const user = await this.getUser(c);
+      if (!user) {
+        return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+      }
+
+      const planId = Number(c.req.param('id'));
+      const plan = await this.service.getMembership(planId);
+
+      if (!plan) {
+        return serveBadRequest(c, ERRORS.MEMBERSHIP_NOT_FOUND);
+      }
+
+      // Get hostId and teamId from context and if they exist (team access)
+      const hostId = c.get('hostId');
+      const teamId = c.get('teamId');
+      let isTeamMember = false;
+      if (hostId && teamId) {
+        //check if user is a member of the team or team host
+        isTeamMember = await this.teamService.isTeamMember(teamId, user.id);
+        const isTeamHost = await this.teamService.isTeamHost(teamId, user.id);
+        if (!isTeamMember && !isTeamHost) {
+          return serveBadRequest(c, ERRORS.TEAM_MEMBER_NOT_ALLOWED);
+        }
+      }
+      //only master role, admin, the owner of the membership, or team members can update the membership
+      if (
+        user.role !== 'master' &&
+        user.role !== 'owner' &&
+        plan.user_id !== user.id &&
+        !isTeamMember
+      ) {
+        return serveBadRequest(c, ERRORS.NOT_ALLOWED);
+      }
+
+      const body: UpdateMembershipBody = await c.req.json();
+      const { name, description, price, payment_type, price_point } = body;
+      await this.service.updateMembership(planId, {
+        name,
+        description,
+        price,
+        payment_type,
+        price_point,
+      });
+
+      return c.json({ message: 'Membership updated successfully' });
+    } catch (error) {
+      logger.error(error);
+      return serveInternalServerError(c, error);
+    }
+  };
+
+  /**
+   * Deletes a membership plan if not linked to active events
+   * @param {Context} c - The Hono context containing membership ID
+   * @returns {Promise<Response>} Response indicating deletion status
+   * @throws {Error} When membership deletion fails
+   */
+  public deleteMembership = async (c: Context) => {
+    try {
+      const user = await this.getUser(c);
+      if (!user) {
+        return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+      }
+
+      const planId = Number(c.req.param('id'));
+      const plan = await this.service.getMembership(planId);
+
+      if (!plan) {
+        return serveNotFound(c, ERRORS.MEMBERSHIP_NOT_FOUND);
+      }
+
+      // Get hostId and teamId from context and if they exist (team access)
+      const hostId = c.get('hostId');
+      const teamId = c.get('teamId');
+      let isTeamMember = false;
+      if (hostId && teamId) {
+        //check if user is a member of the team or team host
+        isTeamMember = await this.teamService.isTeamMember(teamId, user.id);
+        const isTeamHost = await this.teamService.isTeamHost(teamId, user.id);
+        if (!isTeamMember && !isTeamHost) {
+          return serveBadRequest(c, ERRORS.TEAM_MEMBER_NOT_ALLOWED);
+        }
+      }
+      //only master role, admin, the owner of the membership, or team members can delete the membership
+      if (
+        user.role !== 'master' &&
+        user.role !== 'owner' &&
+        plan.user_id !== user.id &&
+        !isTeamMember
+      ) {
+        return serveBadRequest(c, ERRORS.NOT_ALLOWED);
+      }
+
+      // Get all events linked to this membership
+      const events = await this.service.getEventsByMembership(planId);
+
+      // If there are events, check if any are active
+      if (events.length > 0) {
+        const hasActiveEvents = events.some((event) => event.status === 'active');
+        if (hasActiveEvents) {
+          //join with conjunction
+          const formatter = new Intl.ListFormat('en', {
+            style: 'long',
+            type: 'conjunction',
+          });
+          const event_names = formatter.format(events.map((event) => event.event_name));
+
+          return c.json(
+            {
+              hasActiveEvents,
+              events,
+              event_names,
+              message: `This membership is linked to ${event_names}. Deleting this will cause issues with existing contacts registered for the event. Please cancel the event first then try again.`,
+            },
+            400,
+          );
+        }
+      }
+
+      // If no active events or no events at all, proceed with deletion
+      await this.service.deleteMembership(planId);
+      return c.json({ message: 'Membership deleted successfully' });
+    } catch (error) {
+      logger.error(error);
+      return serveInternalServerError(c, error);
+    }
+  };
+
+  /**
+   * Retrieves all dates associated with a membership plan
+   * @param {Context} c - The Hono context containing membership ID
+   * @returns {Promise<Response>} Response containing list of dates
+   * @throws {Error} When fetching dates fails
+   */
+  public getEventDates = async (c: Context) => {
+    try {
+      const membershipId = Number(c.req.param('id'));
+      const dates = await this.service.getMembershipDates(membershipId);
+      return c.json(dates);
+    } catch (error) {
+      logger.error(error);
+      return serveInternalServerError(c, error);
+    }
+  };
+
+  /**
+   * Deletes a specific date from a membership plan
+   * @param {Context} c - The Hono context containing date ID
+   * @returns {Promise<Response>} Response indicating deletion status
+   * @throws {Error} When date deletion fails
+   */
+  public deleteMembershipDate = async (c: Context) => {
+    try {
+      const dateId = Number(c.req.param('dateId'));
+      await this.service.deleteMembershipDate(dateId);
+      return c.json({ message: 'Date deleted successfully' });
+    } catch (error) {
+      logger.error(error);
+      return serveInternalServerError(c, error);
+    }
+  };
+}
