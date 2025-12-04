@@ -1,10 +1,8 @@
 import type { Context } from 'hono';
 
-import { logger } from '../../lib/logger.js';
+
 import type { AssetService } from '../../service/asset.js';
 import { EmailService } from '../../service/email.ts';
-import type { EventService } from '../../service/event.js';
-import type { LeadService } from '../../service/lead.js';
 import { NotificationService } from '../../service/notification.js';
 import type { UserService } from '../../service/user.js';
 import type {
@@ -17,26 +15,21 @@ import type {
 } from '../validator/asset.js';
 import { ERRORS, serveBadRequest, serveInternalServerError, serveNotFound } from './resp/error.js';
 import { serveData } from './resp/resp.ts';
+import { logger } from '../../lib/logger.ts';
 
 export class AssetController {
   private service: AssetService;
   private userService: UserService;
-  private eventService: EventService;
-  private leadService: LeadService;
   private emailService: EmailService;
   private notificationService: NotificationService;
   constructor(
     service: AssetService,
     userService: UserService,
-    eventService: EventService,
-    leadService: LeadService,
     emailService: EmailService,
     notificationService: NotificationService,
   ) {
     this.service = service;
     this.userService = userService;
-    this.eventService = eventService;
-    this.leadService = leadService;
     this.emailService = emailService;
     this.notificationService = notificationService;
   }
@@ -106,7 +99,7 @@ export class AssetController {
       };
 
       if (user.role === 'master' || user.role === 'owner') {
-        const assets = await this.service.getAllAssets(query);
+        const assets = await this.service.getAllAssets(user.id, query);
         return c.json(assets);
       }
 
@@ -148,7 +141,7 @@ export class AssetController {
         const asset = await this.service.findAssetByMediaConvertJobId(body.detail.jobId);
 
         if (!asset) {
-          logger.warn('No asset found for MediaConvert job ID:', body.detail.jobId);
+          logger.warn(body.detail.jobId);
           return serveData(c, {
             message: 'HLS conversion completed but no asset found',
             jobId: body.detail.jobId,
@@ -169,7 +162,7 @@ export class AssetController {
             hls_url: outputFilePath,
           });
 
-          logger.info('Asset updated with HLS URL:', {
+          logger.info({
             assetId: asset.id,
             hlsUrl: outputFilePath,
           });
@@ -293,7 +286,7 @@ export class AssetController {
         const asset = await this.service.findAssetByMediaConvertJobId(body.detail.jobId);
 
         if (!asset) {
-          logger.warn('No asset found for MediaConvert job ID:', body.detail.jobId);
+          logger.warn(`No asset found for MediaConvert job ID: ${body.detail.jobId}`);
           return serveData(c, {
             message: 'HLS conversion failed',
             jobId: body.detail.jobId,
@@ -355,7 +348,7 @@ export class AssetController {
         body: body,
       });
     } catch (error) {
-      logger.error('Error processing MediaConvert webhook:', error);
+      logger.error(error);
       return serveInternalServerError(c, error);
     }
   };
@@ -402,25 +395,10 @@ export class AssetController {
         return serveNotFound(c, ERRORS.ASSET_NOT_FOUND);
       }
 
-      // Check if asset is linked to any events
-      const linkedEvent = await this.eventService.findByAssetId(assetId);
-      if (linkedEvent) {
-        // Check if event has leads, and delete the asset if the event is cancelled, otherwise return an error
-        const eventLeads = await this.leadService.findByEventId(linkedEvent.id);
-        if (linkedEvent.status === 'cancelled') {
-          await this.service.deleteAsset(assetId);
-          return serveData(c, { message: 'Asset deleted successfully' });
-        }
-        if (eventLeads && eventLeads.length > 0) {
-          return serveBadRequest(c, ERRORS.ASSET_LINKED_TO_EVENT);
-        }
-      }
-
-      // If no linked event or no leads, proceed with deletion
       await this.service.deleteAsset(assetId);
       return serveData(c, { message: 'Asset deleted successfully' });
     } catch (error) {
-      logger.error('Error deleting asset:', error);
+      logger.error(error);
       return serveInternalServerError(c, error);
     }
   };
@@ -522,7 +500,7 @@ export class AssetController {
           // Start HLS conversion automatically
           const conversionResult = await this.service.startHlsConversion(assetId);
 
-          logger.info('HLS conversion started automatically after upload:', {
+          logger.info({
             assetId: assetId,
             jobId: conversionResult.jobId,
             status: conversionResult.status,
@@ -553,7 +531,7 @@ export class AssetController {
             },
           });
         } catch (conversionError) {
-          logger.error('Failed to start HLS conversion after upload:', conversionError);
+          logger.error(conversionError);
           // Don't fail the upload completion, just log the error
           return c.json({
             success: true,
@@ -604,7 +582,7 @@ export class AssetController {
         assetId: assetId,
       });
     } catch (error) {
-      logger.error('Error starting HLS conversion:', error);
+      logger.error(error);
       return serveInternalServerError(c, error);
     }
   };

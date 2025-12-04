@@ -1,5 +1,5 @@
-import { and, desc, eq, like } from 'drizzle-orm';
-
+import { and, desc, eq, like, sql } from 'drizzle-orm';
+import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import type { Asset, NewAsset } from '../schema/schema.js';
 import { assetsSchema } from '../schema/schema.js';
@@ -11,13 +11,23 @@ export interface AssetSearchQuery {
 }
 
 export class AssetRepository {
+  private db: DrizzleD1Database;
+
+  constructor(db: DrizzleD1Database) {
+    this.db = db;
+  }
+
   async create(asset: NewAsset): Promise<number> {
-    const result = await db.insert(assetsSchema).values(asset).$returningId();
+    const result = await this.db.insert(assetsSchema).values(asset).returning();
     return result[0].id;
   }
 
   async find(id: number): Promise<Asset | undefined> {
-    const result = await db.select().from(assetsSchema).where(eq(assetsSchema.id, id)).limit(1);
+    const result = await this.db
+      .select()
+      .from(assetsSchema)
+      .where(eq(assetsSchema.id, id))
+      .limit(1);
     return result[0];
   }
 
@@ -39,7 +49,7 @@ export class AssetRepository {
       whereConditions.push(eq(assetsSchema.asset_type, asset_type));
     }
 
-    const assets = await db
+    const assets = await this.db
       .select()
       .from(assetsSchema)
       .where(and(...whereConditions))
@@ -47,8 +57,8 @@ export class AssetRepository {
       .offset(offset)
       .orderBy(desc(assetsSchema.created_at));
 
-    const total = await db
-      .select({ count: assetsSchema.id })
+    const total = await this.db
+      .select({ count: sql<number>`count(*)` })
       .from(assetsSchema)
       .where(and(...whereConditions));
 
@@ -56,11 +66,11 @@ export class AssetRepository {
   }
 
   async delete(id: number): Promise<void> {
-    await db.delete(assetsSchema).where(eq(assetsSchema.id, id));
+    await this.db.delete(assetsSchema).where(eq(assetsSchema.id, id));
   }
 
   async update(id: number, asset: Partial<Asset>): Promise<void> {
-    await db.update(assetsSchema).set(asset).where(eq(assetsSchema.id, id));
+    await this.db.update(assetsSchema).set(asset).where(eq(assetsSchema.id, id));
   }
 
   async findByQuery(query: AssetSearchQuery): Promise<{ assets: Asset[]; total: number }> {
@@ -70,7 +80,7 @@ export class AssetRepository {
       whereConditions.push(eq(assetsSchema.asset_type, query.asset_type));
     }
 
-    const assets = await db
+    const assets = await this.db
       .select()
       .from(assetsSchema)
       .where(and(...whereConditions))
@@ -80,7 +90,7 @@ export class AssetRepository {
   }
 
   async findByMediaConvertJobId(jobId: string): Promise<Asset | undefined> {
-    const result = await db
+    const result = await this.db
       .select()
       .from(assetsSchema)
       .where(eq(assetsSchema.mediaconvert_job_id, jobId))
@@ -89,7 +99,7 @@ export class AssetRepository {
   }
 
   async updateProcessingStatus(id: number, data: Partial<Asset>): Promise<void> {
-    await db
+    await this.db
       .update(assetsSchema)
       .set({
         ...data,
@@ -97,4 +107,6 @@ export class AssetRepository {
       })
       .where(eq(assetsSchema.id, id));
   }
+
+  
 }

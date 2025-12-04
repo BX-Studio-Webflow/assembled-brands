@@ -1,22 +1,28 @@
 import { and, desc, eq, like } from 'drizzle-orm';
+import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
-import { db } from '../lib/database.js';
 import { businessSchema } from '../schema/schema.js';
 import type { BusinessQuery } from '../web/validator/business.ts';
 
 export class BusinessRepository {
+  private db: DrizzleD1Database;
+
+  constructor(db: DrizzleD1Database) {
+    this.db = db;
+  }
+
   async create(business: typeof businessSchema.$inferInsert) {
-    const result = await db.insert(businessSchema).values(business).$returningId();
+    const result = await this.db.insert(businessSchema).values(business).returning();
     return await this.findById(result[0].id);
   }
 
   async findById(id: number) {
-    const result = await db.select().from(businessSchema).where(eq(businessSchema.id, id)).limit(1);
+    const result = await this.db.select().from(businessSchema).where(eq(businessSchema.id, id)).limit(1);
     return result[0];
   }
 
   async findByUserId(userId: number) {
-    const result = await db
+    const result = await this.db
       .select()
       .from(businessSchema)
       .where(eq(businessSchema.user_id, userId))
@@ -33,7 +39,7 @@ export class BusinessRepository {
       whereConditions.push(like(businessSchema.name, `%${search}%`));
     }
 
-    const businesses = await db
+    const businesses = await this.db
       .select()
       .from(businessSchema)
       .where(whereConditions.length ? and(...whereConditions) : undefined)
@@ -41,7 +47,7 @@ export class BusinessRepository {
       .offset(offset)
       .orderBy(desc(businessSchema.created_at));
 
-    const total = await db
+    const total = await this.db
       .select({ count: businessSchema.id })
       .from(businessSchema)
       .where(whereConditions.length ? and(...whereConditions) : undefined);
@@ -50,7 +56,7 @@ export class BusinessRepository {
   }
 
   async update(id: number, business: Partial<typeof businessSchema.$inferSelect>) {
-    await db.update(businessSchema).set(business).where(eq(businessSchema.id, id));
+    await this.db.update(businessSchema).set(business).where(eq(businessSchema.id, id));
     return await this.findById(id);
   }
 }

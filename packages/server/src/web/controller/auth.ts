@@ -2,10 +2,9 @@ import { eq } from 'drizzle-orm';
 import type { Context } from 'hono';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 
-import { db } from '../../lib/database.js';
 import { encrypt, verify } from '../../lib/encryption.js';
 import { env } from 'process';
-
+import { encode, type JWTPayload } from '../../lib/jwt.ts';
 import { logger } from '../../lib/logger.ts';
 import type { UserRepository } from '../../repository/user.js';
 import { userSchema } from '../../schema/schema.ts';

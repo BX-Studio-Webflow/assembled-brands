@@ -1,7 +1,7 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
+import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
-import { db } from '../lib/database.ts';
 import { type NewUser, type User, userSchema } from '../schema/schema.js';
 import {
   bookings,
@@ -18,12 +18,18 @@ import {
 import { memberships } from '../schema/schema.js';
 
 export class UserRepository {
+  private db: DrizzleD1Database;
+
+  constructor(db: DrizzleD1Database) {
+    this.db = db;
+  }
+
   public async create(user: NewUser) {
-    return db.insert(userSchema).values(user).$returningId();
+    return this.db.insert(userSchema).values(user).$returningId();
   }
 
   public async find(id: number) {
-    return db.query.userSchema.findFirst({
+    return this.db.query.userSchema.findFirst({
       where: eq(userSchema.id, id),
       with: {
         business: true,
@@ -32,7 +38,7 @@ export class UserRepository {
   }
 
   public async findByEmail(email: string) {
-    const user = await db.query.userSchema.findFirst({
+    const user = await this.db.query.userSchema.findFirst({
       where: eq(userSchema.email, email),
       with: {
         business: true,
@@ -45,16 +51,16 @@ export class UserRepository {
   }
 
   public async update(id: number, user: Partial<User>) {
-    return db.update(userSchema).set(user).where(eq(userSchema.id, id));
+    return this.db.update(userSchema).set(user).where(eq(userSchema.id, id));
   }
 
   public async delete(id: number) {
-    return db.delete(userSchema).where(eq(userSchema.id, id));
+    return this.db.delete(userSchema).where(eq(userSchema.id, id));
   }
 
   public async getDashboard(id: number) {
     // Get user profile with business info
-    const user = await db.query.userSchema.findFirst({
+    const user = await this.db.query.userSchema.findFirst({
       where: eq(userSchema.id, id),
       with: {
         business: true,
@@ -66,7 +72,7 @@ export class UserRepository {
     }
 
     // Get all metrics in a single query using subqueries
-    const [metrics] = await db
+    const [metrics] = await this.db
       .select({
         // Content counts
         total_events: sql<number>`(SELECT COUNT(*) FROM ${eventSchema} WHERE ${eventSchema.host_id} = ${id})`,
@@ -124,13 +130,13 @@ export class UserRepository {
 
     // Get recent payments in a separate query since it returns multiple rows
     const [recentSuccessfulPayments, recentFailedPayments, eventsStats] = await Promise.all([
-      db
+      this.db
         .select()
         .from(paymentSchema)
         .where(and(eq(paymentSchema.beneficiary_id, id), eq(paymentSchema.status, 'succeeded')))
         .orderBy(desc(paymentSchema.created_at))
         .limit(5),
-      db
+      this.db
         .select()
         .from(paymentSchema)
         .where(and(eq(paymentSchema.beneficiary_id, id), eq(paymentSchema.status, 'failed')))
@@ -203,7 +209,7 @@ export class UserRepository {
 
   public async getAllEventsStats(id: number) {
     // Get all pre-recorded events for the user with their statistics
-    const events = await db
+    const events = await this.db
       .select({
         event_id: eventSchema.id,
         event_name: eventSchema.event_name,
@@ -217,19 +223,19 @@ export class UserRepository {
     const eventsStats = await Promise.all(
       events.map(async (event) => {
         // Get registrations (leads for this event)
-        const registrations = await db
+        const registrations = await this.db
           .select({ count: sql<number>`COUNT(*)` })
           .from(leadSchema)
           .where(eq(leadSchema.event_id, event.event_id));
 
         // Get attendees (leads who attended the event)
-        const attendees = await db
+        const attendees = await this.db
           .select({ count: sql<number>`COUNT(*)` })
           .from(leadSchema)
           .where(and(eq(leadSchema.event_id, event.event_id), eq(leadSchema.attended_event, true)));
 
         // Get earnings for this event
-        const earnings = await db
+        const earnings = await this.db
           .select({
             total: sql<number>`COALESCE(SUM(amount), 0)`,
             count: sql<number>`COUNT(*)`,

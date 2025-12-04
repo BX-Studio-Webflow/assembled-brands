@@ -50,6 +50,10 @@ import { UserRepository } from '../repository/user.ts';
 import { TeamRepository } from '../repository/team.ts';
 import { EmailRepository } from '../repository/email.ts';
 import { NotificationRepository } from '../repository/notification.ts';
+import { AssetService } from '../service/asset.ts';
+import { NotificationService } from '../service/notification.ts';
+import { S3Service } from '../service/s3.ts';
+import { drizzle } from 'drizzle-orm/d1';
 
 
 export class Server {
@@ -79,15 +83,18 @@ export class Server {
 
     const api = this.app.basePath('/v1');
 
+    // Initialize drizzle database connection
+    const db = drizzle(env.DB);
+
     // Setup repos
-    const userRepo = new UserRepository();
-    const assetRepo = new AssetRepository();
-   
-    const teamRepo = new TeamRepository();
-    const businessRepo = new BusinessRepository();
-   
-    const emailRepo = new EmailRepository();
-    const notificationRepo = new NotificationRepository();
+    const userRepo = new UserRepository(db);
+    const assetRepo = new AssetRepository(db);
+
+    const teamRepo = new TeamRepository(db);
+    const businessRepo = new BusinessRepository(db);
+
+    const emailRepo = new EmailRepository(db);
+    const notificationRepo = new NotificationRepository(db);
     // Setup services
     const notificationService = new NotificationService(notificationRepo);
 
@@ -96,7 +103,7 @@ export class Server {
 
     const userService = new UserService(userRepo);
     const teamService = new TeamService(teamRepo, userService);
-   
+
     const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService);
     const emailService = new EmailService(emailRepo);
 
@@ -111,8 +118,6 @@ export class Server {
     const assetController = new AssetController(
       assetService,
       userService,
-      eventService,
-      leadService,
       emailService,
       notificationService,
     );

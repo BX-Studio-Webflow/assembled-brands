@@ -182,7 +182,29 @@ export const notificationsSchema = mysqlTable('notifications', {
 });
 
 
+export const emailsSchema = mysqlTable('emails', {
+  id: serial('id').primaryKey(),
+  email: varchar('email', { length: 255 }).notNull(),
+  subject: varchar('subject', { length: 255 }).notNull(),
+  title: varchar('title', { length: 255 }).notNull(),
+  subtitle: varchar('subtitle', { length: 255 }).notNull(),
+  body: text('body').notNull(),
+  button_text: varchar('button_text', { length: 255 }).notNull(),
+  button_link: varchar('button_link', { length: 255 }).notNull(),
+  created_at: timestamp('created_at').defaultNow(),
+  checked: boolean('checked').default(false),
+  starred: boolean('starred').default(false),
+  flagged: boolean('flagged').default(false),
+  host_id: int('host_id')
+    .references(() => userSchema.id)
+    .notNull(),
+  status: mysqlEnum('status', ['draft', 'sent', 'failed']).default('draft'),
+  updated_at: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
 
+
+export type Email = typeof emailsSchema.$inferSelect;
+export type NewEmail = typeof emailsSchema.$inferInsert;
 
 export type Notification = typeof notificationsSchema.$inferSelect;
 export type NewNotification = typeof notificationsSchema.$inferInsert;
@@ -197,6 +219,7 @@ export type NewTeamMember = typeof teamMemberSchema.$inferInsert;
 export type NewUser = typeof userSchema.$inferInsert;
 export type NewBusiness = typeof businessSchema.$inferInsert;
 export type Business = typeof businessSchema.$inferSelect;
+
 
 
 // Define relations

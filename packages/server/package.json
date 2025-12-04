@@ -23,6 +23,7 @@
 		"wrangler": "^4.52.1"
 	},
 	"dependencies": {
+		"@aws-sdk/client-s3": "^3.943.0",
 		"@hono/zod-validator": "^0.7.5",
 		"dayjs": "^1.11.19",
 		"dotenv": "^17.2.3",

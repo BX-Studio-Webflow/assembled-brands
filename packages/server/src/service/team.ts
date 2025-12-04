@@ -1,11 +1,12 @@
-import env from '../lib/env.ts';
+import { env } from 'process';
 import { logger } from '../lib/logger.ts';
 import type { TeamRepository } from '../repository/team.ts';
 import type { User } from '../schema/schema.ts';
-import { sendTransactionalEmail } from '../task/email-processor.ts';
+
 import { generateSecurePassword } from '../util/string.ts';
 import type { TeamQuery } from '../web/validator/team.ts';
 import type { UserService } from './user.ts';
+import { sendTransactionalEmail } from '../lib/email-processor.ts';
 
 /**
  * Service class for managing teams, including member invitations, access control, and team operations

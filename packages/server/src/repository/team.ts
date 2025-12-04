@@ -1,6 +1,5 @@
 import { and, eq, like } from 'drizzle-orm';
-
-import { db } from '../lib/database.ts';
+import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import {
   teamInvitationSchema,
   teamMemberSchema,
@@ -10,8 +9,14 @@ import {
 import { TeamQuery } from '../web/validator/team.ts';
 
 export class TeamRepository {
+  private db: DrizzleD1Database;
+
+  constructor(db: DrizzleD1Database) {
+    this.db = db;
+  }
+
   public async createTeam(name: string, hostId: number) {
-    const [team] = await db
+    const [team] = await this.db
       .insert(teamSchema)
       .values({
         name,
@@ -33,7 +38,7 @@ export class TeamRepository {
   }
 
   public async getTeamById(id: number) {
-    return await db.query.teamSchema.findFirst({
+    return await this.db.query.teamSchema.findFirst({
       where: (team, { eq }) => eq(team.id, id),
       with: {
         members: true,
@@ -50,7 +55,7 @@ export class TeamRepository {
       whereConditions.push(like(teamSchema.name, `%${search}%`));
     }
 
-    const members = await db
+    const members = await this.db
       .select({
         id: teamMemberSchema.id,
         team_id: teamMemberSchema.team_id,
@@ -77,7 +82,7 @@ export class TeamRepository {
       .limit(limit)
       .offset(offset);
 
-    const total = await db
+    const total = await this.db
       .select({ count: teamMemberSchema.id })
       .from(teamMemberSchema)
       .leftJoin(teamSchema, eq(teamMemberSchema.team_id, teamSchema.id))
@@ -87,13 +92,13 @@ export class TeamRepository {
   }
 
   public async getUserTeams(userId: number) {
-    return await db.query.teamMemberSchema.findMany({
+    return await this.db.query.teamMemberSchema.findMany({
       where: (member, { eq }) => eq(member.user_id, userId),
     });
   }
 
   public async isTeamHost(teamId: number, userId: number) {
-    const member = await db.query.teamMemberSchema.findFirst({
+    const member = await this.db.query.teamMemberSchema.findFirst({
       where: (member, { and, eq }) =>
         and(eq(member.team_id, teamId), eq(member.user_id, userId), eq(member.role, 'host')),
     });
@@ -101,14 +106,14 @@ export class TeamRepository {
   }
 
   public async isTeamMember(teamId: number, userId: number) {
-    const member = await db.query.teamMemberSchema.findFirst({
+    const member = await this.db.query.teamMemberSchema.findFirst({
       where: (member, { and, eq }) => and(eq(member.team_id, teamId), eq(member.user_id, userId)),
     });
     return !!member;
   }
 
   public async addTeamMember(teamId: number, userId: number, role: 'host' | 'member' = 'member') {
-    const [member] = await db
+    const [member] = await this.db
       .insert(teamMemberSchema)
       .values({
         team_id: teamId,
@@ -122,7 +127,7 @@ export class TeamRepository {
   }
 
   public async createInvitation(teamId: number, inviterId: number, inviteeEmail: string) {
-    const [invitation] = await db
+    const [invitation] = await this.db
       .insert(teamInvitationSchema)
       .values({
         team_id: teamId,
@@ -138,20 +143,20 @@ export class TeamRepository {
   }
 
   public async getInvitation(id: number) {
-    return await db.query.teamInvitationSchema.findFirst({
+    return await this.db.query.teamInvitationSchema.findFirst({
       where: (invitation, { eq }) => eq(invitation.id, id),
     });
   }
 
   public async getInvitationsByTeam(teamId: number) {
-    return await db.query.teamInvitationSchema.findMany({
+    return await this.db.query.teamInvitationSchema.findMany({
       where: (invitation, { eq }) => eq(invitation.team_id, teamId),
       orderBy: (invitation, { desc }) => desc(invitation.created_at),
     });
   }
 
   public async getInvitationsByEmail(email: string, status?: 'pending' | 'accepted' | 'rejected') {
-    return await db.query.teamInvitationSchema.findMany({
+    return await this.db.query.teamInvitationSchema.findMany({
       where: (invitation, { eq, and }) => {
         const conditions = [eq(invitation.invitee_email, email)];
         if (status) {
@@ -173,14 +178,14 @@ export class TeamRepository {
   }
 
   public async updateInvitationStatus(id: number, status: 'pending' | 'accepted' | 'rejected') {
-    await db
+    await this.db
       .update(teamInvitationSchema)
       .set({ status, updated_at: new Date() })
       .where(eq(teamInvitationSchema.id, id));
   }
 
   public async getTeamByUserId(userId: number) {
-    return await db.query.teamMemberSchema.findMany({
+    return await this.db.query.teamMemberSchema.findMany({
       where: eq(teamMemberSchema.user_id, userId),
       with: {
         team: true,
@@ -189,7 +194,7 @@ export class TeamRepository {
   }
 
   public async getTeamByHostId(userId: number) {
-    return await db.query.teamMemberSchema.findFirst({
+    return await this.db.query.teamMemberSchema.findFirst({
       where: and(eq(teamMemberSchema.user_id, userId), eq(teamMemberSchema.role, 'host')),
       with: {
         team: true,
@@ -199,7 +204,7 @@ export class TeamRepository {
   }
 
   public async removeTeamMember(teamId: number, userId: number) {
-    await db.delete(teamMemberSchema).where(
+    await this.db.delete(teamMemberSchema).where(
       and(
         eq(teamMemberSchema.team_id, teamId),
         eq(teamMemberSchema.user_id, userId),
@@ -209,6 +214,6 @@ export class TeamRepository {
   }
 
   public async deleteInvitation(id: number) {
-    await db.delete(teamInvitationSchema).where(eq(teamInvitationSchema.id, id));
+    await this.db.delete(teamInvitationSchema).where(eq(teamInvitationSchema.id, id));
   }
 }
