@@ -1,0 +1,21 @@
+CREATE TABLE `onboarding_applications` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`user_id` integer NOT NULL,
+	`legal_name` text,
+	`employee_count` text,
+	`website` text,
+	`years_in_business` text,
+	`asset_type` text,
+	`desired_loan_amount` text,
+	`company_type` text,
+	`company_type_other` text,
+	`revenue_qualification` text,
+	`current_step` integer DEFAULT 1,
+	`is_qualified` integer DEFAULT false,
+	`is_complete` integer DEFAULT false,
+	`is_rejected` integer DEFAULT false,
+	`rejection_reason` text,
+	`created_at` integer DEFAULT (unixepoch()),
+	`updated_at` integer DEFAULT (unixepoch()),
+	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
+);
