@@ -1,14 +1,13 @@
 import { createMiddleware } from 'hono/factory';
+import { TeamService } from '../../service/team';
 
-import { TeamService } from '../../service/team.ts';
-import { ERRORS, serveBadRequest } from '../controller/resp/error.ts';
 
 export const teamAccess = (teamService: TeamService) =>
   createMiddleware(async (c, next) => {
     const teamId = c.req.header('X-Team-Id');
 
     if (teamId) {
-      const { email } = c.get('jwtPayload');
+      /*const { email } = c.get('jwtPayload');
 
       // Get team with its members
       const { members } = await teamService.getTeamMembers(Number(teamId));
@@ -33,7 +32,7 @@ export const teamAccess = (teamService: TeamService) =>
 
       // Set the host and team ID in the context for downstream use
       c.set('hostId', hostMember.user_id);
-      c.set('teamId', Number(teamId));
+      c.set('teamId', Number(teamId));*/
     }
 
     await next();

@@ -1,7 +1,7 @@
 import { and, desc, eq, like, sql } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
-import type { Asset, NewAsset } from '../schema/schema.js';
+import type { Asset, NewAsset, schema } from '../schema/schema.js';
 import { assetsSchema } from '../schema/schema.js';
 import type { AssetQuery } from '../web/validator/asset.js';
 
@@ -10,10 +10,10 @@ export interface AssetSearchQuery {
   processing_status?: 'pending' | 'processing' | 'completed' | 'failed';
 }
 
-export class AssetRepository {
-  private db: DrizzleD1Database;
+export class AssetRepository   {
+  private db: DrizzleD1Database<typeof schema>;
 
-  constructor(db: DrizzleD1Database) {
+  constructor(db: DrizzleD1Database<typeof schema>) {
     this.db = db;
   }
 

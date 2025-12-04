@@ -1,13 +1,13 @@
 import { eq } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
-import { emailsSchema } from '../schema/schema.ts';
+import { emailsSchema, schema } from '../schema/schema.ts';
 import type { Email, NewEmail } from '../schema/schema.ts';
 
 export class EmailRepository {
-  private db: DrizzleD1Database;
+  private db: DrizzleD1Database<typeof schema>;
 
-  constructor(db: DrizzleD1Database) {
+  constructor(db: DrizzleD1Database<typeof schema>) {
     this.db = db;
   }
 

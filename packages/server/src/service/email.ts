@@ -1,5 +1,4 @@
-import { env, title } from 'process';
-import { logger } from '../lib/logger.ts';
+
 import type { EmailRepository } from '../repository/email.ts';
 import type {
   Business,
@@ -8,6 +7,7 @@ import type {
   User,
 } from '../schema/schema.ts';
 import { sendTransactionalEmail } from '../lib/email-processor.ts';
+import { logger } from '../lib/logger.ts';
 
 
 export class EmailService {
@@ -242,18 +242,5 @@ export class EmailService {
     }
   }
 
-  /**
-   * Deletes a follow up email template from the system
-   * @param {number} id - The ID of the follow up email to delete
-   * @returns {Promise<void>}
-   * @throws {Error} When follow up email deletion fails
-   */
-  public async deleteFollowUpEmail(id: number): Promise<void> {
-    try {
-      await this.repository.deleteFollowUpEmail(id);
-    } catch (error) {
-      logger.error(error);
-      throw error;
-    }
-  }
+
 }

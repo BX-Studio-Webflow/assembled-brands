@@ -54,6 +54,7 @@ import { AssetService } from '../service/asset.ts';
 import { NotificationService } from '../service/notification.ts';
 import { S3Service } from '../service/s3.ts';
 import { drizzle } from 'drizzle-orm/d1';
+import { schema } from '../schema/index.ts';
 
 
 export class Server {
@@ -84,7 +85,7 @@ export class Server {
     const api = this.app.basePath('/v1');
 
     // Initialize drizzle database connection
-    const db = drizzle(env.DB);
+    const db = drizzle(env.DB, { schema: schema });
 
     // Setup repos
     const userRepo = new UserRepository(db);
@@ -229,7 +230,6 @@ export class Server {
 
     team.post('/create', authCheck, createTeamValidator, teamCtrl.createTeam);
     team.post('/invite', authCheck, inviteMemberValidator, teamCtrl.inviteMember);
-    team.get('/dashboard', authCheck, teamCtrl.getTeamDashboard);
     team.get('/invitations', authCheck, teamQueryValidator, teamCtrl.getTeamInvitations);
     team.get('/my-invitations', authCheck, teamQueryValidator, teamCtrl.getMyInvitations);
     team.delete('/invitations/:id', authCheck, teamCtrl.deleteInvitation);

@@ -1,13 +1,13 @@
 import { and, desc, eq, like } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
-import { businessSchema } from '../schema/schema.js';
+import { businessSchema, schema } from '../schema/schema.js';
 import type { BusinessQuery } from '../web/validator/business.ts';
 
 export class BusinessRepository {
-  private db: DrizzleD1Database;
+  private db: DrizzleD1Database<typeof schema>;
 
-  constructor(db: DrizzleD1Database) {
+  constructor(db: DrizzleD1Database<typeof schema>) {
     this.db = db;
   }
 
@@ -47,12 +47,9 @@ export class BusinessRepository {
       .offset(offset)
       .orderBy(desc(businessSchema.created_at));
 
-    const total = await this.db
-      .select({ count: businessSchema.id })
-      .from(businessSchema)
-      .where(whereConditions.length ? and(...whereConditions) : undefined);
 
-    return { businesses, total: total.length };
+
+    return { businesses, total: businesses.length };
   }
 
   async update(id: number, business: Partial<typeof businessSchema.$inferSelect>) {

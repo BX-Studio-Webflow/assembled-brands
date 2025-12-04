@@ -23,7 +23,7 @@ export class NotificationService {
       const record = await this.repo.create(notification);
       return record[0].id;
     } catch (error) {
-      logger.error('Failed to create notification:', error);
+      logger.error(error);
       throw error;
     }
   }
@@ -38,7 +38,7 @@ export class NotificationService {
     try {
       return await this.repo.findById(id);
     } catch (error) {
-      logger.error('Failed to find notification:', error);
+      logger.error(error);
       throw error;
     }
   }
@@ -53,7 +53,7 @@ export class NotificationService {
     try {
       return await this.repo.findByUserId(userId);
     } catch (error) {
-      logger.error('Failed to find notifications by user ID:', error);
+      logger.error(error);
       throw error;
     }
   }
@@ -68,7 +68,7 @@ export class NotificationService {
     try {
       return await this.repo.findUnreadByUserId(userId);
     } catch (error) {
-      logger.error('Failed to find unread notifications by user ID:', error);
+      logger.error(error);
       throw error;
     }
   }
@@ -84,7 +84,7 @@ export class NotificationService {
     try {
       await this.repo.update(id, data);
     } catch (error) {
-      logger.error('Failed to update notification:', error);
+      logger.error(error);
       throw error;
     }
   }
@@ -99,7 +99,7 @@ export class NotificationService {
     try {
       await this.repo.markAsRead(id);
     } catch (error) {
-      logger.error('Failed to mark notification as read:', error);
+      logger.error(error);
       throw error;
     }
   }
@@ -114,7 +114,7 @@ export class NotificationService {
     try {
       await this.repo.markAllAsRead(userId);
     } catch (error) {
-      logger.error('Failed to mark all notifications as read:', error);
+      logger.error(error);
       throw error;
     }
   }
@@ -129,7 +129,7 @@ export class NotificationService {
     try {
       await this.repo.delete(id);
     } catch (error) {
-      logger.error('Failed to delete notification:', error);
+      logger.error(error);
       throw error;
     }
   }
@@ -144,7 +144,7 @@ export class NotificationService {
     try {
       await this.repo.deleteByUserId(userId);
     } catch (error) {
-      logger.error('Failed to delete notifications by user ID:', error);
+      logger.error(error);
       throw error;
     }
   }
@@ -159,7 +159,7 @@ export class NotificationService {
     try {
       return await this.repo.getUnreadCount(userId);
     } catch (error) {
-      logger.error('Failed to get unread count:', error);
+      logger.error(error);
       throw error;
     }
   }

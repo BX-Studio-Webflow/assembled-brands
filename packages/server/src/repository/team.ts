@@ -5,13 +5,14 @@ import {
   teamMemberSchema,
   teamSchema,
   userSchema,
+  schema,
 } from '../schema/schema.ts';
 import { TeamQuery } from '../web/validator/team.ts';
 
 export class TeamRepository {
-  private db: DrizzleD1Database;
+  private db: DrizzleD1Database<typeof schema>;
 
-  constructor(db: DrizzleD1Database) {
+  constructor(db: DrizzleD1Database<typeof schema>) {
     this.db = db;
   }
 
@@ -23,16 +24,16 @@ export class TeamRepository {
         created_at: new Date(),
         updated_at: new Date(),
       })
-      .$returningId();
+      .returning();
 
     // Add host as team member
-    await db.insert(teamMemberSchema).values({
+    await this.db.insert(teamMemberSchema).values({
       team_id: team.id,
       user_id: hostId,
       role: 'host',
       created_at: new Date(),
       updated_at: new Date(),
-    });
+    }).returning();
 
     return team;
   }
@@ -51,44 +52,51 @@ export class TeamRepository {
     const offset = (page - 1) * limit;
 
     const whereConditions = [eq(teamMemberSchema.team_id, teamId)];
-    if (search) {
-      whereConditions.push(like(teamSchema.name, `%${search}%`));
-    }
 
-    const members = await this.db
-      .select({
-        id: teamMemberSchema.id,
-        team_id: teamMemberSchema.team_id,
-        user_id: teamMemberSchema.user_id,
-        role: teamMemberSchema.role,
-        created_at: teamMemberSchema.created_at,
-        updated_at: teamMemberSchema.updated_at,
+    // Use relational query API which handles joins automatically
+    const allMembers = await this.db.query.teamMemberSchema.findMany({
+      where: (member, { eq, and }) => {
+        const conditions = [eq(member.team_id, teamId)];
+        // Note: search on team name would require a different approach with relations
+        return and(...conditions);
+      },
+      with: {
         user: {
-          id: userSchema.id,
-          name: userSchema.name,
-          email: userSchema.email,
-          phone: userSchema.phone,
-          role: userSchema.role,
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            role: true,
+          },
         },
         team: {
-          id: teamSchema.id,
-          name: teamSchema.name,
+          columns: {
+            id: true,
+            name: true,
+          },
         },
-      })
-      .from(teamMemberSchema)
-      .leftJoin(teamSchema, eq(teamMemberSchema.team_id, teamSchema.id))
-      .leftJoin(userSchema, eq(teamMemberSchema.user_id, userSchema.id))
-      .where(and(...whereConditions))
-      .limit(limit)
-      .offset(offset);
+      },
+      limit: limit,
+      offset: offset,
+    });
 
-    const total = await this.db
-      .select({ count: teamMemberSchema.id })
-      .from(teamMemberSchema)
-      .leftJoin(teamSchema, eq(teamMemberSchema.team_id, teamSchema.id))
-      .where(and(...whereConditions));
+    // Get total count
+    const totalMembers = await this.db.query.teamMemberSchema.findMany({
+      where: (member, { eq }) => eq(member.team_id, teamId),
+    });
 
-    return { members, total: total.length };
+    // Filter by search if provided (client-side filtering for now)
+    let members = allMembers;
+    if (search) {
+      members = allMembers.filter(
+        (member) =>
+          member.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
+          member.team?.name?.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    return { members, total: totalMembers.length };
   }
 
   public async getUserTeams(userId: number) {
@@ -113,7 +121,7 @@ export class TeamRepository {
   }
 
   public async addTeamMember(teamId: number, userId: number, role: 'host' | 'member' = 'member') {
-    const [member] = await this.db
+    const members = await this.db
       .insert(teamMemberSchema)
       .values({
         team_id: teamId,
@@ -122,12 +130,12 @@ export class TeamRepository {
         created_at: new Date(),
         updated_at: new Date(),
       })
-      .$returningId();
-    return member;
+      .returning();
+    return members[0].id;
   }
 
   public async createInvitation(teamId: number, inviterId: number, inviteeEmail: string) {
-    const [invitation] = await this.db
+    const invitations = await this.db
       .insert(teamInvitationSchema)
       .values({
         team_id: teamId,
@@ -137,9 +145,9 @@ export class TeamRepository {
         created_at: new Date(),
         updated_at: new Date(),
       })
-      .$returningId();
+      .returning();
 
-    return invitation.id;
+    return invitations[0].id;
   }
 
   public async getInvitation(id: number) {

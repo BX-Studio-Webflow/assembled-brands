@@ -1,11 +1,12 @@
 import type { Context } from 'hono';
 
 
-import { logger } from '../../lib/logger.js';
-import type { BusinessService } from '../../service/business.js';
 import type { UserService } from '../../service/user.js';
-import type { BusinessBody, UploadBusinessLogoBody } from '../validator/business.ts';
+
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
+import { BusinessService } from '../../service/business.js';
+import { logger } from '../../lib/logger.js';
+import { BusinessBody, UploadBusinessLogoBody } from '../validator/business.js';
 
 export class BusinessController {
   private service: BusinessService;
@@ -52,15 +53,12 @@ export class BusinessController {
           dial_code: user.dial_code,
           role: user.role,
           subscription_status: user.subscription_status,
-          is_banned: user.is_banned,
-          is_deleted: user.is_deleted,
           profile_picture: user.profile_picture,
           bio: user.bio,
           auth_provider: user.auth_provider,
           authority: [],
           createdAt: user.createdAt,
           is_verified: user.is_verified,
-          stripe_connect_id: user.stripe_connect_id,
           subscription_product: user.subscription_product,
         },
       });

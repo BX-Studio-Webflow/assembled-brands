@@ -40,15 +40,15 @@ const sendTransactionalEmail = async (
     if (!response.ok) {
       const error = await response.json();
 
-      logger.info(`Mailer error to ${email} using template ${templateId}:`, error);
-      throw new Error(`Email API error: ${error.message}`);
+      logger.info(error);
+      throw new Error(error as string);
     }
 
     const result = await response.json();
     logger.info(`Email sent to ${email} using template ${templateId}`);
     return result;
   } catch (error) {
-    logger.error(`Failed to send email to ${email}:`, error);
+    logger.error(error);
   }
 };
 
@@ -86,15 +86,15 @@ const sendTemplateEmail = async (
     if (!response.ok) {
       const error = await response.json();
 
-      logger.info(`Mailer error to ${email} using template ${templateId}:`, error);
-      throw new Error(`Email API error: ${error.message}`);
+      logger.info(error);
+      throw new Error(error as string);
     }
 
     const result = await response.json();
     logger.info(`Email sent to ${email} using template ${templateId}`);
     return result;
   } catch (error) {
-    logger.error(`Failed to send email to ${email}:`, error);
+    logger.error(error);
   }
 };
 

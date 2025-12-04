@@ -1,9 +1,7 @@
 import type { Context } from 'hono';
 
-import { logger } from '../../lib/logger.ts';
 import type { TeamMember, User } from '../../schema/schema.ts';
-import { BusinessService } from '../../service/business.ts';
-import type { TeamService } from '../../service/team.ts';
+
 import type { UserService } from '../../service/user.ts';
 import {
   type CreateTeamBody,
@@ -12,6 +10,9 @@ import {
 } from '../validator/team.ts';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.ts';
 import { serveData } from './resp/resp.ts';
+import { logger } from '../../lib/logger.ts';
+import { BusinessService } from '../../service/business.ts';
+import { TeamService } from '../../service/team.ts';
 export class TeamController {
   private service: TeamService;
   private userService: UserService;
@@ -316,10 +317,10 @@ export class TeamController {
 
       // Get team details for each team
       const teamDetails = await Promise.all(
-        teamMembers.map(async (member) => {
+        teamMembers.map(async (member: TeamMember) => {
           const teamInfo = await this.service.getTeamById(member.team_id);
           //get the host of the team
-          const host_id = teamInfo?.members.find((m) => m.role === 'host')?.user_id;
+          const host_id = teamInfo?.members.find((m: TeamMember) => m.role === 'host')?.user_id;
           if (!host_id) {
             return {
               team_id: member.team_id,
@@ -436,99 +437,10 @@ export class TeamController {
         message: 'Invitation deleted successfully',
       });
     } catch (error) {
-      logger.error('Error deleting invitation:', error);
-      return serveInternalServerError(c, error);
-    }
-  };
-
-  /**
-   * Get all team-related information in a single request
-   * @param {Context} c - The Hono context containing user information
-   * @returns {Promise<Response>} Response containing all team-related information
-   * @throws {Error} When fetching team information fails
-   */
-  public getTeamDashboard = async (c: Context) => {
-    try {
-      const user = await this.getUser(c);
-      if (!user) {
-        return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
-      }
-
-      // Get all teams the user is a member of
-      const teamMembers = await this.service.getUserTeams(user.id);
-      const teamDetails = await Promise.all(
-        teamMembers.map(async (member) => {
-          const teamInfo = await this.service.getTeamById(member.team_id);
-          const host_id = teamInfo?.members.find((m) => m.role === 'host')?.user_id;
-          if (!host_id) {
-            return {
-              team_id: member.team_id,
-              team_name: teamInfo?.name || 'Unknown Team',
-              role: member.role,
-              created_at: member.created_at,
-              updated_at: member.updated_at,
-            };
-          }
-          const business = await this.businessService.getBusinessDetailsByUserId(host_id);
-          return {
-            team_id: member.team_id,
-            team_name: teamInfo?.name || 'Unknown Team',
-            role: member.role,
-            created_at: member.created_at,
-            updated_at: member.updated_at,
-            business,
-          };
-        }),
-      );
-
-      // Get team members for the team where user is host
-      const hostTeam = await this.service.getTeamByHostId(user.id);
-      let teamMembersData = null;
-      if (hostTeam) {
-        const members = await this.service.getTeamMembers(hostTeam.team_id);
-        if (members) {
-          teamMembersData = {
-            team_id: hostTeam.team_id,
-            team_name: hostTeam.team.name,
-            members: members.members.map((member) => ({
-              name: member.user?.name || 'Unknown',
-              email: member.user?.email || 'Unknown',
-              phone: member.user?.phone || 'Unknown',
-              role: member.role,
-              memberId: member.id,
-            })),
-          };
-        }
-      }
-
-      // Get user's pending invitations
-      const myInvitations = await this.service.getMyInvitations(user.email, 'pending');
-      const formattedMyInvitations = myInvitations.map((invitation) => ({
-        id: invitation.id,
-        team_id: invitation.team_id,
-        team_name: invitation.team?.name || 'Unknown Team',
-        inviter_name: invitation.inviter?.name || 'Unknown',
-        inviter_email: invitation.inviter?.email || 'Unknown',
-        status: invitation.status,
-        created_at: invitation.created_at,
-        updated_at: invitation.updated_at,
-      }));
-
-      // Get team invitations for the team where user is host
-      let teamInvitations = null;
-      if (hostTeam) {
-        teamInvitations = await this.service.getTeamInvitations(hostTeam.team_id);
-      }
-
-      return c.json({
-        my_teams: teamDetails,
-        team_members: teamMembersData,
-        my_invitations: formattedMyInvitations,
-        team_invitations: teamInvitations,
-      });
-    } catch (error) {
       logger.error(error);
       return serveInternalServerError(c, error);
     }
   };
+
+
 }

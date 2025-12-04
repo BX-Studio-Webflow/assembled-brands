@@ -272,4 +272,22 @@ export const teamInvitationRelations = relations(teamInvitationSchema, ({ one })
   }),
 }));
 
+export const schema = {
+  userSchema,
+  businessSchema,
+  assetsSchema,
+  subscriptionSchema,
+  teamSchema,
+  teamMemberSchema,
+  teamInvitationSchema,
+  notificationsSchema,
+  emailsSchema,
 
+
+  userRelations,
+  notificationRelations,
+  businessRelations,
+  teamRelations,
+  teamMemberRelations,
+  teamInvitationRelations,
+}

@@ -1,8 +1,9 @@
-import { encrypt } from '../lib/encryption.ts';
+
 import { env } from 'process';
 import { logger } from '../lib/logger.ts';
 import type { UserRepository } from '../repository/user.ts';
 import type { User } from '../schema/schema.ts';
+import { encrypt } from '../lib/encryption.ts';
 
 /**
  * Service class for managing users, including creation, authentication, and profile management
@@ -70,15 +71,6 @@ export class UserService {
   }
 
 
-
-  /**
-   * Gets all events statistics for a user
-   * @param {number} id - ID of the user
-   * @returns {Promise<LiveEventsStats>} The live events statistics
-   */
-  public async getAllEventsStats(id: number) {
-    return this.repo.getAllEventsStats(id);
-  }
 
   /**
    * Finds a user by their ID

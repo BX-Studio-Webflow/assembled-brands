@@ -1,18 +1,18 @@
 import { and, desc, eq, sql } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
-import type { NewNotification } from '../schema/schema.js';
+import type { NewNotification, schema } from '../schema/schema.js';
 import { notificationsSchema } from '../schema/schema.js';
 
 export class NotificationRepository {
-  private db: DrizzleD1Database;
+  private db: DrizzleD1Database<typeof schema>;
 
-  constructor(db: DrizzleD1Database) {
+  constructor(db: DrizzleD1Database<typeof schema>) {
     this.db = db;
   }
 
   public async create(notification: NewNotification) {
-    return this.db.insert(notificationsSchema).values(notification).$returningId();
+    return this.db.insert(notificationsSchema).values(notification).returning();
   }
 
   public async findById(id: number) {

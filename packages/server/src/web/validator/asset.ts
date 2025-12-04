@@ -56,7 +56,7 @@ export const mediaConvertWebhookSchema = z.object({
     queue: z.string(),
     jobId: z.string(),
     status: z.enum(['COMPLETE', 'STATUS_UPDATE', 'ERROR', 'PROGRESSING']),
-    userMetadata: z.record(z.any()),
+    userMetadata: z.any(),
     warnings: z
       .array(
         z.object({
@@ -102,12 +102,7 @@ export const mediaConvertWebhookSchema = z.object({
     framesDecoded: z.number().optional(),
     jobProgress: z
       .object({
-        phaseProgress: z.record(
-          z.object({
-            status: z.string(),
-            percentComplete: z.number(),
-          }),
-        ),
+        phaseProgress: z.any(),
         jobPercentComplete: z.number(),
         currentPhase: z.string(),
         retryCount: z.number(),

@@ -1,6 +1,7 @@
 import { logger } from '../lib/logger.js';
-import type { BusinessRepository } from '../repository/business.js';
+import { BusinessRepository } from '../repository/business.ts';
 import { getContentType } from '../util/string.ts';
+
 import type { BusinessBody, BusinessQuery } from '../web/validator/business.ts';
 import type { AssetService } from './asset.js';
 import type { S3Service } from './s3.js';
@@ -56,7 +57,7 @@ export class BusinessService {
 
       return { assetId: assetObject.asset };
     } catch (error) {
-      logger.error('Failed to upload logo:', error);
+      logger.error(error);
       throw error;
     }
   }
@@ -107,7 +108,7 @@ export class BusinessService {
         },
       };
     } catch (error) {
-      logger.error('Failed to get business by user:', error);
+      logger.error(error);
       throw error;
     }
   }
@@ -122,7 +123,7 @@ export class BusinessService {
     try {
       return await this.repository.findAll(query);
     } catch (error) {
-      logger.error('Failed to get all businesses:', error);
+      logger.error(error);
       throw error;
     }
   }
@@ -173,7 +174,7 @@ export class BusinessService {
       // Return business with resolved asset URLs
       return await this.getBusinessByUserId(userId);
     } catch (error) {
-      logger.error('Failed to upsert business:', error);
+      logger.error(error);
       throw error;
     }
   }
@@ -201,7 +202,7 @@ export class BusinessService {
         presignedLogoUrl: asset.presignedUrl,
       };
     } catch (error) {
-      logger.error('Failed to get business logo:', error);
+      logger.error(error);
       throw error;
     }
   }
@@ -256,7 +257,7 @@ export class BusinessService {
         },
       };
     } catch (error) {
-      logger.error('Error uploading business logo:', error);
+      logger.error(error);
       throw error;
     }
   };

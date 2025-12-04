@@ -6,7 +6,7 @@ import { serveUnprocessableEntity } from '../controller/resp/error.js';
 const getErrorPhrase = (error: ZodError) => {
   const path = error.issues[0].path[0];
   const { message } = error.issues[0];
-  return `${path}: ${message}`;
+  return `${String(path)}: ${message}`;
 };
 
 const validateSchema = (c: Context, schema: ZodObject<any>, value: any) => {
