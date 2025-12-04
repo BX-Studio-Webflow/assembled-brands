@@ -1,5 +1,5 @@
 import pino from 'pino';
-
+import { env } from 'process';
 
 
 const logger = pino.pino({

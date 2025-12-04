@@ -12,8 +12,8 @@ import type { AssetService } from '../../service/asset.js';
 import type { BusinessService } from '../../service/business.js';
 import type { S3Service } from '../../service/s3.js';
 import type { UserService } from '../../service/user.js';
-import sendWelcomeEmailAsync from '../../task/client/sendWelcomeEmailAsync.js';
-import { sendTransactionalEmail } from '../../task/email-processor.ts';
+
+import { sendTransactionalEmail } from '../../lib/email-processor.ts';
 
 import type {
   EmailVerificationBody,
@@ -119,7 +119,14 @@ export class AuthController {
       return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
     }
 
-    await sendWelcomeEmailAsync(user.id);
+    await sendTransactionalEmail(user.email, user.name, 12, {
+      subject: 'Welcome to Assembled Brands',
+      title: 'Welcome to Assembled Brands',
+      subtitle: `Welcome to Assembled Brands`,
+      body: `Welcome to Assembled Brands. We have are glad to have you on board.`,
+      buttonText: 'Ok, got it',
+      buttonLink: `${env.FRONTEND_URL}`,
+    });
 
     const token = await encode(user.id, user.email);
     const serializedUser = await serializeUser(user);
@@ -148,7 +155,7 @@ export class AuthController {
       }
       //6 digint random number
       const token = Math.floor(100000 + Math.random() * 900000).toString();
-      await db.update(userSchema).set({ email_token: token }).where(eq(userSchema.id, user.id));
+      await this.userRepository.update(user.id, { email_token: token });
 
       await sendTransactionalEmail(user.email, user.name, 12, {
         subject: 'Your code',
@@ -224,7 +231,7 @@ export class AuthController {
         return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
       }
       const token = Math.floor(100000 + Math.random() * 900000).toString();
-      await db.update(userSchema).set({ reset_token: token }).where(eq(userSchema.id, user.id));
+      await this.userRepository.update(user.id, { reset_token: token });
       await sendTransactionalEmail(user.email, user.name, 12, {
         subject: 'Reset password',
         title: 'Reset password',
@@ -273,7 +280,7 @@ export class AuthController {
       }
       const hashedPassword = encrypt(body.password);
       await this.service.update(user.id, { password: hashedPassword });
-      await db.update(userSchema).set({ reset_token: null }).where(eq(userSchema.id, user.id));
+      await this.userRepository.update(user.id, { reset_token: null });
       await sendTransactionalEmail(user.email, user.name, 12, {
         subject: 'Password reset',
         title: 'Password reset',
