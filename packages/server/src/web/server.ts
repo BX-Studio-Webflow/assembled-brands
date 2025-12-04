@@ -62,7 +62,7 @@ export class Server {
 			return serveInternalServerError(c, err);
 		});
 
-		const api = this.app.basePath('/v1');
+		const api = this.app.basePath('/api/v1');
 
 		// Load environment variables
 		loadEnvironmentVariables(env);

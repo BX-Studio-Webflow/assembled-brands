@@ -17,8 +17,10 @@
 		"db:migrate:development": "wrangler d1 migrations apply DB --env development --remote",
 		"db:migrate:production": "wrangler d1 migrations apply DB --env production --remote",
 		"db:studio": "drizzle-kit migrate && drizzle-kit studio",
-		"db:create": "wrangler d1 create",
-		"db:delete": "wrangler d1 delete"
+		"db:create:development": "wrangler d1 create assembled-dev",
+		"db:create:production": "wrangler d1 create assembled-prod",
+		"db:delete:development": "wrangler d1 delete b104f47c-9d4e-478e-9f90-b6f070956f37",
+		"db:delete:production": "wrangler d1 delete 759f912b-f645-499f-8f7f-10f494f22c7f"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.19",
