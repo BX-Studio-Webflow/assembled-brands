@@ -5,7 +5,7 @@ import ApiService from './ApiService'
 
 export async function apiSignIn(data: SignInCredential) {
     return ApiService.fetchDataWithAxios<SignInResponse>({
-        url: '/auth/sign-in',
+        url: '/user/login',
         method: 'post',
         data,
     })
@@ -13,7 +13,7 @@ export async function apiSignIn(data: SignInCredential) {
 
 export async function apiSignUp(data: SignUpCredential) {
     return ApiService.fetchDataWithAxios<SignUpResponse>({
-        url: '/auth/sign-up',
+        url: '/user/register',
         method: 'post',
         data,
     })
@@ -28,7 +28,7 @@ export async function apiSignOut() {
 
 export async function apiForgotPassword<T>(data: ForgotPassword) {
     return ApiService.fetchDataWithAxios<T>({
-        url: '/auth/forgot-password',
+        url: '/user/request-reset-password',
         method: 'post',
         data,
     })
@@ -36,7 +36,7 @@ export async function apiForgotPassword<T>(data: ForgotPassword) {
 
 export async function apiResetPassword<T>(data: ResetPassword) {
     return ApiService.fetchDataWithAxios<T>({
-        url: '/auth/reset-password',
+        url: '/user/reset-password',
         method: 'post',
         data,
     })
@@ -54,7 +54,7 @@ export async function apiUpdateSettingsNotification<T>(
 
 export async function apiSaveBusinessDetails(data: BusinessDetails) {
     return ApiService.fetchDataWithAxios({
-        url: '/business/save-business-details',
+        url: '/business/my',
         method: 'post',
         data,
     })
