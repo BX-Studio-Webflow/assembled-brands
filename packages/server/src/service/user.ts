@@ -35,6 +35,7 @@ export class UserService {
 		email: string,
 		password: string,
 		role: 'master' | 'owner' | 'host',
+		dial_code: string,
 		phone: string,
 		additionalFields: Partial<User> = {},
 	) {
@@ -47,6 +48,7 @@ export class UserService {
 				email,
 				password: hashedPassword,
 				role,
+				dial_code,
 				phone,
 				auth_provider: 'local',
 				...additionalFields,

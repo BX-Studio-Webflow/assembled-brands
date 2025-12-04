@@ -106,7 +106,7 @@ export class AuthController {
 			if (existingUser) {
 				return serveBadRequest(c, ERRORS.USER_EXISTS);
 			}
-			await this.service.create(body.name, body.email, body.password, 'host', fullNumber);
+			await this.service.create(body.name, body.email, body.password, 'host', body.dial_code, body.phone);
 		} catch (err) {
 			return serveInternalServerError(c, err);
 		}

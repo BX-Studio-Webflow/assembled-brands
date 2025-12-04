@@ -20,7 +20,7 @@ const serveUnauthorized = (c: Context) => {
 	return c.json({ error: getReasonPhrase(StatusCodes.UNAUTHORIZED) }, <ContentfulStatusCode>StatusCodes.UNAUTHORIZED);
 };
 
-/*ts-ignore no-explicit-any */
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 const serveInternalServerError = (c: Context, error: any) => {
 	if (error instanceof HTTPException) {
 		return c.json({ error: error.message }, <ContentfulStatusCode>error.status);
