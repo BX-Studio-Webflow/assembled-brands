@@ -7,6 +7,7 @@ import { loadEnvironmentVariables } from '../lib/secrets.ts';
 import { AssetRepository } from '../repository/asset.ts';
 import { BusinessRepository } from '../repository/business.ts';
 import { EmailRepository } from '../repository/email.ts';
+import { FinancialWizardRepository } from '../repository/financial-wizard.ts';
 import { NotificationRepository } from '../repository/notification.ts';
 import { TeamRepository } from '../repository/team.ts';
 import { UserRepository } from '../repository/user.ts';
@@ -14,6 +15,7 @@ import { schema } from '../schema/index.ts';
 import { AssetService } from '../service/asset.ts';
 import { BusinessService } from '../service/business.ts';
 import { EmailService } from '../service/email.js';
+import { FinancialWizardService } from '../service/financial-wizard.ts';
 import { NotificationService } from '../service/notification.ts';
 import { S3Service } from '../service/s3.ts';
 import { TeamService } from '../service/team.js';
@@ -21,11 +23,17 @@ import { UserService } from '../service/user.js';
 import { AssetController } from './controller/asset.js';
 import { AuthController } from './controller/auth.js';
 import { BusinessController } from './controller/business.js';
+import { FinancialWizardController } from './controller/financial-wizard.ts';
 import { ERRORS, serveInternalServerError, serveNotFound } from './controller/resp/error.js';
 import { TeamController } from './controller/team.js';
 import { teamAccess } from './middleware/team.js';
 import { assetQueryValidator, completeMultipartUploadValidator, createMultipartAssetValidator } from './validator/asset.ts';
 import { businessQueryValidator, businessValidator, uploadBusinessLogoValidator } from './validator/business.ts';
+import {
+	documentUploadValidator,
+	financialOverviewValidator,
+	updateStepValidator,
+} from './validator/financial-wizard.ts';
 import { createTeamValidator, inviteMemberValidator, revokeAccessValidator, teamQueryValidator } from './validator/team.ts';
 import {
 	emailVerificationValidator,
@@ -76,6 +84,7 @@ export class Server {
 
 		const teamRepo = new TeamRepository(db);
 		const businessRepo = new BusinessRepository(db);
+		const financialWizardRepo = new FinancialWizardRepository(db);
 
 		const emailRepo = new EmailRepository(db);
 		const notificationRepo = new NotificationRepository(db);
@@ -87,6 +96,7 @@ export class Server {
 
 		const userService = new UserService(userRepo);
 		const teamService = new TeamService(teamRepo, userService);
+		const financialWizardService = new FinancialWizardService(financialWizardRepo, assetService);
 
 		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService);
 		const emailService = new EmailService(emailRepo);
@@ -96,6 +106,7 @@ export class Server {
 		const assetController = new AssetController(assetService, userService, emailService, notificationService);
 
 		const businessController = new BusinessController(businessService, userService);
+		const financialWizardController = new FinancialWizardController(financialWizardService, userService);
 
 		// Add team service and controller
 
@@ -109,6 +120,7 @@ export class Server {
 		this.registerAssetRoutes(api, assetController, teamService);
 		this.registerBusinessRoutes(api, businessController);
 		this.registerTeamRoutes(api, teamController);
+		this.registerFinancialWizardRoutes(api, financialWizardController);
 	}
 
 	private registerUserRoutes(api: Hono, authCtrl: AuthController) {
@@ -183,5 +195,23 @@ export class Server {
 		team.post('/revoke-access', authCheck, revokeAccessValidator, teamCtrl.revokeAccess);
 
 		api.route('/team', team);
+	}
+
+	private registerFinancialWizardRoutes(api: Hono, financialWizardCtrl: FinancialWizardController) {
+		const financialWizard = new Hono();
+		const authCheck = jwt({ secret: env.SECRET_KEY });
+
+		// All routes require authentication
+		financialWizard.use(authCheck);
+
+		financialWizard.post('/step1', financialOverviewValidator, financialWizardCtrl.saveStep1);
+		financialWizard.post('/document', documentUploadValidator, financialWizardCtrl.uploadDocument);
+		financialWizard.get('/progress', financialWizardCtrl.getProgress);
+		financialWizard.get('/documents/:step', financialWizardCtrl.getDocumentsByStep);
+		financialWizard.post('/step', updateStepValidator, financialWizardCtrl.updateStep);
+		financialWizard.post('/complete', financialWizardCtrl.completeApplication);
+		financialWizard.delete('/document/:id', financialWizardCtrl.deleteDocument);
+
+		api.route('/financial-wizard', financialWizard);
 	}
 }

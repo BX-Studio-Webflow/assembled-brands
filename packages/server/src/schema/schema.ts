@@ -198,6 +198,128 @@ export const onboardingApplicationRelations = relations(onboardingApplicationSch
 	}),
 }));
 
+
+export const financialWizardApplicationSchema = sqliteTable('financial_wizard_applications', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	user_id: integer('user_id')
+		.references(() => userSchema.id)
+		.notNull(),
+
+	// Progress tracking
+	current_step: integer('current_step').default(1), // 1-4
+	is_complete: integer('is_complete', { mode: 'boolean' }).default(false),
+
+	created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+	updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+});
+
+/**
+ * Step 1: Financial Overview - Basic financial information
+ */
+export const financialOverviewSchema = sqliteTable('financial_overview', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	application_id: integer('application_id')
+		.references(() => financialWizardApplicationSchema.id)
+		.notNull(),
+
+	// Financial data
+	revenue_last_12_months: text('revenue_last_12_months'), // Store as string to handle large numbers/currency
+	net_income_last_12_months: text('net_income_last_12_months'),
+	projected_revenue_next_12_months: text('projected_revenue_next_12_months'),
+
+	created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+	updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+});
+
+/**
+ * Financial Documents - Links documents to wizard with versioning
+ * Each document type can have multiple versions, but only one is_current
+ */
+export const financialDocumentSchema = sqliteTable('financial_documents', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	application_id: integer('application_id')
+		.references(() => financialWizardApplicationSchema.id)
+		.notNull(),
+	asset_id: integer('asset_id')
+		.references(() => assetsSchema.id)
+		.notNull(),
+
+	// Document categorization
+	step: integer('step').notNull(), // Which step this document belongs to (2, 3, 4, or 5)
+	document_type: text('document_type', {
+		enum: [
+			// Financial Reports (Step 2)
+			'monthly_balance_sheet',
+			'monthly_income_statement',
+			'monthly_income_forecast',
+			// Accounts & Inventory (Step 3)
+			'monthly_inventory_report',
+			'accounts_receivable_aging',
+			'accounts_payable_aging',
+			// E-Commerce Performance (Step 4)
+			'shopify_repeat_customers',
+			'shopify_monthly_sales',
+			// Team & Ownership (Step 5)
+			'management_bios',
+			'investor_deck',
+			'cap_table',
+			// Other
+			'other',
+		],
+	}).notNull(),
+
+	// Versioning
+	is_current: integer('is_current', { mode: 'boolean' }).default(true), // Only one document per type should be current
+	version: integer('version').default(1), // Incrementing version number
+
+	// Optional metadata
+	notes: text('notes'), // Optional notes about the document
+
+	created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+	updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+});
+
+// Relations
+export const financialWizardApplicationRelations = relations(financialWizardApplicationSchema, ({ one, many }) => ({
+	user: one(userSchema, {
+		fields: [financialWizardApplicationSchema.user_id],
+		references: [userSchema.id],
+	}),
+	financialOverview: one(financialOverviewSchema, {
+		fields: [financialWizardApplicationSchema.id],
+		references: [financialOverviewSchema.application_id],
+	}),
+	documents: many(financialDocumentSchema),
+}));
+
+export const financialOverviewRelations = relations(financialOverviewSchema, ({ one }) => ({
+	application: one(financialWizardApplicationSchema, {
+		fields: [financialOverviewSchema.application_id],
+		references: [financialWizardApplicationSchema.id],
+	}),
+}));
+
+export const financialDocumentRelations = relations(financialDocumentSchema, ({ one }) => ({
+	application: one(financialWizardApplicationSchema, {
+		fields: [financialDocumentSchema.application_id],
+		references: [financialWizardApplicationSchema.id],
+	}),
+	asset: one(assetsSchema, {
+		fields: [financialDocumentSchema.asset_id],
+		references: [assetsSchema.id],
+	}),
+}));
+
+// Type exports
+export type FinancialWizardApplication = typeof financialWizardApplicationSchema.$inferSelect;
+export type NewFinancialWizardApplication = typeof financialWizardApplicationSchema.$inferInsert;
+export type FinancialOverview = typeof financialOverviewSchema.$inferSelect;
+export type NewFinancialOverview = typeof financialOverviewSchema.$inferInsert;
+export type FinancialDocument = typeof financialDocumentSchema.$inferSelect;
+export type NewFinancialDocument = typeof financialDocumentSchema.$inferInsert;
+
+
+
 export type OnboardingApplication = typeof onboardingApplicationSchema.$inferSelect;
 export type NewOnboardingApplication = typeof onboardingApplicationSchema.$inferInsert;
 
@@ -277,6 +399,11 @@ export const schema = {
 	teamInvitationSchema,
 	notificationsSchema,
 	emailsSchema,
+	onboardingApplicationSchema,
+	financialWizardApplicationSchema,
+	financialOverviewSchema,
+	financialDocumentSchema,
+
 
 	userRelations,
 	notificationRelations,
@@ -284,4 +411,8 @@ export const schema = {
 	teamRelations,
 	teamMemberRelations,
 	teamInvitationRelations,
+	onboardingApplicationRelations,
+	financialWizardApplicationRelations,
+	financialOverviewRelations,
+	financialDocumentRelations,
 };
