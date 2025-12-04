@@ -2,8 +2,9 @@ import type { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { getReasonPhrase, StatusCodes } from 'http-status-codes';
+import { env } from 'process';
 
-import env from '../../../lib/env.ts';
+
 
 const serveNotFound = (c: Context, message: string) => {
   return c.json({ error: message }, <ContentfulStatusCode>StatusCodes.NOT_FOUND);

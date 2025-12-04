@@ -1,4 +1,4 @@
-import env from '../lib/env.ts';
+import { env } from 'process';
 import { logger } from '../lib/logger.ts';
 import type { EmailRepository } from '../repository/email.ts';
 import type {

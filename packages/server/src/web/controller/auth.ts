@@ -4,8 +4,8 @@ import { isValidPhoneNumber } from 'libphonenumber-js';
 
 import { db } from '../../lib/database.js';
 import { encrypt, verify } from '../../lib/encryption.js';
-import env from '../../lib/env.js';
-import { encode, type JWTPayload } from '../../lib/jwt.js';
+import { env } from 'process';
+
 import { logger } from '../../lib/logger.ts';
 import type { UserRepository } from '../../repository/user.js';
 import { userSchema } from '../../schema/schema.ts';
@@ -15,7 +15,7 @@ import type { S3Service } from '../../service/s3.js';
 import type { UserService } from '../../service/user.js';
 import sendWelcomeEmailAsync from '../../task/client/sendWelcomeEmailAsync.js';
 import { sendTransactionalEmail } from '../../task/email-processor.ts';
-import { getContentType } from '../../util/string.ts';
+
 import type {
   EmailVerificationBody,
   InAppResetPasswordBody,
@@ -30,6 +30,7 @@ import type {
 import { ERRORS, MAIL_CONTENT, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { serveData } from './resp/resp.js';
 import { serializeUser } from './serializer/user.js';
+import { getContentType } from '../../util/string.ts';
 
 export class AuthController {
   private service: UserService;
@@ -466,17 +467,5 @@ export class AuthController {
     }
   };
 
-  public getDashboard = async (c: Context) => {
-    try {
-      const user = await this.getUser(c);
-      if (!user) {
-        return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
-      }
-      const dashboard = await this.service.getDashboard(user.id);
-      return c.json(dashboard);
-    } catch (error) {
-      logger.error(error);
-      return serveInternalServerError(c, error);
-    }
-  };
+
 }

@@ -1,5 +1,5 @@
 import type { Context } from 'hono';
-import { isValidPhoneNumber } from 'libphonenumber-js';
+
 
 import { logger } from '../../lib/logger.js';
 import type { BusinessService } from '../../service/business.js';
@@ -88,9 +88,7 @@ export class BusinessController {
         const { imageBase64, fileName } = body;
 
         const fullNumber = body.dial_code + body.phone;
-        if (!isValidPhoneNumber(fullNumber)) {
-          return serveBadRequest(c, ERRORS.INVALID_PHONE_NUMBER);
-        }
+
 
         const business = await this.service.getBusinessByUserId(user.id);
 
