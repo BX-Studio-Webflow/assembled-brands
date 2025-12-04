@@ -1,0 +1,206 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table teams {
+  id integer [primary key]
+  name varchar [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table team_members {
+  id integer [primary key]
+  team_id integer [not null]
+  user_id integer [not null]
+  role varchar [default: 'member']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table user {
+  id integer [primary key]
+  name varchar [not null]
+  email varchar [not null, unique]
+  phone varchar [not null, default: '']
+  dial_code varchar [not null, default: '']
+  password varchar [not null]
+  reset_token varchar
+  email_token varchar
+  created_at timestamp
+  updated_at timestamp
+  role varchar [default: 'host']
+  profile_picture varchar
+  bio text
+  custom_id varchar
+  is_verified boolean [default: false]
+  stripe_customer_id varchar
+  subscription_id varchar
+  subscription_product varchar [default: 'free']
+  subscription_status varchar
+  trial_ends_at timestamp
+  auth_provider varchar [default: 'local']
+}
+
+Table businesses {
+  id integer [primary key]
+  name varchar [not null]
+  address varchar
+  phone varchar
+  dial_code varchar
+  email varchar
+  description text
+  logo_asset_id integer
+  user_id integer [not null]
+  updated_at timestamp
+  created_at timestamp
+}
+
+Table assets {
+  id integer [primary key]
+  asset_name varchar [not null]
+  asset_type varchar [default: 'image']
+  content_type varchar
+  asset_url varchar
+  asset_size varchar
+  duration integer
+  hls_url varchar
+  processing_status varchar [default: 'pending']
+  upload_id varchar
+  mediaconvert_job_id varchar
+  mediaconvert_job_status varchar [default: 'pending']
+  mediaconvert_job_progress integer [default: 0]
+  mediaconvert_job_current_phase varchar
+  upload_status varchar [default: 'pending']
+  user_id integer [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table subscription {
+  id integer [primary key]
+  created_at timestamp
+  user_id integer [not null]
+  object varchar [not null]
+  amount_subtotal integer [not null]
+  amount_total integer [not null]
+  session_id varchar [not null]
+  cancel_url varchar [not null]
+  success_url varchar [not null]
+  created integer [not null]
+  currency varchar [not null]
+  mode varchar [not null]
+  payment_status varchar [not null]
+  status varchar [not null]
+  subscription_id varchar
+}
+
+Table team_invitations {
+  id integer [primary key]
+  team_id integer [not null]
+  inviter_id integer [not null]
+  invitee_email varchar [not null]
+  status varchar [default: 'pending']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table notifications {
+  id integer [primary key]
+  user_id integer [not null]
+  notification_type varchar [not null]
+  is_read boolean [default: false]
+  title varchar
+  message text
+  link varchar
+  metadata json
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table emails {
+  id integer [primary key]
+  email varchar [not null]
+  subject varchar [not null]
+  title varchar [not null]
+  subtitle varchar [not null]
+  body text [not null]
+  button_text varchar [not null]
+  button_link varchar [not null]
+  created_at timestamp
+  checked boolean [default: false]
+  starred boolean [default: false]
+  flagged boolean [default: false]
+  host_id integer [not null]
+  status varchar [default: 'draft']
+  updated_at timestamp
+}
+
+Table onboarding_applications {
+  id integer [primary key]
+  user_id integer [not null]
+  legal_name varchar
+  employee_count varchar
+  website varchar
+  years_in_business varchar
+  asset_type varchar
+  desired_loan_amount varchar
+  company_type varchar
+  company_type_other varchar
+  revenue_qualification varchar
+  current_step integer [default: 1]
+  is_qualified boolean [default: false]
+  is_complete boolean [default: false]
+  is_rejected boolean [default: false]
+  rejection_reason text
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table financial_wizard_applications {
+  id integer [primary key]
+  user_id integer [not null]
+  current_step integer [default: 1]
+  is_complete boolean [default: false]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table financial_overview {
+  id integer [primary key]
+  application_id integer [not null]
+  revenue_last_12_months text
+  net_income_last_12_months text
+  projected_revenue_next_12_months text
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table financial_documents {
+  id integer [primary key]
+  application_id integer [not null]
+  asset_id integer [not null]
+  step integer [not null]
+  document_type varchar [not null]
+  is_current boolean [default: true]
+  version integer [default: 1]
+  notes text
+  created_at timestamp
+  updated_at timestamp
+}
+
+// Relationships
+Ref: team_members.team_id > teams.id
+Ref: team_members.user_id > user.id
+Ref: businesses.user_id > user.id
+Ref: businesses.logo_asset_id > assets.id
+Ref: assets.user_id > user.id
+Ref: team_invitations.team_id > teams.id
+Ref: team_invitations.inviter_id > user.id
+Ref: notifications.user_id > user.id
+Ref: emails.host_id > user.id
+Ref: onboarding_applications.user_id > user.id
+Ref: financial_wizard_applications.user_id > user.id
+Ref: financial_overview.application_id > financial_wizard_applications.id
+Ref: financial_documents.application_id > financial_wizard_applications.id
+Ref: financial_documents.asset_id > assets.id
+
