@@ -490,7 +490,7 @@ export class AssetService {
 			offset += part.length;
 		}
 
-		const response = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+		const response = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true", {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${accessToken}`,

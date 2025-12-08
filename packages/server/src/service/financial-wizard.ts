@@ -52,7 +52,9 @@ export class FinancialWizardService {
 	public async saveFinancialOverview(userId: number, data: FinancialOverviewBody) {
 		try {
 			const application = await this.getOrCreateApplication(userId);
-
+            if (!application) {
+                throw new Error('Application not found');
+            }
 			const overview = await this.repo.upsertFinancialOverview({
 				application_id: application.id,
 				revenue_last_12_months: data.revenue_last_12_months,
@@ -89,7 +91,9 @@ export class FinancialWizardService {
 			if (!asset || asset.user_id !== userId) {
 				throw new Error('Asset not found or access denied');
 			}
-
+            if (!application) {
+                throw new Error('Application not found');
+            }
 			const document = await this.repo.createDocument({
 				application_id: application.id,
 				asset_id: assetId,
