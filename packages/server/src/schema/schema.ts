@@ -28,7 +28,7 @@ export const userSchema = sqliteTable('user', {
 	email_token: text('email_token'),
 	createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
-	role: text('role', { enum: ['master', 'owner', 'host'] }).default('host'),
+	role: text('role', { enum: ['admin', 'super-admin', 'user'] }).default('user'),
 	profile_picture: text('profile_picture'),
 	bio: text('bio'),
 	custom_id: text('custom_id'),

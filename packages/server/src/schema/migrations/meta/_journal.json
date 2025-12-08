@@ -22,6 +22,13 @@
       "when": 1764861462073,
       "tag": "0002_clumsy_garia",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1765215630997,
+      "tag": "0003_daily_jack_flag",
+      "breakpoints": true
     }
   ]
 }
