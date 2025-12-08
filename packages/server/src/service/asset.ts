@@ -3,7 +3,7 @@ import { eq, like } from 'drizzle-orm';
 import type { AssetRepository } from '../repository/asset.js';
 import type { Asset, NewAsset } from '../schema/schema.js';
 import { assetsSchema } from '../schema/schema.js';
-import { generateAssetKey, getKeyFromUrl } from '../util/string.ts';
+import { createGoogleJWT, generateAssetKey, getKeyFromUrl } from '../util/string.ts';
 import type { AssetQuery } from '../web/validator/asset.js';
 import type { S3Service } from './s3.js';
 
@@ -398,4 +398,139 @@ export class AssetService {
 
 		return { jobId, status };
 	}
+
+	/**
+ * Exchanges a JWT for a Google OAuth access token
+ * @returns {Promise<string>} The access token
+ */
+	getGoogleAccessToken = async (): Promise<string> => {
+		const jwt = await createGoogleJWT();
+
+		const response = await fetch("https://oauth2.googleapis.com/token", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/x-www-form-urlencoded",
+			},
+			body: new URLSearchParams({
+				grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+				assertion: jwt,
+			}),
+		});
+
+		if (!response.ok) {
+			const error = await response.text();
+			throw new Error(`Failed to get access token: ${error}`);
+		}
+
+		const data = await response.json() as { access_token: string };
+		return data.access_token;
+	};
+
+	/**
+	 * Uploads a file to Google Drive
+	 * @param {ArrayBuffer | Uint8Array} fileData - The file data to upload
+	 * @param {string} fileName - The name of the file
+	 * @param {string} mimeType - The MIME type of the file
+	 * @param {string} folderId - Optional folder ID to upload to
+	 * @returns {Promise<{id: string, name: string, webViewLink: string}>} The uploaded file information
+	 */
+	uploadToGoogleDrive = async (
+		fileData: ArrayBuffer | Uint8Array,
+		fileName: string,
+		mimeType: string,
+		folderId?: string
+	): Promise<{ id: string; name: string; webViewLink: string }> => {
+		const accessToken = await this.getGoogleAccessToken();
+
+		// Convert ArrayBuffer to Uint8Array if needed
+		const data = fileData instanceof ArrayBuffer ? new Uint8Array(fileData) : fileData;
+
+		// Create metadata for the file
+		const metadata: {
+			name: string;
+			mimeType: string;
+			parents?: string[];
+		} = {
+			name: fileName,
+			mimeType: mimeType,
+		};
+
+		if (folderId) {
+			metadata.parents = [folderId];
+		}
+
+		// Upload using multipart upload for better compatibility
+		const boundary = `----WebKitFormBoundary${Math.random().toString(36).substring(2, 15)}`;
+		const metadataPart = JSON.stringify(metadata);
+
+		// Build multipart body
+		const encoder = new TextEncoder();
+
+		const parts: Uint8Array[] = [];
+
+		// Add metadata part
+		parts.push(encoder.encode(`--${boundary}\r\n`));
+		parts.push(encoder.encode(`Content-Type: application/json; charset=UTF-8\r\n\r\n`));
+		parts.push(encoder.encode(metadataPart));
+		parts.push(encoder.encode(`\r\n--${boundary}\r\n`));
+		parts.push(encoder.encode(`Content-Type: ${mimeType}\r\n\r\n`));
+
+		// Add file data
+		parts.push(data);
+
+		// Add closing boundary
+		parts.push(encoder.encode(`\r\n--${boundary}--\r\n`));
+
+		// Combine all parts
+		const totalLength = parts.reduce((sum, part) => sum + part.length, 0);
+		const body = new Uint8Array(totalLength);
+		let offset = 0;
+		for (const part of parts) {
+			body.set(part, offset);
+			offset += part.length;
+		}
+
+		const response = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+				"Content-Type": `multipart/related; boundary=${boundary}`,
+			},
+			body: body,
+		});
+
+		if (!response.ok) {
+			const error = await response.text();
+			throw new Error(`Failed to upload to Google Drive: ${error}`);
+		}
+
+		const fileInfo = await response.json() as {
+			id: string;
+			name: string;
+			webViewLink?: string;
+		};
+
+		// Get web view link if not provided
+		let webViewLink = fileInfo.webViewLink;
+		if (!webViewLink) {
+			const getFileResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileInfo.id}?fields=webViewLink`, {
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			if (getFileResponse.ok) {
+				const fileDetails = await getFileResponse.json() as { webViewLink?: string };
+				webViewLink = fileDetails.webViewLink || `https://drive.google.com/file/d/${fileInfo.id}/view`;
+			} else {
+				webViewLink = `https://drive.google.com/file/d/${fileInfo.id}/view`;
+			}
+		}
+
+		return {
+			id: fileInfo.id,
+			name: fileInfo.name,
+			webViewLink: webViewLink,
+		};
+	};
 }

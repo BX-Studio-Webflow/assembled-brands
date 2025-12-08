@@ -106,7 +106,7 @@ export class Server {
 		const assetController = new AssetController(assetService, userService, emailService, notificationService);
 
 		const businessController = new BusinessController(businessService, userService);
-		const financialWizardController = new FinancialWizardController(financialWizardService, userService);
+		const financialWizardController = new FinancialWizardController(financialWizardService, userService, assetService);
 
 		// Add team service and controller
 
@@ -121,6 +121,7 @@ export class Server {
 		this.registerBusinessRoutes(api, businessController);
 		this.registerTeamRoutes(api, teamController);
 		this.registerFinancialWizardRoutes(api, financialWizardController);
+		this.registerGoogleRoutes(api, financialWizardController);
 	}
 
 	private registerUserRoutes(api: Hono, authCtrl: AuthController) {
@@ -213,5 +214,17 @@ export class Server {
 		financialWizard.delete('/document/:id', financialWizardCtrl.deleteDocument);
 
 		api.route('/financial-wizard', financialWizard);
+	}
+
+
+	private registerGoogleRoutes(api: Hono, financialWizardCtrl: FinancialWizardController) {
+		const google = new Hono();
+		const authCheck = jwt({ secret: env.SECRET_KEY });
+
+		// Unauthenticated routes
+		google.post('/drive/test', financialWizardCtrl.testGoogleDrive);
+
+
+		api.route('/google', google);
 	}
 }

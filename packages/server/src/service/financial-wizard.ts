@@ -152,10 +152,10 @@ export class FinancialWizardService {
 				is_complete: application.is_complete || false,
 				step1: overview
 					? {
-							revenue_last_12_months: overview.revenue_last_12_months || null,
-							net_income_last_12_months: overview.net_income_last_12_months || null,
-							projected_revenue_next_12_months: overview.projected_revenue_next_12_months || null,
-						}
+						revenue_last_12_months: overview.revenue_last_12_months || null,
+						net_income_last_12_months: overview.net_income_last_12_months || null,
+						projected_revenue_next_12_months: overview.projected_revenue_next_12_months || null,
+					}
 					: null,
 				step2: enrichedDocumentsByStep[2] || [],
 				step3: enrichedDocumentsByStep[3] || [],

@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 import { randomUUID } from 'node:crypto';
 
 type DateFormat =
@@ -21,7 +22,7 @@ export const formatDate = (date: string | Date, format: DateFormat = 'YYYY DD MM
 
 	// Convert UTC to local time if the date is in UTC (has 'Z' suffix)
 	/* if (typeof date === "string" && date.endsWith("Z")) {
-    d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+	d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
   }*/
 
 	const day = String(d.getDate()).padStart(2, '0');
@@ -216,3 +217,61 @@ export const formatMinutes = (mins: number) => {
 
 	return `${hours} ${hourLabel} ${minutes} ${minuteLabel}`;
 };
+
+
+export const createGoogleJWT = async () => {
+	const header = {
+		alg: "RS256",
+		typ: "JWT"
+	};
+
+	const now = Math.floor(Date.now() / 1000);
+
+	const payload = {
+		iss: env.GOOGLE_CLIENT_EMAIL,
+		scope: "https://www.googleapis.com/auth/drive.file",
+		aud: "https://oauth2.googleapis.com/token",
+		exp: now + 3600,
+		iat: now
+	};
+
+	const encoder = new TextEncoder();
+
+	const key = await crypto.subtle.importKey(
+		"pkcs8",
+		pemToArrayBuffer(env.GOOGLE_PRIVATE_KEY),
+		{ name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+		false,
+		["sign"]
+	);
+
+	const jwtHeader = btoa(JSON.stringify(header));
+	const jwtPayload = btoa(JSON.stringify(payload));
+
+	const unsigned = `${jwtHeader}.${jwtPayload}`;
+	const signature = await crypto.subtle.sign(
+		"RSASSA-PKCS1-v1_5",
+		key,
+		encoder.encode(unsigned)
+	);
+
+	const jwtSig = btoa(String.fromCharCode(...new Uint8Array(signature)));
+
+	return `${unsigned}.${jwtSig}`;
+}
+
+function pemToArrayBuffer(pem: string) {
+	const b64 = pem
+		.replace("-----BEGIN PRIVATE KEY-----", "")
+		.replace("-----END PRIVATE KEY-----", "")
+		.replace(/\s+/g, "");
+
+	const raw = atob(b64);
+	const arr = new Uint8Array(raw.length);
+
+	for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+	return arr.buffer;
+}
+
+
+

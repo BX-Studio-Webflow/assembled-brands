@@ -3,6 +3,7 @@ import type { Context } from 'hono';
 import { logger } from '../../lib/logger.js';
 import { FinancialWizardService } from '../../service/financial-wizard.js';
 import type { UserService } from '../../service/user.js';
+import type { AssetService } from '../../service/asset.js';
 import type {
 	FinancialDocumentBody,
 	FinancialOverviewBody,
@@ -10,14 +11,17 @@ import type {
 } from '../validator/financial-wizard.js';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { serveData } from './resp/resp.js';
+import { env } from 'cloudflare:workers';
 
 export class FinancialWizardController {
 	private service: FinancialWizardService;
 	private userService: UserService;
+	private assetService: AssetService;
 
-	constructor(service: FinancialWizardService, userService: UserService) {
+	constructor(service: FinancialWizardService, userService: UserService, assetService: AssetService) {
 		this.service = service;
 		this.userService = userService;
+		this.assetService = assetService;
 	}
 
 	/**
@@ -222,6 +226,55 @@ export class FinancialWizardController {
 
 			return serveData(c, {
 				message: 'Document deleted successfully',
+			});
+		} catch (error) {
+			logger.error(error);
+			return serveInternalServerError(c, error);
+		}
+	};
+
+
+	/**
+	 * Test endpoint to upload a file to Google Drive
+	 * @param {Context} c - The Hono context containing file upload
+	 * @returns {Promise<Response>} Response containing uploaded file information
+	 * @throws {Error} When upload fails
+	 */
+	public testGoogleDrive = async (c: Context) => {
+		try {
+			if (!env.GOOGLE_CLIENT_EMAIL || !env.GOOGLE_PRIVATE_KEY) {
+				return serveBadRequest(c, 'Google client email or private key not set');
+			}
+
+			// Get the file from the request
+			const formData = await c.req.formData();
+			const file = formData.get('file') as File | null;
+
+			if (!file) {
+				return serveBadRequest(c, 'No file provided. Please send a file with the key "file"');
+			}
+
+			// Get file data
+			const fileData = await file.arrayBuffer();
+			const fileName = file.name || 'uploaded-file';
+			const mimeType = file.type || 'application/octet-stream';
+
+			// Upload to Google Drive using asset service
+			const folderId = env.GOOGLE_DRIVE_FOLDER_ID || undefined;
+			const uploadedFile = await this.assetService.uploadToGoogleDrive(
+				fileData,
+				fileName,
+				mimeType,
+				folderId
+			);
+
+			return serveData(c, {
+				message: 'File uploaded to Google Drive successfully',
+				file: {
+					id: uploadedFile.id,
+					name: uploadedFile.name,
+					webViewLink: uploadedFile.webViewLink,
+				},
 			});
 		} catch (error) {
 			logger.error(error);
