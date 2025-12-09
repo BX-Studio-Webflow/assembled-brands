@@ -46,6 +46,7 @@ import {
 	updateUserDetailsValidator,
 	verifyEmailAndSetPasswordValidator,
 } from './validator/user.js';
+import { cors } from 'hono/cors';
 
 export class Server {
 	private app: Hono;
@@ -69,6 +70,11 @@ export class Server {
 		this.app.onError((err, c) => {
 			return serveInternalServerError(c, err);
 		});
+
+		//Allow any origin
+		this.app.use('*', cors({
+			origin: '*'
+		}));
 
 		const api = this.app.basePath('/api/v1');
 
