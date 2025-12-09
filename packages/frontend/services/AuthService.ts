@@ -39,7 +39,7 @@ export async function apiSignIn(data: SignInCredential) {
 
 export async function apiSignUp(data: SignUpCredential) {
   return ApiService.fetchDataWithAxios<SignUpResponse>({
-    url: '/user/register',
+    url: '/user/cold-lead-register',
     method: 'post',
     data,
   });

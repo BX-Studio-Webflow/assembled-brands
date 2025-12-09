@@ -10,8 +10,8 @@ window.Webflow.push(() => {
   //add a test api call
   try {
     apiSignUp({
-      email: 'test@test.com',
-      password: 'test',
+      email: 'briankennedy@assembledbrands.com',
+      password: '12345678',
       name: 'Test User',
       phone: '1234567890',
       dial_code: '+1',
