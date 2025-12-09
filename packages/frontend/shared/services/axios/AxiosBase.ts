@@ -1,7 +1,6 @@
 import type { AxiosError } from 'axios';
 import axios from 'axios';
-
-import { appConfig } from '$utils/config';
+import { appConfig } from 'shared/utils/config';
 
 import AxiosRequestIntrceptorConfigCallback from './AxiosRequestIntrceptorConfigCallback';
 import AxiosResponseIntrceptorErrorCallback from './AxiosResponseIntrceptorErrorCallback';

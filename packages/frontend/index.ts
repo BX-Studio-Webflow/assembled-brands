@@ -1,7 +1,7 @@
 import type { AxiosError } from 'axios';
 
 //import { greetUser } from '$utils/greet';
-import { apiColdLeadRegister } from './services/AuthService';
+import { apiColdLeadRegister } from './shared/services/AuthService';
 
 window.Webflow ||= [];
 window.Webflow.push(() => {
