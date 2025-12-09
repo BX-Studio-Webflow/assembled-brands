@@ -400,19 +400,19 @@ export class AssetService {
 	}
 
 	/**
- * Exchanges a JWT for a Google OAuth access token
- * @returns {Promise<string>} The access token
- */
+	 * Exchanges a JWT for a Google OAuth access token
+	 * @returns {Promise<string>} The access token
+	 */
 	getGoogleAccessToken = async (): Promise<string> => {
 		const jwt = await createGoogleJWT();
 
-		const response = await fetch("https://oauth2.googleapis.com/token", {
-			method: "POST",
+		const response = await fetch('https://oauth2.googleapis.com/token', {
+			method: 'POST',
 			headers: {
-				"Content-Type": "application/x-www-form-urlencoded",
+				'Content-Type': 'application/x-www-form-urlencoded',
 			},
 			body: new URLSearchParams({
-				grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+				grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
 				assertion: jwt,
 			}),
 		});
@@ -422,7 +422,7 @@ export class AssetService {
 			throw new Error(`Failed to get access token: ${error}`);
 		}
 
-		const data = await response.json() as { access_token: string };
+		const data = (await response.json()) as { access_token: string };
 		return data.access_token;
 	};
 
@@ -438,7 +438,7 @@ export class AssetService {
 		fileData: ArrayBuffer | Uint8Array,
 		fileName: string,
 		mimeType: string,
-		folderId?: string
+		folderId?: string,
 	): Promise<{ id: string; name: string; webViewLink: string }> => {
 		const accessToken = await this.getGoogleAccessToken();
 
@@ -490,11 +490,11 @@ export class AssetService {
 			offset += part.length;
 		}
 
-		const response = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true", {
-			method: "POST",
+		const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true', {
+			method: 'POST',
 			headers: {
 				Authorization: `Bearer ${accessToken}`,
-				"Content-Type": `multipart/related; boundary=${boundary}`,
+				'Content-Type': `multipart/related; boundary=${boundary}`,
 			},
 			body: body,
 		});
@@ -504,14 +504,14 @@ export class AssetService {
 			throw new Error(`Failed to upload to Google Drive: ${error}`);
 		}
 
-		const fileInfo = await response.json() as {
+		const fileInfo = (await response.json()) as {
 			id: string;
 			name: string;
 			webViewLink?: string;
 		};
 
 		// Get web view link if not provided
-		let webViewLink = fileInfo.webViewLink;
+		let { webViewLink } = fileInfo;
 		if (!webViewLink) {
 			const getFileResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileInfo.id}?fields=webViewLink`, {
 				headers: {
@@ -520,7 +520,7 @@ export class AssetService {
 			});
 
 			if (getFileResponse.ok) {
-				const fileDetails = await getFileResponse.json() as { webViewLink?: string };
+				const fileDetails = (await getFileResponse.json()) as { webViewLink?: string };
 				webViewLink = fileDetails.webViewLink || `https://drive.google.com/file/d/${fileInfo.id}/view`;
 			} else {
 				webViewLink = `https://drive.google.com/file/d/${fileInfo.id}/view`;

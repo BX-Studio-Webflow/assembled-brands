@@ -29,13 +29,10 @@ import { TeamController } from './controller/team.js';
 import { teamAccess } from './middleware/team.js';
 import { assetQueryValidator, completeMultipartUploadValidator, createMultipartAssetValidator } from './validator/asset.ts';
 import { businessQueryValidator, businessValidator, uploadBusinessLogoValidator } from './validator/business.ts';
-import {
-	documentUploadValidator,
-	financialOverviewValidator,
-	updateStepValidator,
-} from './validator/financial-wizard.ts';
+import { documentUploadValidator, financialOverviewValidator, updateStepValidator } from './validator/financial-wizard.ts';
 import { createTeamValidator, inviteMemberValidator, revokeAccessValidator, teamQueryValidator } from './validator/team.ts';
 import {
+	claimYourAccountValidator,
 	emailVerificationValidator,
 	inAppResetPasswordValidator,
 	loginValidator,
@@ -43,6 +40,7 @@ import {
 	registrationValidator,
 	requestResetPasswordValidator,
 	resetPasswordValidator,
+	startAccountRecoveryValidator,
 	updateUserDetailsValidator,
 	uploadProfileImageValidator,
 } from './validator/user.js';
@@ -130,10 +128,13 @@ export class Server {
 
 		user.get('/me', authCheck, authCtrl.me);
 		user.post('/login', loginValidator, authCtrl.login);
-		user.post('/register', registrationValidator, authCtrl.register);
+		user.post('/register-get-started', registrationValidator, authCtrl.register);
+		user.post('/claim-your-account', claimYourAccountValidator, authCtrl.claimYourAccount);
+
 		user.post('/send-token', emailVerificationValidator, authCtrl.sendToken);
 		user.post('/verify-registration', registerTokenValidator, authCtrl.verifyRegistrationToken);
 		user.post('/request-reset-password', requestResetPasswordValidator, authCtrl.requestResetPassword);
+		user.post('/start-account-recovery', startAccountRecoveryValidator, authCtrl.startAccountRecovery);
 		user.post('/reset-password', resetPasswordValidator, authCtrl.resetPassword);
 		user.post('/reset-password-in-app', authCheck, inAppResetPasswordValidator, authCtrl.resetPasswordInApp);
 		user.put('/details', authCheck, updateUserDetailsValidator, authCtrl.updateUserDetails);
@@ -216,14 +217,12 @@ export class Server {
 		api.route('/financial-wizard', financialWizard);
 	}
 
-
 	private registerGoogleRoutes(api: Hono, financialWizardCtrl: FinancialWizardController) {
 		const google = new Hono();
 		const authCheck = jwt({ secret: env.SECRET_KEY });
 
 		// Unauthenticated routes
 		google.post('/drive/test', financialWizardCtrl.testGoogleDrive);
-
 
 		api.route('/google', google);
 	}

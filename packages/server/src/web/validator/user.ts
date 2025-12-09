@@ -12,15 +12,33 @@ const loginValidator = validator('json', (value, c) => {
 	return validateSchema(c, loginSchema, value);
 });
 
-const registrationSchema = loginSchema.extend({
-	name: z.string().min(2).max(40),
-	phone: z.string(),
-	dial_code: z.string(),
+const registrationSchema = z.object({
+	work_email: z.email(),
 });
 
 const uploadProfileImageSchema = z.object({
 	imageBase64: z.string().nullable().optional(),
 	fileName: z.string().nullable().optional(),
+});
+
+const startAccountRecoverySchema = z.object({
+	email: z.email(),
+});
+
+const claimYourAccountSchema = z.object({
+	work_email: z.email(),
+	first_name: z.string().min(2).max(40),
+	last_name: z.string().min(2).max(40),
+	password: z.string().min(8).max(20),
+	loan_urgency: z.enum(['yesterday', 'this-month', '3-months', 'this-year']),
+});
+
+const claimYourAccountValidator = validator('json', (value, c) => {
+	return validateSchema(c, claimYourAccountSchema, value);
+});
+
+const startAccountRecoveryValidator = validator('json', (value, c) => {
+	return validateSchema(c, startAccountRecoverySchema, value);
 });
 
 const registrationValidator = validator('json', (value, c) => {
@@ -73,7 +91,8 @@ const inAppResetPasswordValidator = validator('json', (value, c) => {
 });
 
 const updateUserDetailsSchema = z.object({
-	name: z.string().min(2).max(40),
+	first_name: z.string().min(2).max(40),
+	last_name: z.string().min(2).max(40),
 	email: z.string().email(),
 	dial_code: z.string(),
 	phone: z.string(),
@@ -94,11 +113,14 @@ type RegisterTokenBody = z.infer<typeof registerTokenSchema>;
 type RequestResetPasswordBody = z.infer<typeof requestResetPasswordSchema>;
 type ResetPasswordBody = z.infer<typeof resetPasswordSchema>;
 type InAppResetPasswordBody = z.infer<typeof inAppResetPasswordSchema>;
-
+type StartAccountRecoveryBody = z.infer<typeof startAccountRecoverySchema>;
+type ClaimYourAccountBody = z.infer<typeof claimYourAccountSchema>;
 type UpdateUserDetailsBody = z.infer<typeof updateUserDetailsSchema>;
 type UploadProfileImageBody = z.infer<typeof uploadProfileImageSchema>;
 
 export {
+	type ClaimYourAccountBody,
+	claimYourAccountValidator,
 	type EmailVerificationBody,
 	emailVerificationValidator,
 	type InAppResetPasswordBody,
@@ -113,6 +135,8 @@ export {
 	requestResetPasswordValidator,
 	type ResetPasswordBody,
 	resetPasswordValidator,
+	type StartAccountRecoveryBody,
+	startAccountRecoveryValidator,
 	type UpdateUserDetailsBody,
 	updateUserDetailsValidator,
 	type UploadProfileImageBody,

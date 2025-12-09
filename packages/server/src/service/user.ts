@@ -24,19 +24,21 @@ export class UserService {
 	 * @param {string} name - User's name
 	 * @param {string} email - User's email address
 	 * @param {string} password - User's password (will be encrypted)
-	 * @param {'master'|'owner'|'host'} role - User's role
+	 * @param {'user'|'admin'|'super-admin'} role - User's role
 	 * @param {string} phone - User's phone number
 	 * @param {Partial<User>} [additionalFields={}] - Optional additional user fields
 	 * @returns {Promise<User>} Created user
 	 * @throws {Error} When user creation fails
 	 */
 	public async create(
-		name: string,
 		email: string,
 		password: string,
-		role: 'master' | 'owner' | 'host',
+		role: 'user' | 'admin' | 'super-admin',
 		dial_code: string,
 		phone: string,
+		first_name: string,
+		last_name: string,
+		loan_urgency: 'none' | 'yesterday' | 'this-month' | '3-months' | 'this-year',
 		additionalFields: Partial<User> = {},
 	) {
 		try {
@@ -44,13 +46,15 @@ export class UserService {
 
 			// Create user with all fields
 			const user = await this.repo.create({
-				name,
 				email,
 				password: hashedPassword,
 				role,
 				dial_code,
 				phone,
 				auth_provider: 'local',
+				first_name,
+				last_name,
+				loan_urgency,
 				...additionalFields,
 			});
 

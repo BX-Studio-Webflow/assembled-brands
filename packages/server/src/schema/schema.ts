@@ -19,7 +19,6 @@ export const teamMemberSchema = sqliteTable('team_members', {
 
 export const userSchema = sqliteTable('user', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
-	name: text('name').notNull(),
 	email: text('email').notNull().unique(),
 	phone: text('phone').notNull().default(''),
 	dial_code: text('dial_code').notNull().default(''),
@@ -41,6 +40,9 @@ export const userSchema = sqliteTable('user', {
 	}),
 	trial_ends_at: integer('trial_ends_at', { mode: 'timestamp' }),
 	auth_provider: text('auth_provider', { enum: ['local'] }).default('local'),
+	first_name: text('first_name').notNull(),
+	last_name: text('last_name').notNull(),
+	loan_urgency: text('loan_urgency', { enum: ['none', 'yesterday', 'this-month', '3-months', 'this-year'] }).default('none'),
 });
 
 export const businessSchema = sqliteTable('businesses', {
@@ -198,7 +200,6 @@ export const onboardingApplicationRelations = relations(onboardingApplicationSch
 	}),
 }));
 
-
 export const financialWizardApplicationSchema = sqliteTable('financial_wizard_applications', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	user_id: integer('user_id')
@@ -318,8 +319,6 @@ export type NewFinancialOverview = typeof financialOverviewSchema.$inferInsert;
 export type FinancialDocument = typeof financialDocumentSchema.$inferSelect;
 export type NewFinancialDocument = typeof financialDocumentSchema.$inferInsert;
 
-
-
 export type OnboardingApplication = typeof onboardingApplicationSchema.$inferSelect;
 export type NewOnboardingApplication = typeof onboardingApplicationSchema.$inferInsert;
 
@@ -403,7 +402,6 @@ export const schema = {
 	financialWizardApplicationSchema,
 	financialOverviewSchema,
 	financialDocumentSchema,
-
 
 	userRelations,
 	notificationRelations,

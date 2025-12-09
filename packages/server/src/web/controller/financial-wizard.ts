@@ -1,17 +1,13 @@
+import { env } from 'cloudflare:workers';
 import type { Context } from 'hono';
 
 import { logger } from '../../lib/logger.js';
+import type { AssetService } from '../../service/asset.js';
 import { FinancialWizardService } from '../../service/financial-wizard.js';
 import type { UserService } from '../../service/user.js';
-import type { AssetService } from '../../service/asset.js';
-import type {
-	FinancialDocumentBody,
-	FinancialOverviewBody,
-	UpdateStepBody,
-} from '../validator/financial-wizard.js';
+import type { FinancialDocumentBody, FinancialOverviewBody, UpdateStepBody } from '../validator/financial-wizard.js';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { serveData } from './resp/resp.js';
-import { env } from 'cloudflare:workers';
 
 export class FinancialWizardController {
 	private service: FinancialWizardService;
@@ -76,13 +72,7 @@ export class FinancialWizardController {
 			}
 
 			const body: FinancialDocumentBody = await c.req.json();
-			const document = await this.service.uploadDocument(
-				user.id,
-				body.step,
-				body.document_type,
-				body.asset_id,
-				body.notes,
-			);
+			const document = await this.service.uploadDocument(user.id, body.step, body.document_type, body.asset_id, body.notes);
 
 			return serveData(c, {
 				message: 'Document uploaded successfully',
@@ -233,7 +223,6 @@ export class FinancialWizardController {
 		}
 	};
 
-
 	/**
 	 * Test endpoint to upload a file to Google Drive
 	 * @param {Context} c - The Hono context containing file upload
@@ -261,15 +250,7 @@ export class FinancialWizardController {
 
 			// Upload to Google Drive using asset service
 			const folderId = env.GOOGLE_DRIVE_FOLDER_ID || undefined;
-			const uploadedFile = await this.assetService.uploadToGoogleDrive(
-				fileData,
-				fileName,
-				mimeType,
-				folderId
-			);
-
-
-
+			const uploadedFile = await this.assetService.uploadToGoogleDrive(fileData, fileName, mimeType, folderId);
 
 			return serveData(c, {
 				message: 'File uploaded to Google Drive successfully',
@@ -285,4 +266,3 @@ export class FinancialWizardController {
 		}
 	};
 }
-

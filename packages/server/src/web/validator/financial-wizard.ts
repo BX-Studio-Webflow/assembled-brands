@@ -114,4 +114,3 @@ export type FinancialWizardProgressResponse = {
 		asset_name: string | null;
 	}>;
 };
-

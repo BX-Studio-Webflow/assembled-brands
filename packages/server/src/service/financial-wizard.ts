@@ -1,11 +1,7 @@
 import { logger } from '../lib/logger.ts';
 import type { FinancialWizardRepository } from '../repository/financial-wizard.ts';
+import type { FinancialOverviewBody, FinancialWizardProgressResponse } from '../web/validator/financial-wizard.ts';
 import type { AssetService } from './asset.js';
-import type {
-	FinancialDocumentBody,
-	FinancialOverviewBody,
-	FinancialWizardProgressResponse,
-} from '../web/validator/financial-wizard.ts';
 
 /**
  * Service class for managing financial wizard operations
@@ -52,9 +48,9 @@ export class FinancialWizardService {
 	public async saveFinancialOverview(userId: number, data: FinancialOverviewBody) {
 		try {
 			const application = await this.getOrCreateApplication(userId);
-            if (!application) {
-                throw new Error('Application not found');
-            }
+			if (!application) {
+				throw new Error('Application not found');
+			}
 			const overview = await this.repo.upsertFinancialOverview({
 				application_id: application.id,
 				revenue_last_12_months: data.revenue_last_12_months,
@@ -91,9 +87,9 @@ export class FinancialWizardService {
 			if (!asset || asset.user_id !== userId) {
 				throw new Error('Asset not found or access denied');
 			}
-            if (!application) {
-                throw new Error('Application not found');
-            }
+			if (!application) {
+				throw new Error('Application not found');
+			}
 			const document = await this.repo.createDocument({
 				application_id: application.id,
 				asset_id: assetId,
@@ -156,10 +152,10 @@ export class FinancialWizardService {
 				is_complete: application.is_complete || false,
 				step1: overview
 					? {
-						revenue_last_12_months: overview.revenue_last_12_months || null,
-						net_income_last_12_months: overview.net_income_last_12_months || null,
-						projected_revenue_next_12_months: overview.projected_revenue_next_12_months || null,
-					}
+							revenue_last_12_months: overview.revenue_last_12_months || null,
+							net_income_last_12_months: overview.net_income_last_12_months || null,
+							projected_revenue_next_12_months: overview.projected_revenue_next_12_months || null,
+						}
 					: null,
 				step2: enrichedDocumentsByStep[2] || [],
 				step3: enrichedDocumentsByStep[3] || [],
@@ -277,4 +273,3 @@ export class FinancialWizardService {
 		}
 	}
 }
-

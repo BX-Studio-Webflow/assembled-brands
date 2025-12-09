@@ -1,5 +1,6 @@
-import { env } from 'cloudflare:workers';
 import { randomUUID } from 'node:crypto';
+
+import { env } from 'cloudflare:workers';
 
 type DateFormat =
 	| 'YYYY DD MM HH:mm' // 2025 18 03 14:30
@@ -218,53 +219,45 @@ export const formatMinutes = (mins: number) => {
 	return `${hours} ${hourLabel} ${minutes} ${minuteLabel}`;
 };
 
-
 export const createGoogleJWT = async () => {
 	const header = {
-		alg: "RS256",
-		typ: "JWT"
+		alg: 'RS256',
+		typ: 'JWT',
 	};
 
 	const now = Math.floor(Date.now() / 1000);
 
 	const payload = {
 		iss: env.GOOGLE_CLIENT_EMAIL,
-		scope: "https://www.googleapis.com/auth/drive.file",
-		aud: "https://oauth2.googleapis.com/token",
+		scope: 'https://www.googleapis.com/auth/drive.file',
+		aud: 'https://oauth2.googleapis.com/token',
 		exp: now + 3600,
-		iat: now
+		iat: now,
 	};
 
 	const encoder = new TextEncoder();
 
 	const key = await crypto.subtle.importKey(
-		"pkcs8",
+		'pkcs8',
 		pemToArrayBuffer(env.GOOGLE_PRIVATE_KEY),
-		{ name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+		{ name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
 		false,
-		["sign"]
+		['sign'],
 	);
 
 	const jwtHeader = btoa(JSON.stringify(header));
 	const jwtPayload = btoa(JSON.stringify(payload));
 
 	const unsigned = `${jwtHeader}.${jwtPayload}`;
-	const signature = await crypto.subtle.sign(
-		"RSASSA-PKCS1-v1_5",
-		key,
-		encoder.encode(unsigned)
-	);
+	const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, encoder.encode(unsigned));
 
 	const jwtSig = btoa(String.fromCharCode(...new Uint8Array(signature)));
 
 	return `${unsigned}.${jwtSig}`;
-}
+};
 
 function pemToArrayBuffer(pem: string) {
-	const b64 = pem
-		.replace("-----BEGIN PRIVATE KEY-----", "")
-		.replace("-----END PRIVATE KEY-----", "")
-		.replace(/\s+/g, "");
+	const b64 = pem.replace('-----BEGIN PRIVATE KEY-----', '').replace('-----END PRIVATE KEY-----', '').replace(/\s+/g, '');
 
 	const raw = atob(b64);
 	const arr = new Uint8Array(raw.length);
@@ -272,6 +265,3 @@ function pemToArrayBuffer(pem: string) {
 	for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
 	return arr.buffer;
 }
-
-
-

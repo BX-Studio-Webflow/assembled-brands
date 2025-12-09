@@ -1,5 +1,4 @@
 import type { Context } from 'hono';
-import { isValidPhoneNumber } from 'libphonenumber-js';
 import { env } from 'process';
 
 import { sendTransactionalEmail } from '../../lib/email-processor.ts';
@@ -11,8 +10,9 @@ import type { AssetService } from '../../service/asset.js';
 import type { BusinessService } from '../../service/business.js';
 import type { S3Service } from '../../service/s3.js';
 import type { UserService } from '../../service/user.js';
-import { getContentType } from '../../util/string.ts';
+import { generateSecurePassword, getContentType } from '../../util/string.ts';
 import type {
+	ClaimYourAccountBody,
 	EmailVerificationBody,
 	InAppResetPasswordBody,
 	LoginBody,
@@ -20,6 +20,7 @@ import type {
 	RegistrationBody,
 	RequestResetPasswordBody,
 	ResetPasswordBody,
+	StartAccountRecoveryBody,
 	UpdateUserDetailsBody,
 	UploadProfileImageBody,
 } from '../validator/user.js';
@@ -98,35 +99,126 @@ export class AuthController {
 	public register = async (c: Context) => {
 		const body: RegistrationBody = await c.req.json();
 		try {
-			const fullNumber = body.dial_code + body.phone;
-			if (!isValidPhoneNumber(fullNumber)) {
-				return serveBadRequest(c, ERRORS.INVALID_PHONE_NUMBER);
-			}
-			const existingUser = await this.service.findByEmail(body.email);
+			const { work_email } = body;
+			const existingUser = await this.service.findByEmail(work_email);
 			if (existingUser) {
 				return serveBadRequest(c, ERRORS.USER_EXISTS);
 			}
-			await this.service.create(body.name, body.email, body.password, 'host', body.dial_code, body.phone);
+
+			//reject personal emails
+			const rejectedEmails = [
+				'gmail.com',
+				'yahoo.com',
+				'hotmail.com',
+				'outlook.com',
+				'icloud.com',
+				'aol.com',
+				'yahoo.co.uk',
+				'yahoo.com.au',
+				'yahoo.com.br',
+				'yahoo.com.es',
+				'yahoo.com.fr',
+				'yahoo.com.de',
+				'yahoo.com.it',
+				'yahoo.com.nl',
+				'yahoo.com.pt',
+				'yahoo.com.ru',
+				'yahoo.com.tr',
+				'yahoo.com.ua',
+				'yahoo.com.vn',
+			];
+			if (rejectedEmails.includes(work_email.split('@')[1])) {
+				return serveBadRequest(c, 'We are not accepting personal emails at the moment');
+			}
+
+			const randomPassword = generateSecurePassword(6);
+			await this.service.create(work_email, randomPassword, 'user', '+1', '1234567890', '', '', 'none');
+
+			const user = await this.service.findByEmail(work_email);
+			if (!user) {
+				return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
+			}
+
+			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
+				subject: 'Welcome to Assembled Brands',
+				title: 'Welcome to Assembled Brands',
+				subtitle: `Welcome to Assembled Brands`,
+				body: `Welcome to Assembled Brands. We have are glad to have you on board.`,
+				buttonText: 'Ok, got it',
+				buttonLink: `${env.FRONTEND_URL}`,
+			});
+
+			const token = await encode(user.id, user.email);
+			const serializedUser = await serializeUser(user);
+			return serveData(c, { token, user: serializedUser });
 		} catch (err) {
 			return serveInternalServerError(c, err);
 		}
-		const user = await this.service.findByEmail(body.email);
-		if (!user) {
-			return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
+	};
+
+	/**
+	 * Registers a new user in the system
+	 * @param {Context} c - The Hono context containing registration data
+	 * @returns {Promise<Response>} Response containing JWT token and user data
+	 * @throws {Error} When registration fails or user already exists
+	 */
+	public claimYourAccount = async (c: Context) => {
+		const body: ClaimYourAccountBody = await c.req.json();
+		try {
+			const { work_email, first_name, last_name, password, loan_urgency } = body;
+			const existingUser = await this.service.findByEmail(work_email);
+			if (!existingUser) {
+				return serveBadRequest(c, ERRORS.USER_EXISTS);
+			}
+
+			//reject personal emails
+			const rejectedEmails = [
+				'gmail.com',
+				'yahoo.com',
+				'hotmail.com',
+				'outlook.com',
+				'icloud.com',
+				'aol.com',
+				'yahoo.co.uk',
+				'yahoo.com.au',
+				'yahoo.com.br',
+				'yahoo.com.es',
+				'yahoo.com.fr',
+				'yahoo.com.de',
+				'yahoo.com.it',
+				'yahoo.com.nl',
+				'yahoo.com.pt',
+				'yahoo.com.ru',
+				'yahoo.com.tr',
+				'yahoo.com.ua',
+				'yahoo.com.vn',
+			];
+			if (rejectedEmails.includes(work_email.split('@')[1])) {
+				return serveBadRequest(c, 'We are not accepting personal emails at the moment');
+			}
+
+			await this.service.update(existingUser.id, { first_name, last_name, password, loan_urgency });
+
+			const user = await this.service.findByEmail(work_email);
+			if (!user) {
+				return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
+			}
+
+			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
+				subject: 'Welcome to Assembled Brands',
+				title: 'Welcome to Assembled Brands',
+				subtitle: `Welcome to Assembled Brands`,
+				body: `Welcome to Assembled Brands. We have are glad to have you on board.`,
+				buttonText: 'Ok, got it',
+				buttonLink: `${env.FRONTEND_URL}`,
+			});
+
+			const token = await encode(user.id, user.email);
+			const serializedUser = await serializeUser(user);
+			return serveData(c, { token, user: serializedUser });
+		} catch (err) {
+			return serveInternalServerError(c, err);
 		}
-
-		await sendTransactionalEmail(user.email, user.name, 12, {
-			subject: 'Welcome to Assembled Brands',
-			title: 'Welcome to Assembled Brands',
-			subtitle: `Welcome to Assembled Brands`,
-			body: `Welcome to Assembled Brands. We have are glad to have you on board.`,
-			buttonText: 'Ok, got it',
-			buttonLink: `${env.FRONTEND_URL}`,
-		});
-
-		const token = await encode(user.id, user.email);
-		const serializedUser = await serializeUser(user);
-		return serveData(c, { token, user: serializedUser });
 	};
 
 	/**
@@ -153,7 +245,7 @@ export class AuthController {
 			const token = Math.floor(100000 + Math.random() * 900000).toString();
 			await this.userRepository.update(user.id, { email_token: token });
 
-			await sendTransactionalEmail(user.email, user.name, 12, {
+			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
 				subject: 'Your code',
 				title: 'Thanks for signing up',
 				subtitle: `${token}`,
@@ -214,6 +306,30 @@ export class AuthController {
 	};
 
 	/**
+	 * Verifies the registration token sent to user's email
+	 * @param {Context} c - The Hono context containing token and user ID
+	 * @returns {Promise<Response>} Response indicating verification status
+	 * @throws {Error} When token verification fails
+	 */
+	public startAccountRecovery = async (c: Context) => {
+		try {
+			const body: StartAccountRecoveryBody = await c.req.json();
+			const user = await this.service.findByEmail(body.email);
+			if (!user) {
+				serveBadRequest(c, 'Ops, we cannot find your details, please check your email and try again');
+			}
+
+			return serveData(c, {
+				success: true,
+				message: 'Email verified successfully',
+			});
+		} catch (err) {
+			logger.error(err);
+			return serveInternalServerError(c, err);
+		}
+	};
+
+	/**
 	 * Initiates password reset process by sending reset token
 	 * @param {Context} c - The Hono context containing email information
 	 * @returns {Promise<Response>} Response indicating reset link sent status
@@ -228,7 +344,7 @@ export class AuthController {
 			}
 			const token = Math.floor(100000 + Math.random() * 900000).toString();
 			await this.userRepository.update(user.id, { reset_token: token });
-			await sendTransactionalEmail(user.email, user.name, 12, {
+			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
 				subject: 'Reset password',
 				title: 'Reset password',
 				subtitle: `${token}`,
@@ -277,7 +393,7 @@ export class AuthController {
 			const hashedPassword = encrypt(body.password);
 			await this.service.update(user.id, { password: hashedPassword });
 			await this.userRepository.update(user.id, { reset_token: null });
-			await sendTransactionalEmail(user.email, user.name, 12, {
+			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
 				subject: 'Password reset',
 				title: 'Password reset',
 				subtitle: `Your password has been reset successfully`,
@@ -320,7 +436,7 @@ export class AuthController {
 			await this.service.update(user.id, { password: hashedPassword });
 
 			// Send confirmation email
-			await sendTransactionalEmail(user.email, user.name, 12, MAIL_CONTENT.PASSWORD_CHANGED_IN_APP);
+			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, MAIL_CONTENT.PASSWORD_CHANGED_IN_APP);
 
 			return serveData(c, {
 				success: true,
@@ -372,38 +488,10 @@ export class AuthController {
 				}
 			}
 
-			/*//if updating the profile image, check if the image is valid
-      if (body.imageBase64 && body.fileName) {
-        const { imageBase64, fileName } = body;
-
-        // Convert base64 to buffer
-        const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-        const buffer = Buffer.from(base64Data, 'base64');
-
-        // Create asset using AssetService
-        const { asset: assetId } = await this.assetService.createAsset(
-          user.id,
-          fileName.replace(/[^\w.-]/g, ''),
-          getContentType(imageBase64),
-          'profile_picture',
-          buffer.length,
-          0,
-          buffer,
-        );
-
-        // Get the full asset object to access the URL
-        const asset = await this.assetService.getAsset(assetId);
-        if (!asset || !asset.asset_url) {
-          return serveInternalServerError(c, new Error('Failed to get asset URL'));
-        }
-
-        // Update user profile image with the asset URL
-        await this.service.updateProfileImage(user.id, asset.asset_url);
-      }*/
-			const { name, email, dial_code, phone } = body;
+			const { first_name, last_name, email, dial_code, phone } = body;
 
 			// Update user details
-			await this.service.update(user.id, { name, email, dial_code, phone });
+			await this.service.update(user.id, { first_name, last_name, email, dial_code, phone });
 
 			// Get updated user
 			const updatedUser = await this.service.find(user.id);
