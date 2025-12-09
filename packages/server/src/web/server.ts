@@ -9,6 +9,7 @@ import { BusinessRepository } from '../repository/business.ts';
 import { EmailRepository } from '../repository/email.ts';
 import { FinancialWizardRepository } from '../repository/financial-wizard.ts';
 import { NotificationRepository } from '../repository/notification.ts';
+import { OnboardingWizardRepository } from '../repository/onboarding-wizard.ts';
 import { TeamRepository } from '../repository/team.ts';
 import { UserRepository } from '../repository/user.ts';
 import { schema } from '../schema/index.ts';
@@ -17,6 +18,7 @@ import { BusinessService } from '../service/business.ts';
 import { EmailService } from '../service/email.js';
 import { FinancialWizardService } from '../service/financial-wizard.ts';
 import { NotificationService } from '../service/notification.ts';
+import { OnboardingWizardService } from '../service/onboarding-wizard.ts';
 import { S3Service } from '../service/s3.ts';
 import { TeamService } from '../service/team.js';
 import { UserService } from '../service/user.js';
@@ -24,12 +26,14 @@ import { AssetController } from './controller/asset.js';
 import { AuthController } from './controller/auth.js';
 import { BusinessController } from './controller/business.js';
 import { FinancialWizardController } from './controller/financial-wizard.ts';
+import { OnboardingWizardController } from './controller/onboarding-wizard.ts';
 import { ERRORS, serveInternalServerError, serveNotFound } from './controller/resp/error.js';
 import { TeamController } from './controller/team.js';
 import { teamAccess } from './middleware/team.js';
 import { assetQueryValidator, completeMultipartUploadValidator, createMultipartAssetValidator } from './validator/asset.ts';
 import { businessQueryValidator, businessValidator, uploadBusinessLogoValidator } from './validator/business.ts';
 import { documentUploadValidator, financialOverviewValidator, updateStepValidator } from './validator/financial-wizard.ts';
+import { onboardingStep1Validator, onboardingStep2Validator, onboardingStep3Validator } from './validator/onboarding.ts';
 import { createTeamValidator, inviteMemberValidator, revokeAccessValidator, teamQueryValidator } from './validator/team.ts';
 import {
 	claimYourAccountValidator,
@@ -81,6 +85,7 @@ export class Server {
 		const teamRepo = new TeamRepository(db);
 		const businessRepo = new BusinessRepository(db);
 		const financialWizardRepo = new FinancialWizardRepository(db);
+		const onboardingWizardRepo = new OnboardingWizardRepository(db);
 
 		const emailRepo = new EmailRepository(db);
 		const notificationRepo = new NotificationRepository(db);
@@ -93,6 +98,7 @@ export class Server {
 		const userService = new UserService(userRepo);
 		const teamService = new TeamService(teamRepo, userService);
 		const financialWizardService = new FinancialWizardService(financialWizardRepo, assetService);
+		const onboardingWizardService = new OnboardingWizardService(onboardingWizardRepo);
 
 		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService);
 		const emailService = new EmailService(emailRepo);
@@ -103,6 +109,7 @@ export class Server {
 
 		const businessController = new BusinessController(businessService, userService);
 		const financialWizardController = new FinancialWizardController(financialWizardService, userService, assetService);
+		const onboardingWizardController = new OnboardingWizardController(onboardingWizardService, userService);
 
 		// Add team service and controller
 
@@ -117,6 +124,7 @@ export class Server {
 		this.registerBusinessRoutes(api, businessController);
 		this.registerTeamRoutes(api, teamController);
 		this.registerFinancialWizardRoutes(api, financialWizardController);
+		this.registerOnboardingRoutes(api, onboardingWizardController);
 		this.registerGoogleRoutes(api, financialWizardController);
 	}
 
@@ -211,6 +219,23 @@ export class Server {
 		financialWizard.delete('/document/:id', financialWizardCtrl.deleteDocument);
 
 		api.route('/financial-wizard', financialWizard);
+	}
+
+	private registerOnboardingRoutes(api: Hono, onboardingWizardCtrl: OnboardingWizardController) {
+		const onboardingWizard = new Hono();
+		const authCheck = jwt({ secret: env.SECRET_KEY });
+
+		// All routes require authentication
+		onboardingWizard.use(authCheck);
+
+		onboardingWizard.post('/step1', onboardingStep1Validator, onboardingWizardCtrl.saveStep1);
+		onboardingWizard.post('/step2', onboardingStep2Validator, onboardingWizardCtrl.saveStep2);
+		onboardingWizard.post('/step3', onboardingStep3Validator, onboardingWizardCtrl.saveStep3);
+		onboardingWizard.get('/progress', onboardingWizardCtrl.getProgress);
+		onboardingWizard.post('/step', updateStepValidator, onboardingWizardCtrl.updateStep);
+		onboardingWizard.post('/complete', onboardingWizardCtrl.completeApplication);
+
+		api.route('/onboarding-wizard', onboardingWizard);
 	}
 
 	private registerGoogleRoutes(api: Hono, financialWizardCtrl: FinancialWizardController) {

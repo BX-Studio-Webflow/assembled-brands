@@ -85,7 +85,7 @@ export class AssetController {
 				asset_type: asset_type as AssetQuery['asset_type'],
 			};
 
-			if (user.role === 'master' || user.role === 'owner') {
+			if (user.role === 'admin' || user.role === 'super-admin') {
 				const assets = await this.service.getAllAssets(user.id, query);
 				return c.json(assets);
 			}
@@ -407,7 +407,7 @@ export class AssetController {
 				return serveNotFound(c, ERRORS.ASSET_NOT_FOUND);
 			}
 			//only and master role or admin or the owner of the  can update the asset
-			if (user.role !== 'master' && user.role !== 'owner' && asset.user_id !== user.id) {
+			if (user.role !== 'admin' && user.role !== 'super-admin' && asset.user_id !== user.id) {
 				return serveBadRequest(c, ERRORS.NOT_ALLOWED);
 			}
 

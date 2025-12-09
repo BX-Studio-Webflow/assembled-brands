@@ -10,7 +10,7 @@ import type { AssetService } from '../../service/asset.js';
 import type { BusinessService } from '../../service/business.js';
 import type { S3Service } from '../../service/s3.js';
 import type { UserService } from '../../service/user.js';
-import { generateSecurePassword, getContentType } from '../../util/string.ts';
+import { generateSecurePassword } from '../../util/string.ts';
 import type {
 	ClaimYourAccountBody,
 	EmailVerificationBody,
@@ -21,7 +21,7 @@ import type {
 	ResetPasswordBody,
 	UpdateUserDetailsBody,
 } from '../validator/user.js';
-import { ERRORS, MAIL_CONTENT, serveBadRequest, serveInternalServerError } from './resp/error.js';
+import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { serveData } from './resp/resp.js';
 import { serializeUser } from './serializer/user.js';
 

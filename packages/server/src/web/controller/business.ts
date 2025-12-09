@@ -46,7 +46,8 @@ export class BusinessController {
 				business,
 				user: {
 					email: user.email,
-					name: user.name,
+					first_name: user.first_name,
+					last_name: user.last_name,
 					phone: user.phone,
 					dial_code: user.dial_code,
 					role: user.role,
@@ -151,7 +152,7 @@ export class BusinessController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			if (user.role !== 'master' && user.role !== 'owner') {
+			if (user.role !== 'admin' && user.role !== 'super-admin') {
 				return serveBadRequest(c, ERRORS.NOT_ALLOWED);
 			}
 
