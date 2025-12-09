@@ -1,11 +1,9 @@
-import ApiService from './ApiService'
+import ApiService from './ApiService';
 
-export async function apiGetFiles<T, U extends Record<string, unknown>>(
-    params: U,
-) {
-    return ApiService.fetchDataWithAxios<T>({
-        url: '/asset',
-        method: 'get',
-        params,
-    })
+export async function apiGetFiles<T, U extends Record<string, unknown>>(params: U) {
+  return ApiService.fetchDataWithAxios<T>({
+    url: '/asset',
+    method: 'get',
+    params,
+  });
 }

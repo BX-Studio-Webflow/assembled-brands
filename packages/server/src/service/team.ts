@@ -119,19 +119,24 @@ export class TeamService {
 			if (!user) {
 				// Create user with default password (they'll need to reset it)
 				const tempPassword = generateSecurePassword(9);
-				await this.userService.create(
-					invitation.invitee_email.split('@')[0], // Use email prefix as name
-					invitation.invitee_email,
-					tempPassword, // User will need to reset this
-					'host',
-					'',
-					'',
-					{ is_verified: true, subscription_status: 'active' },
-				);
+				await this.userService.create({
+					email: invitation.invitee_email,
+					phone: '',
+					dial_code: '',
+					password: tempPassword, // User will need to reset this
+					role: 'user',
+					is_verified: true,
+					subscription_status: 'active',
+					first_name: '',
+					last_name: '',
+					loan_urgency: 'none',
+				});
+
 				user = (await this.userService.findByEmail(invitation.invitee_email)) ?? null;
 				if (!user) {
 					throw new Error('Failed to create or find user');
 				}
+
 				//send transactional email
 				sendTransactionalEmail(user.email, 'Temporary Password', 12, {
 					subject: 'New account created',

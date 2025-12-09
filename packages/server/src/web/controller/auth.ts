@@ -6,6 +6,7 @@ import { encrypt, verify } from '../../lib/encryption.js';
 import { encode, type JWTPayload } from '../../lib/jwt.ts';
 import { logger } from '../../lib/logger.ts';
 import type { UserRepository } from '../../repository/user.js';
+import { NewUser } from '../../schema/schema.ts';
 import type { AssetService } from '../../service/asset.js';
 import type { BusinessService } from '../../service/business.js';
 import type { S3Service } from '../../service/s3.js';
@@ -132,7 +133,19 @@ export class AuthController {
 
 			//6 digint random number
 			const token = Math.floor(100000 + Math.random() * 900000).toString();
-			await this.service.create(work_email, randomPassword, 'user', '+1', '1234567890', '', '', 'none', { email_token: token });
+			const newUser: NewUser = {
+				email: work_email,
+				password: randomPassword,
+				role: 'user',
+				dial_code: '+1',
+				phone: '1234567890',
+				first_name: '',
+				last_name: '',
+				loan_urgency: 'none',
+				email_token: token,
+			};
+
+			await this.service.create(newUser);
 
 			const user = await this.service.findByEmail(work_email);
 			if (!user) {

@@ -60,7 +60,8 @@ export class TeamRepository {
 				user: {
 					columns: {
 						id: true,
-						name: true,
+						first_name: true,
+						last_name: true,
 						email: true,
 						phone: true,
 						role: true,
@@ -87,7 +88,8 @@ export class TeamRepository {
 		if (search) {
 			members = allMembers.filter(
 				(member) =>
-					member.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
+					member.user?.first_name?.toLowerCase().includes(search.toLowerCase()) ||
+					member.user?.last_name?.toLowerCase().includes(search.toLowerCase()) ||
 					member.team?.name?.toLowerCase().includes(search.toLowerCase()),
 			);
 		}
@@ -172,7 +174,8 @@ export class TeamRepository {
 				team: true,
 				inviter: {
 					columns: {
-						name: true,
+						first_name: true,
+						last_name: true,
 						email: true,
 					},
 				},

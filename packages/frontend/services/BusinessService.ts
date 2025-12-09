@@ -1,20 +1,18 @@
-import ApiService from './ApiService'
-import type {
-    GetBusinessResponse,
-    UpdateBusinessRequest,
-} from '@/@types/business'
+import type { GetBusinessResponse, UpdateBusinessRequest } from '@/@types/business';
+
+import ApiService from './ApiService';
 
 export const apiGetBusiness = () => {
-    return ApiService.fetchDataWithAxios<GetBusinessResponse>({
-        url: '/business/my',
-        method: 'get',
-    })
-}
+  return ApiService.fetchDataWithAxios<GetBusinessResponse>({
+    url: '/business/my',
+    method: 'get',
+  });
+};
 
 export const apiUpdateBusiness = (data: UpdateBusinessRequest) => {
-    return ApiService.fetchDataWithAxios<void>({
-        url: '/business/my',
-        method: 'post',
-        data,
-    })
-}
+  return ApiService.fetchDataWithAxios<void>({
+    url: '/business/my',
+    method: 'post',
+    data,
+  });
+};
