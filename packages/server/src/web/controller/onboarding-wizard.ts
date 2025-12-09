@@ -68,12 +68,17 @@ export class OnboardingWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
+			const application = await this.service.findByUserId(user.id);
+			if (!application) {
+				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
+			}
+
 			const body: OnboardingStep2Body = await c.req.json();
-			const application = await this.service.saveStep2(user.id, body);
+			const updatedApplication = await this.service.saveStep2(user.id, body);
 
 			return serveData(c, {
 				message: 'Step 2 saved successfully',
-				application,
+				application: updatedApplication,
 			});
 		} catch (error) {
 			logger.error(error);
@@ -94,12 +99,17 @@ export class OnboardingWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
+			const application = await this.service.findByUserId(user.id);
+			if (!application) {
+				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
+			}
+
 			const body: OnboardingStep3Body = await c.req.json();
-			const application = await this.service.saveStep3(user.id, body);
+			const updatedApplication = await this.service.saveStep3(user.id, body);
 
 			return serveData(c, {
 				message: 'Step 3 saved successfully',
-				application,
+				application: updatedApplication,
 			});
 		} catch (error) {
 			logger.error(error);
@@ -122,10 +132,7 @@ export class OnboardingWizardController {
 
 			const progress = await this.service.getProgress(user.id);
 			if (!progress) {
-				return serveData(c, {
-					message: 'No onboarding progress found',
-					progress: null,
-				});
+				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
 			return serveData(c, {
@@ -150,12 +157,17 @@ export class OnboardingWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
+			const application = await this.service.findByUserId(user.id);
+			if (!application) {
+				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
+			}
+
 			const body: UpdateStepBody = await c.req.json();
-			const application = await this.service.updateStep(user.id, body.step);
+			const updatedApplication = await this.service.updateStep(user.id, body.step);
 
 			return serveData(c, {
 				message: 'Step updated successfully',
-				application,
+				application: updatedApplication,
 			});
 		} catch (error) {
 			logger.error(error);
@@ -176,11 +188,16 @@ export class OnboardingWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const application = await this.service.completeApplication(user.id);
+			const application = await this.service.findByUserId(user.id);
+			if (!application) {
+				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
+			}
+
+			const completedApplication = await this.service.completeApplication(user.id);
 
 			return serveData(c, {
 				message: 'Onboarding completed successfully',
-				application,
+				application: completedApplication,
 			});
 		} catch (error) {
 			logger.error(error);

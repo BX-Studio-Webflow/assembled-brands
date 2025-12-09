@@ -132,6 +132,11 @@ export class FinancialWizardController {
 				return serveBadRequest(c, 'Invalid step number');
 			}
 
+			const application = await this.service.findByUserId(user.id);
+			if (!application) {
+				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
+			}
+
 			const documents = await this.service.getDocumentsByStep(user.id, step);
 
 			return serveData(c, {
@@ -156,12 +161,17 @@ export class FinancialWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
+			const application = await this.service.findByUserId(user.id);
+			if (!application) {
+				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
+			}
+
 			const body: UpdateStepBody = await c.req.json();
-			const application = await this.service.updateStep(user.id, body.step);
+			const updatedApplication = await this.service.updateStep(user.id, body.step);
 
 			return serveData(c, {
 				message: 'Step updated successfully',
-				application,
+				application: updatedApplication,
 			});
 		} catch (error) {
 			logger.error(error);
@@ -182,11 +192,16 @@ export class FinancialWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const application = await this.service.completeApplication(user.id);
+			const application = await this.service.findByUserId(user.id);
+			if (!application) {
+				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
+			}
+
+			const completedApplication = await this.service.completeApplication(user.id);
 
 			return serveData(c, {
 				message: 'Financial wizard completed successfully',
-				application,
+				application: completedApplication,
 			});
 		} catch (error) {
 			logger.error(error);
@@ -205,6 +220,11 @@ export class FinancialWizardController {
 			const user = await this.getUser(c);
 			if (!user) {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+			}
+
+			const application = await this.service.findByUserId(user.id);
+			if (!application) {
+				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
 			const documentId = Number.parseInt(c.req.param('id'));

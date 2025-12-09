@@ -2,15 +2,21 @@ import { logger } from '../lib/logger.ts';
 import type { OnboardingWizardRepository } from '../repository/onboarding-wizard.ts';
 import type { NewOnboardingApplication, OnboardingApplication } from '../schema/schema.ts';
 import type { OnboardingStep1Body, OnboardingStep2Body, OnboardingStep3Body } from '../web/validator/onboarding.js';
+import type { HubSpotService } from './hubspot.ts';
+import type { UserService } from './user.ts';
 
 /**
  * Service class for managing onboarding wizard applications
  */
 export class OnboardingWizardService {
 	private repo: OnboardingWizardRepository;
+	private hubSpotService: HubSpotService;
+	private userService: UserService;
 
-	constructor(onboardingWizardRepo: OnboardingWizardRepository) {
+	constructor(onboardingWizardRepo: OnboardingWizardRepository, hubSpotService: HubSpotService, userService: UserService) {
 		this.repo = onboardingWizardRepo;
+		this.hubSpotService = hubSpotService;
+		this.userService = userService;
 	}
 
 	/**
@@ -121,8 +127,11 @@ export class OnboardingWizardService {
 	 */
 	public async saveStep2(userId: number, data: OnboardingStep2Body): Promise<OnboardingApplication> {
 		try {
-			const application = await this.getOrCreate(userId);
-			const updated = await this.repo.update(application.id, {
+			const application = await this.findByUserId(userId);
+			if (!application) {
+				throw new Error('Application not found');
+			}
+			await this.repo.update(application.id, {
 				years_in_business: data.years_in_business,
 				asset_type: data.asset_type,
 				desired_loan_amount: data.desired_loan_amount,
@@ -149,12 +158,15 @@ export class OnboardingWizardService {
 	 */
 	public async saveStep3(userId: number, data: OnboardingStep3Body): Promise<OnboardingApplication> {
 		try {
-			const application = await this.getOrCreate(userId);
+			const application = await this.findByUserId(userId);
+			if (!application) {
+				throw new Error('Application not found');
+			}
 
 			// Determine qualification based on revenue qualification
 			const isQualified = data.revenue_qualification === 'yes';
 
-			const updated = await this.repo.update(application.id, {
+			await this.repo.update(application.id, {
 				company_type: data.company_type,
 				company_type_other: data.company_type_other || null,
 				revenue_qualification: data.revenue_qualification,
@@ -168,6 +180,19 @@ export class OnboardingWizardService {
 			if (!result) {
 				throw new Error('Failed to retrieve updated application');
 			}
+
+			// If disqualified, send to HubSpot and delete user account
+			if (!isQualified) {
+				const user = await this.userService.find(userId);
+				if (user) {
+					const [hubspotId, deleteUser] = await Promise.all([
+						this.hubSpotService.sendDisqualifiedLead(user, result),
+						this.userService.delete(userId),
+					]);
+					logger.info(`Disqualified lead ${userId} sent to HubSpot and user account ${userId} deleted. HubSpot ID: ${hubspotId}`);
+				}
+			}
+
 			return result;
 		} catch (error) {
 			logger.error(error);
@@ -184,7 +209,10 @@ export class OnboardingWizardService {
 	 */
 	public async updateStep(userId: number, step: number): Promise<OnboardingApplication> {
 		try {
-			const application = await this.getOrCreate(userId);
+			const application = await this.findByUserId(userId);
+			if (!application) {
+				throw new Error('Application not found');
+			}
 			await this.repo.update(application.id, {
 				current_step: step,
 				updated_at: new Date(),
@@ -208,7 +236,10 @@ export class OnboardingWizardService {
 	 */
 	public async completeApplication(userId: number): Promise<OnboardingApplication> {
 		try {
-			const application = await this.getOrCreate(userId);
+			const application = await this.findByUserId(userId);
+			if (!application) {
+				throw new Error('Application not found');
+			}
 			await this.repo.update(application.id, {
 				is_complete: true,
 				updated_at: new Date(),

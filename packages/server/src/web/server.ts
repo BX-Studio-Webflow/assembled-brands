@@ -17,6 +17,7 @@ import { AssetService } from '../service/asset.ts';
 import { BusinessService } from '../service/business.ts';
 import { EmailService } from '../service/email.js';
 import { FinancialWizardService } from '../service/financial-wizard.ts';
+import { HubSpotService } from '../service/hubspot.ts';
 import { NotificationService } from '../service/notification.ts';
 import { OnboardingWizardService } from '../service/onboarding-wizard.ts';
 import { S3Service } from '../service/s3.ts';
@@ -98,7 +99,8 @@ export class Server {
 		const userService = new UserService(userRepo);
 		const teamService = new TeamService(teamRepo, userService);
 		const financialWizardService = new FinancialWizardService(financialWizardRepo, assetService);
-		const onboardingWizardService = new OnboardingWizardService(onboardingWizardRepo);
+		const hubSpotService = new HubSpotService();
+		const onboardingWizardService = new OnboardingWizardService(onboardingWizardRepo, hubSpotService, userService);
 
 		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService);
 		const emailService = new EmailService(emailRepo);

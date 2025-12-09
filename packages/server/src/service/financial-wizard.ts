@@ -30,8 +30,26 @@ export class FinancialWizardService {
 					current_step: 1,
 					is_complete: false,
 				});
+				if (!application) {
+					throw new Error('Failed to create application');
+				}
 			}
 			return application;
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Finds application by user ID
+	 * @param {number} userId - ID of the user
+	 * @returns {Promise<FinancialWizardApplication | undefined>} The application if found
+	 * @throws {Error} When application retrieval fails
+	 */
+	public async findByUserId(userId: number) {
+		try {
+			return await this.repo.findApplicationByUserId(userId);
 		} catch (error) {
 			logger.error(error);
 			throw error;
@@ -86,9 +104,6 @@ export class FinancialWizardService {
 			const asset = await this.assetService.getAsset(assetId);
 			if (!asset || asset.user_id !== userId) {
 				throw new Error('Asset not found or access denied');
-			}
-			if (!application) {
-				throw new Error('Application not found');
 			}
 			const document = await this.repo.createDocument({
 				application_id: application.id,
@@ -224,7 +239,7 @@ export class FinancialWizardService {
 		try {
 			const application = await this.repo.findApplicationByUserId(userId);
 			if (!application) {
-				return [];
+				throw new Error('Application not found');
 			}
 
 			const documents = await this.repo.findDocumentsByStep(application.id, step);
