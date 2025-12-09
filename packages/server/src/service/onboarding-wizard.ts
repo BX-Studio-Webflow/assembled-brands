@@ -185,11 +185,22 @@ export class OnboardingWizardService {
 			if (!isQualified) {
 				const user = await this.userService.find(userId);
 				if (user) {
-					const [hubspotId, deleteUser] = await Promise.all([
-						this.hubSpotService.sendDisqualifiedLead(user, result),
-						this.userService.delete(userId),
-					]);
-					logger.info(`Disqualified lead ${userId} sent to HubSpot and user account ${userId} deleted. HubSpot ID: ${hubspotId}`);
+					try {
+						const [hubspotResult] = await Promise.allSettled([
+							this.hubSpotService.sendDisqualifiedLead(user, result),
+							this.userService.delete(userId),
+						]);
+
+						if (hubspotResult.status === 'fulfilled') {
+							logger.info(`Disqualified lead ${userId} sent to HubSpot. HubSpot ID: ${hubspotResult.value.id}`);
+						} else {
+							logger.error({ error: hubspotResult.reason }, `Failed to send disqualified lead ${userId} to HubSpot`);
+						}
+
+						logger.info(`User account ${userId} deletion attempted for disqualified lead`);
+					} catch (error) {
+						logger.error(error);
+					}
 				}
 			}
 

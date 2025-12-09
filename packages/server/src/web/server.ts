@@ -40,12 +40,12 @@ import {
 	claimYourAccountValidator,
 	emailVerificationValidator,
 	loginValidator,
-	registerTokenValidator,
 	registrationValidator,
 	requestResetPasswordValidator,
 	resetPasswordValidator,
 	startAccountRecoveryValidator,
 	updateUserDetailsValidator,
+	verifyEmailAndSetPasswordValidator,
 } from './validator/user.js';
 
 export class Server {
@@ -136,11 +136,11 @@ export class Server {
 
 		user.get('/me', authCheck, authCtrl.me);
 		user.post('/login', loginValidator, authCtrl.login);
-		user.post('/register-get-started', registrationValidator, authCtrl.register);
+		user.post('/cold-lead-register', registrationValidator, authCtrl.coldRegister);
 		user.post('/claim-your-account', claimYourAccountValidator, authCtrl.claimYourAccount);
 
 		user.post('/send-verification-code', emailVerificationValidator, authCtrl.sendToken);
-		user.post('/verify-registration', registerTokenValidator, authCtrl.verifyRegistrationToken);
+		user.post('/verify-registration', verifyEmailAndSetPasswordValidator, authCtrl.verifyEmailAndSetPassword);
 		user.post('/start-account-recovery', requestResetPasswordValidator, authCtrl.startPasswordReset);
 		user.post('/reset-password', resetPasswordValidator, authCtrl.resetPassword);
 		user.put('/details', authCheck, updateUserDetailsValidator, authCtrl.updateUserDetails);

@@ -15,11 +15,11 @@ import type {
 	ClaimYourAccountBody,
 	EmailVerificationBody,
 	LoginBody,
-	RegisterTokenBody,
 	RegistrationBody,
 	RequestResetPasswordBody,
 	ResetPasswordBody,
 	UpdateUserDetailsBody,
+	VerifyEmailAndSetPasswordBody,
 } from '../validator/user.js';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { serveData } from './resp/resp.js';
@@ -93,7 +93,7 @@ export class AuthController {
 	 * @returns {Promise<Response>} Response containing JWT token and user data
 	 * @throws {Error} When registration fails or user already exists
 	 */
-	public register = async (c: Context) => {
+	public coldRegister = async (c: Context) => {
 		const body: RegistrationBody = await c.req.json();
 		try {
 			const { work_email } = body;
@@ -129,25 +129,28 @@ export class AuthController {
 			}
 
 			const randomPassword = generateSecurePassword(6);
-			await this.service.create(work_email, randomPassword, 'user', '+1', '1234567890', '', '', 'none');
+
+			//6 digint random number
+			const token = Math.floor(100000 + Math.random() * 900000).toString();
+			await this.service.create(work_email, randomPassword, 'user', '+1', '1234567890', '', '', 'none', { email_token: token });
 
 			const user = await this.service.findByEmail(work_email);
 			if (!user) {
 				return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
 			}
 
-			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
-				subject: 'Welcome to Assembled Brands',
-				title: 'Welcome to Assembled Brands',
-				subtitle: `Welcome to Assembled Brands`,
-				body: `Welcome to Assembled Brands. We have are glad to have you on board.`,
-				buttonText: 'Ok, got it',
-				buttonLink: `${env.FRONTEND_URL}`,
+			const link = `${env.FRONTEND_URL}/verify-registration?token=${token}&email=${user.email}`;
+
+			await sendTransactionalEmail(user.email, `Sign up code`, 12, {
+				subject: 'Click the link to verify your email',
+				title: 'Click the link to verify your email',
+				subtitle: `Let's get you verified`,
+				body: `Welcome to ${env.BRAND_NAME}. Let's get you verified. Click the link to verify your email: ${link}`,
+				buttonText: 'Verify email',
+				buttonLink: link,
 			});
 
-			const token = await encode(user.id, user.email);
-			const serializedUser = await serializeUser(user);
-			return serveData(c, { token, user: serializedUser });
+			return serveData(c, { success: true, message: 'User created successfully, please check your email for your verification code' });
 		} catch (err) {
 			return serveInternalServerError(c, err);
 		}
@@ -219,7 +222,7 @@ export class AuthController {
 	};
 
 	/**
-	 * Sends a verification token to user's email
+	 * Sends a verification token to user's email, tp prevent spam registrations
 	 * @param {Context} c - The Hono context containing email information
 	 * @returns {Promise<Response>} Response indicating success or failure of token sending
 	 * @throws {Error} When token generation or email sending fails
@@ -267,35 +270,25 @@ export class AuthController {
 	 * @returns {Promise<Response>} Response indicating verification status
 	 * @throws {Error} When token verification fails
 	 */
-	public verifyRegistrationToken = async (c: Context) => {
+	public verifyEmailAndSetPassword = async (c: Context) => {
 		try {
-			const body: RegisterTokenBody = await c.req.json();
+			const body: VerifyEmailAndSetPasswordBody = await c.req.json();
 			const user = await this.service.find(body.id);
 			if (!user) {
-				return c.json(
-					{
-						success: false,
-						message: 'Ops, could not verify account, please check',
-						code: 'AUTH_INVALID_CREDENTIALS',
-					},
-					401,
-				);
+				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 			if (user.email_token !== String(body.token)) {
-				return c.json(
-					{
-						success: false,
-						message: 'Ops, wrong code, please check',
-						code: 'AUTH_INVALID_CREDENTIALS',
-					},
-					401,
-				);
+				return serveBadRequest(c, ERRORS.INVALID_TOKEN);
 			}
-			await this.service.update(user.id, { is_verified: true });
-			return serveData(c, {
-				success: true,
-				message: 'Email verified successfully',
-			});
+
+			//set password
+			const hashedPassword = encrypt(body.password);
+			await this.service.update(user.id, { password: hashedPassword, email_token: null, is_verified: true });
+
+			//generate token and serialize user
+			const token = await encode(user.id, user.email);
+			const serializedUser = await serializeUser(user);
+			return serveData(c, { token, user: serializedUser });
 		} catch (err) {
 			logger.error(err);
 			return serveInternalServerError(c, err);
