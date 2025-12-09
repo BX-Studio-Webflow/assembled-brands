@@ -1,5 +1,6 @@
 import { logger } from '../lib/logger.ts';
 import type { FinancialWizardRepository } from '../repository/financial-wizard.ts';
+import { NewFinancialDocument } from '../schema/index.ts';
 import type { FinancialOverviewBody, FinancialWizardProgressResponse } from '../web/validator/financial-wizard.ts';
 import type { AssetService } from './asset.js';
 
@@ -91,13 +92,19 @@ export class FinancialWizardService {
 	 * Uploads a financial document
 	 * @param {number} userId - ID of the user
 	 * @param {number} step - Step number (2-5)
-	 * @param {string} documentType - Type of document
+	 * @param {NewFinancialDocument['document_type']} documentType - Type of document
 	 * @param {number} assetId - ID of the uploaded asset
 	 * @param {string} [notes] - Optional notes about the document
 	 * @returns {Promise<FinancialDocument>} The created document
 	 * @throws {Error} When document upload fails or asset access is denied
 	 */
-	public async uploadDocument(userId: number, step: number, documentType: string, assetId: number, notes?: string) {
+	public async uploadDocument(
+		userId: number,
+		step: number,
+		documentType: NewFinancialDocument['document_type'],
+		assetId: number,
+		notes?: string,
+	) {
 		try {
 			const application = await this.getOrCreateApplication(userId);
 
@@ -109,7 +116,7 @@ export class FinancialWizardService {
 				application_id: application.id,
 				asset_id: assetId,
 				step,
-				document_type: documentType as any,
+				document_type: documentType,
 				notes: notes || null,
 			});
 
@@ -148,13 +155,31 @@ export class FinancialWizardService {
 				documentsByStep[doc.step].push(doc);
 			}
 
-			const enrichedDocumentsByStep: Record<number, any[]> = {};
+			const enrichedDocumentsByStep: Record<
+				number,
+				Array<{
+					id: number;
+					application_id: number;
+					asset_id: number;
+					step: number;
+					document_type: string;
+					is_current: boolean;
+					version: number;
+					notes: string | null;
+					created_at: Date | null;
+					updated_at: Date | null;
+					asset_url: string | null;
+					asset_name: string | null;
+				}>
+			> = {};
 			for (const [step, docs] of Object.entries(documentsByStep)) {
 				enrichedDocumentsByStep[Number(step)] = await Promise.all(
 					docs.map(async (doc) => {
 						const asset = await this.assetService.getAsset(doc.asset_id);
 						return {
 							...doc,
+							is_current: doc.is_current ?? false,
+							version: doc.version ?? 1,
 							asset_url: asset?.asset_url || null,
 							asset_name: asset?.asset_name || null,
 						};

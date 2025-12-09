@@ -43,7 +43,6 @@ import {
 	registrationValidator,
 	requestResetPasswordValidator,
 	resetPasswordValidator,
-	startAccountRecoveryValidator,
 	updateUserDetailsValidator,
 	verifyEmailAndSetPasswordValidator,
 } from './validator/user.js';
@@ -246,7 +245,7 @@ export class Server {
 
 	private registerGoogleRoutes(api: Hono, financialWizardCtrl: FinancialWizardController) {
 		const google = new Hono();
-		const authCheck = jwt({ secret: env.SECRET_KEY });
+		//const authCheck = jwt({ secret: env.SECRET_KEY });
 
 		// Unauthenticated routes
 		google.post('/drive/test', financialWizardCtrl.testGoogleDrive);

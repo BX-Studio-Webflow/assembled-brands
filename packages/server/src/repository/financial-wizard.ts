@@ -29,7 +29,7 @@ export class FinancialWizardRepository {
 	}
 
 	public async updateApplication(id: number, application: Partial<NewFinancialWizardApplication>) {
-		const { updated_at, ...updateData } = application;
+		const { ...updateData } = application;
 		await this.db.update(financialWizardApplicationSchema).set(updateData).where(eq(financialWizardApplicationSchema.id, id));
 		return await this.findApplicationById(id);
 	}
@@ -40,7 +40,7 @@ export class FinancialWizardRepository {
 		});
 
 		if (existing) {
-			const { updated_at, ...updateData } = overview;
+			const { ...updateData } = overview;
 			await this.db.update(financialOverviewSchema).set(updateData).where(eq(financialOverviewSchema.id, existing.id));
 			return await this.findFinancialOverviewByApplicationId(overview.application_id);
 		}
@@ -80,7 +80,7 @@ export class FinancialWizardRepository {
 			.where(
 				and(
 					eq(financialDocumentSchema.application_id, document.application_id),
-					eq(financialDocumentSchema.document_type, document.document_type as any),
+					eq(financialDocumentSchema.document_type, document.document_type),
 				),
 			);
 
@@ -114,11 +114,11 @@ export class FinancialWizardRepository {
 		});
 	}
 
-	public async findCurrentDocumentByType(applicationId: number, documentType: string) {
+	public async findCurrentDocumentByType(applicationId: number, documentType: NewFinancialDocument['document_type']) {
 		return this.db.query.financialDocumentSchema.findFirst({
 			where: and(
 				eq(financialDocumentSchema.application_id, applicationId),
-				eq(financialDocumentSchema.document_type, documentType as any),
+				eq(financialDocumentSchema.document_type, documentType),
 				eq(financialDocumentSchema.is_current, true),
 			),
 		});

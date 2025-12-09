@@ -40,8 +40,8 @@ export const userSchema = sqliteTable('user', {
 	}),
 	trial_ends_at: integer('trial_ends_at', { mode: 'timestamp' }),
 	auth_provider: text('auth_provider', { enum: ['local'] }).default('local'),
-	first_name: text('first_name').notNull(),
-	last_name: text('last_name').notNull(),
+	first_name: text('first_name').notNull().default(''),
+	last_name: text('last_name').notNull().default(''),
 	loan_urgency: text('loan_urgency', { enum: ['none', 'yesterday', 'this-month', '3-months', 'this-year'] }).default('none'),
 });
 

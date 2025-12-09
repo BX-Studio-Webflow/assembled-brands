@@ -100,7 +100,7 @@ export class OnboardingWizardService {
 	public async saveStep1(userId: number, data: OnboardingStep1Body): Promise<OnboardingApplication> {
 		try {
 			const application = await this.getOrCreate(userId);
-			const updated = await this.repo.update(application.id, {
+			await this.repo.update(application.id, {
 				legal_name: data.legal_name,
 				employee_count: data.employee_count,
 				website: data.website || null,
