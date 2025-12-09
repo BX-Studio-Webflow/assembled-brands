@@ -1,27 +1,49 @@
 import * as esbuild from 'esbuild';
-import { readdirSync } from 'fs';
+import { readdirSync, existsSync } from 'fs';
 import { join, sep } from 'path';
 
 // Config output
 const BUILD_DIRECTORY = 'dist';
 const PRODUCTION = process.env.NODE_ENV === 'production';
 
-// Config entrypoint files
-const ENTRY_POINTS = ['index.ts'];
+// Get all page entry points
+function getPageEntryPoints() {
+  const entryPoints = {};
+  const pagesDir = 'pages';
+
+  if (existsSync(pagesDir)) {
+    const pages = readdirSync(pagesDir, { withFileTypes: true });
+
+    for (const page of pages) {
+      if (page.isDirectory()) {
+        const indexPath = join(pagesDir, page.name, 'index.ts');
+        if (existsSync(indexPath)) {
+          entryPoints[`pages/${page.name}/index`] = indexPath;
+        }
+      }
+    }
+  }
+
+  return entryPoints;
+}
+
+const PAGE_ENTRY_POINTS = getPageEntryPoints();
 
 // Config dev serving
 const LIVE_RELOAD = !PRODUCTION;
 const SERVE_PORT = 3000;
 const SERVE_ORIGIN = `http://localhost:${SERVE_PORT}`;
 
-// Create context
+// Create context for page bundles
 const context = await esbuild.context({
   bundle: true,
-  entryPoints: ENTRY_POINTS,
+  entryPoints: PAGE_ENTRY_POINTS,
   outdir: BUILD_DIRECTORY,
+  outbase: '.',
   minify: PRODUCTION,
   sourcemap: !PRODUCTION,
   target: PRODUCTION ? 'es2020' : 'esnext',
+  format: 'esm',
   inject: LIVE_RELOAD ? ['./bin/live-reload.js'] : undefined,
   define: {
     SERVE_ORIGIN: JSON.stringify(SERVE_ORIGIN),
