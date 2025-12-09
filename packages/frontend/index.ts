@@ -16,6 +16,7 @@ window.Webflow.push(() => {
             phone: '1234567890',
             dial_code: '+1',
         });
+        console.log('API call successful');
     } catch (error) {
         const { message } = error as AxiosError;
         console.error(message);
