@@ -3,6 +3,7 @@ import type { AxiosError } from 'axios';
 //const unauthorizedCode = [401, 419, 440];
 
 const AxiosResponseIntrceptorErrorCallback = (error: AxiosError) => {
+  console.warn(error);
   //const { response } = error;
   /*const { setToken } = useToken();
 
