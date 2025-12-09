@@ -11,7 +11,7 @@ declare const process: {
  * See https://playwright.dev/docs/test-configuration.
  */
 const config: PlaywrightTestConfig = {
-  testDir: './tests',
+  testDir: './packages/frontend/tests',
 
   /* Maximum time one test can run for. */
   timeout: 30 * 1000,
@@ -75,7 +75,7 @@ const config: PlaywrightTestConfig = {
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm dev',
+    command: 'pnpm frontend:dev',
     port: 3000,
     reuseExistingServer: true,
   },

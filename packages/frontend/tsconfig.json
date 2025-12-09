@@ -1,0 +1,24 @@
+{
+    "extends": "@finsweet/tsconfig",
+    "compilerOptions": {
+        "rootDir": ".",
+        "baseUrl": "./",
+        "allowImportingTsExtensions": true,
+        "noEmit": true,
+        "paths": {
+            "$utils/*": [
+                "./utils/*"
+            ]
+        },
+        "types": [
+            "@finsweet/ts-utils"
+        ]
+    },
+    "include": [
+        "./**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

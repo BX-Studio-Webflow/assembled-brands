@@ -17,20 +17,17 @@
     "url": "https://github.com/finsweet/developer-starter/issues"
   },
   "type": "module",
-  "main": "packages/index.ts",
-  "module": "packages/index.ts",
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "dev": "cross-env NODE_ENV=development node ./bin/build.js",
-    "build": "cross-env NODE_ENV=production node ./bin/build.js",
+    "frontend:dev": "pnpm --filter @assembled-brands/frontend dev",
+    "frontend:build": "pnpm --filter @assembled-brands/frontend build",
+    "server:dev": "wrangler dev",
+    "server:build": "wrangler deploy",
     "lint": "eslint ./packages --ignore-pattern '**/.wrangler/**' --ignore-pattern '**/node_modules/**' && prettier --check ./packages --ignore-path .prettierignore",
     "lint:fix": "eslint ./packages --fix --ignore-pattern '**/.wrangler/**' --ignore-pattern '**/node_modules/**'",
-    "check": "tsc --noEmit",
+    "check": "pnpm --filter @assembled-brands/frontend check && pnpm --filter server check && tsc --noEmit",
     "format": "prettier --write ./packages",
-    "test": "playwright test",
-    "test:ui": "playwright test --ui",
+    "test": "playwright test --config=packages/frontend/playwright.config.ts",
+    "test:ui": "playwright test --ui --config=packages/frontend/playwright.config.ts",
     "release": "changeset publish",
     "update": "pnpm update -i -L -r",
     "wrangler:login": "wrangler login",
@@ -57,8 +54,7 @@
     "wrangler": "^4.52.1"
   },
   "dependencies": {
-    "@finsweet/ts-utils": "^0.40.0",
-    "axios": "^1.13.2"
+    "@assembled-brands/frontend": "workspace:*"
   },
   "engines": {
     "pnpm": ">=10"

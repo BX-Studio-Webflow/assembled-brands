@@ -1,6 +1,7 @@
+import { appConfig } from '$utils/config';
 import type { InternalAxiosRequestConfig } from 'axios';
 
-import { appConfig } from '$utils/config';
+
 
 const AxiosRequestIntrceptorConfigCallback = (config: InternalAxiosRequestConfig) => {
   const storage = appConfig.accessTokenPersistStrategy;

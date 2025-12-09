@@ -1,5 +1,6 @@
-import type { GetBusinessResponse, UpdateBusinessRequest } from '@/@types/business';
 
+
+import type { GetBusinessResponse, UpdateBusinessRequest } from '../types/business';
 import ApiService from './ApiService';
 
 export const apiGetBusiness = () => {

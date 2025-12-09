@@ -1,7 +1,7 @@
 import { encrypt } from '../lib/encryption.ts';
 import { logger } from '../lib/logger.ts';
 import type { UserRepository } from '../repository/user.ts';
-import { NewUser, type User } from '../schema/schema.ts';
+import { type NewUser, type User } from '../schema/schema.ts';
 
 /**
  * Service class for managing users, including creation, authentication, and profile management
