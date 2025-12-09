@@ -1,48 +1,48 @@
 {
-  "version": "7",
-  "dialect": "sqlite",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "6",
-      "when": 1764854777845,
-      "tag": "0000_funny_thanos",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1764857754196,
-      "tag": "0001_closed_alice",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1764861462073,
-      "tag": "0002_clumsy_garia",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1765215630997,
-      "tag": "0003_daily_jack_flag",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1765289230361,
-      "tag": "0004_fantastic_triton",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1765289331626,
-      "tag": "0005_wandering_iron_monger",
-      "breakpoints": true
-    }
-  ]
+	"version": "7",
+	"dialect": "sqlite",
+	"entries": [
+		{
+			"idx": 0,
+			"version": "6",
+			"when": 1764854777845,
+			"tag": "0000_funny_thanos",
+			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "6",
+			"when": 1764857754196,
+			"tag": "0001_closed_alice",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "6",
+			"when": 1764861462073,
+			"tag": "0002_clumsy_garia",
+			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "6",
+			"when": 1765215630997,
+			"tag": "0003_daily_jack_flag",
+			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "6",
+			"when": 1765289230361,
+			"tag": "0004_fantastic_triton",
+			"breakpoints": true
+		},
+		{
+			"idx": 5,
+			"version": "6",
+			"when": 1765289331626,
+			"tag": "0005_wandering_iron_monger",
+			"breakpoints": true
+		}
+	]
 }

@@ -7,11 +7,9 @@
 	"name": "server",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-12-02",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
+	"compatibility_flags": ["nodejs_compat"],
 	"observability": {
-		"enabled": true
+		"enabled": true,
 	},
 	"env": {
 		"production": {
@@ -22,8 +20,8 @@
 					"database_name": "assembled-prod",
 					"database_id": "759f912b-f645-499f-8f7f-10f494f22c7f",
 					"remote": true,
-					"migrations_dir": "./src/schema/migrations"
-				}
+					"migrations_dir": "./src/schema/migrations",
+				},
 			],
 			"vars": {
 				"LOG_LEVEL": "info",
@@ -38,8 +36,8 @@
 				"BRAND_NAME": "Assembled Brands",
 				"GOOGLE_CLIENT_EMAIL": "my-service-account@drive-intergration-480614.iam.gserviceaccount.com",
 				"GOOGLE_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCUMMbqsadQoqNk\nOqWpYfeGLg3US2Fg3sDPQ6stKoODZj4qkLM9cVA5S9vCZykYoLcyuir/JJlm0pa9\nrBRtV1fwaZREP/Lb95neA7VSvDOMhuD/qUPqMVxFJ5jh0OGBYsuRn7FJtUrVtSu8\nBPx/hIl7wIUZxR4odnbYH/M+K5bLxpWbFRiW4SEn+N+IEOjSbpMCIFHHe7P+bseq\nzkqVW8SFisdsi+OxW6uLfkpZvsG4IocsL2EYo7yFIeARoy1yIMUO+O/BBpwlyVXz\nZI6kdFJOfFMpbMI4wsOC3K9uigu+7VgK9Fs7b1ZHkPx9jvnZD5AvOWrUlH2u3SLS\n9tCAnzZhAgMBAAECgf93GbzFY4LVi+FF7Ny4BcSqUtlKhkr9UAominxJEKIiOUo9\na46jEy8m3ZEB7WdaI9EZNAbaiM/Bk/8S8fp45noG/tPrBnppz9YaWWCh3iCQENdE\nowWyc3l1Gx4EX5zeIEj8ARy74LkEiVddBaTp19unWlOfIo3ad1uM2CDnFqFbpEV1\nFuhiLr5kKYR/bdNGp7/GnthtDzBZEwocSqoZsqIO0QtFiXtUwJumSiBO5Vd8Vo1g\nwkqIBJOXhWSjtHMVMmyTtWF8pJjOoWDexkK/vx5xw1QPUe2BPn553CsrnG4oeQhW\nZ6/0muGiCfh9vtz5FMDLZZ4V1HBBZNBieQUcmTUCgYEAzr8/6/cYEDNPmjcYfTph\nXcUEpV9WdTI2RbqUUsEtZ3Mizd4GD3dqBMh9vGdql6yxxzjO9Ov7UOwqyZuhGuYW\npTOmZaklBnwqXLJ4QScqXDzqpCw8qHGcoOUhSIHGYifNTK4Hy91KPtKzsErhn5pi\nz4uoTK+0oktEmrg/vzG+zeUCgYEAt35gshnrH8toX46gTNrz+ygeUnQVjK1o3Il6\nA8iIR5oW+SLL0AkgsmSReZs0j5i/ZmiRq5R6P+m39jjrQSihSiF0zuejRNmNUtZZ\n8WMmqj6CGjaMgAXExpSU9kjM3nI63n7oLKAJTKmIQAd7dBoKGXHsDk1gmuTkp3xX\nYXStns0CgYEAvjqwySABDx73NnFNYiQuZIYcQUFYntsFnuEPCpneehoxQvTv5Jk+\nfoovTwRkyoxGw4Ucv7TF9+5lbD17XfGpknXUvCOHAtGKdOJtzZ0I1/fg+hAN+/sV\nX+GT31AxRi1TNCPI3qaNYwKh/SrZMO5vzoG06GKfNNlGlYnEddqCspUCgYEAitsN\n3XkTnrnUwAs0bzR50SPo3kiOTiij48/9D4Pe7SBEJkAYr9NYdOb512aF/ex/WsXj\nBk6TvG3nEmK8VFCkzW5H8JMF0II5Geivo6V+ivJGjgOdivvSjtu9ZiptLiCPP/QV\nSj/JCcR5IMsItzFFV0AIfEI9yrlP9xZ3IX6kLDkCgYB0DIa0JAnD+tV9uvk8ML1Z\nsQetiIoRl/x3gpoCfhtwWLyzunUeS3mZfeUtBqBx62Hg2kOuVNgsHP2RMaMAdU8U\nn0nvhaXeaixPy2uTtesfJAh+JQX0Io/0RrJLvmQ/lzvNMYhkbukX6ew7XyFvaEhu\n+ZTUIgU731Us5CzqvfKAGQ==\n-----END PRIVATE KEY-----\n",
-				"GOOGLE_DRIVE_FOLDER_ID": "0AJXqL9jbHtG6Uk9PVA"
-			}
+				"GOOGLE_DRIVE_FOLDER_ID": "0AJXqL9jbHtG6Uk9PVA",
+			},
 		},
 		"development": {
 			"name": "assembled-brands-dev",
@@ -49,7 +47,7 @@
 					"database_name": "assembled-dev",
 					"database_id": "b104f47c-9d4e-478e-9f90-b6f070956f37",
 					"remote": true,
-					"migrations_dir": "./src/schema/migrations"
+					"migrations_dir": "./src/schema/migrations",
 				},
 			],
 			"vars": {
@@ -65,9 +63,9 @@
 				"BRAND_NAME": "Assembled Brands",
 				"GOOGLE_CLIENT_EMAIL": "my-service-account@drive-intergration-480614.iam.gserviceaccount.com",
 				"GOOGLE_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCUMMbqsadQoqNk\nOqWpYfeGLg3US2Fg3sDPQ6stKoODZj4qkLM9cVA5S9vCZykYoLcyuir/JJlm0pa9\nrBRtV1fwaZREP/Lb95neA7VSvDOMhuD/qUPqMVxFJ5jh0OGBYsuRn7FJtUrVtSu8\nBPx/hIl7wIUZxR4odnbYH/M+K5bLxpWbFRiW4SEn+N+IEOjSbpMCIFHHe7P+bseq\nzkqVW8SFisdsi+OxW6uLfkpZvsG4IocsL2EYo7yFIeARoy1yIMUO+O/BBpwlyVXz\nZI6kdFJOfFMpbMI4wsOC3K9uigu+7VgK9Fs7b1ZHkPx9jvnZD5AvOWrUlH2u3SLS\n9tCAnzZhAgMBAAECgf93GbzFY4LVi+FF7Ny4BcSqUtlKhkr9UAominxJEKIiOUo9\na46jEy8m3ZEB7WdaI9EZNAbaiM/Bk/8S8fp45noG/tPrBnppz9YaWWCh3iCQENdE\nowWyc3l1Gx4EX5zeIEj8ARy74LkEiVddBaTp19unWlOfIo3ad1uM2CDnFqFbpEV1\nFuhiLr5kKYR/bdNGp7/GnthtDzBZEwocSqoZsqIO0QtFiXtUwJumSiBO5Vd8Vo1g\nwkqIBJOXhWSjtHMVMmyTtWF8pJjOoWDexkK/vx5xw1QPUe2BPn553CsrnG4oeQhW\nZ6/0muGiCfh9vtz5FMDLZZ4V1HBBZNBieQUcmTUCgYEAzr8/6/cYEDNPmjcYfTph\nXcUEpV9WdTI2RbqUUsEtZ3Mizd4GD3dqBMh9vGdql6yxxzjO9Ov7UOwqyZuhGuYW\npTOmZaklBnwqXLJ4QScqXDzqpCw8qHGcoOUhSIHGYifNTK4Hy91KPtKzsErhn5pi\nz4uoTK+0oktEmrg/vzG+zeUCgYEAt35gshnrH8toX46gTNrz+ygeUnQVjK1o3Il6\nA8iIR5oW+SLL0AkgsmSReZs0j5i/ZmiRq5R6P+m39jjrQSihSiF0zuejRNmNUtZZ\n8WMmqj6CGjaMgAXExpSU9kjM3nI63n7oLKAJTKmIQAd7dBoKGXHsDk1gmuTkp3xX\nYXStns0CgYEAvjqwySABDx73NnFNYiQuZIYcQUFYntsFnuEPCpneehoxQvTv5Jk+\nfoovTwRkyoxGw4Ucv7TF9+5lbD17XfGpknXUvCOHAtGKdOJtzZ0I1/fg+hAN+/sV\nX+GT31AxRi1TNCPI3qaNYwKh/SrZMO5vzoG06GKfNNlGlYnEddqCspUCgYEAitsN\n3XkTnrnUwAs0bzR50SPo3kiOTiij48/9D4Pe7SBEJkAYr9NYdOb512aF/ex/WsXj\nBk6TvG3nEmK8VFCkzW5H8JMF0II5Geivo6V+ivJGjgOdivvSjtu9ZiptLiCPP/QV\nSj/JCcR5IMsItzFFV0AIfEI9yrlP9xZ3IX6kLDkCgYB0DIa0JAnD+tV9uvk8ML1Z\nsQetiIoRl/x3gpoCfhtwWLyzunUeS3mZfeUtBqBx62Hg2kOuVNgsHP2RMaMAdU8U\nn0nvhaXeaixPy2uTtesfJAh+JQX0Io/0RrJLvmQ/lzvNMYhkbukX6ew7XyFvaEhu\n+ZTUIgU731Us5CzqvfKAGQ==\n-----END PRIVATE KEY-----\n",
-				"GOOGLE_DRIVE_FOLDER_ID": "0AJXqL9jbHtG6Uk9PVA"
-			}
-		}
+				"GOOGLE_DRIVE_FOLDER_ID": "0AJXqL9jbHtG6Uk9PVA",
+			},
+		},
 	},
 	/**
 	 * Smart Placement

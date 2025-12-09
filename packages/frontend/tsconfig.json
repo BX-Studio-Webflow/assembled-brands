@@ -1,24 +1,15 @@
 {
-    "extends": "@finsweet/tsconfig",
-    "compilerOptions": {
-        "rootDir": ".",
-        "baseUrl": "./",
-        "allowImportingTsExtensions": true,
-        "noEmit": true,
-        "paths": {
-            "$utils/*": [
-                "./utils/*"
-            ]
-        },
-        "types": [
-            "@finsweet/ts-utils"
-        ]
+  "extends": "@finsweet/tsconfig",
+  "compilerOptions": {
+    "rootDir": ".",
+    "baseUrl": "./",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "paths": {
+      "$utils/*": ["./utils/*"]
     },
-    "include": [
-        "./**/*"
-    ],
-    "exclude": [
-        "node_modules",
-        "dist"
-    ]
+    "types": ["@finsweet/ts-utils"]
+  },
+  "include": ["./**/*"],
+  "exclude": ["node_modules", "dist"]
 }
