@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { drizzle } from 'drizzle-orm/d1';
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { jwt } from 'hono/jwt';
 
 import { loadEnvironmentVariables } from '../lib/secrets.ts';
@@ -46,7 +47,6 @@ import {
 	updateUserDetailsValidator,
 	verifyEmailAndSetPasswordValidator,
 } from './validator/user.js';
-import { cors } from 'hono/cors';
 
 export class Server {
 	private app: Hono;
@@ -72,9 +72,12 @@ export class Server {
 		});
 
 		//Allow any origin
-		this.app.use('*', cors({
-			origin: '*'
-		}));
+		this.app.use(
+			'*',
+			cors({
+				origin: '*',
+			}),
+		);
 
 		const api = this.app.basePath('/api/v1');
 

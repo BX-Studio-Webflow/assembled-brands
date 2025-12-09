@@ -15,8 +15,6 @@ import type {
   SendVerificationCodeResponse,
   SignInCredential,
   SignInResponse,
-  SignUpCredential,
-  SignUpResponse,
   StartAccountRecoveryBody,
   StartAccountRecoveryResponse,
   UpdateSettingsNotificationBody,
@@ -32,14 +30,6 @@ import ApiService from './ApiService';
 export async function apiSignIn(data: SignInCredential) {
   return ApiService.fetchDataWithAxios<SignInResponse>({
     url: '/user/login',
-    method: 'post',
-    data,
-  });
-}
-
-export async function apiSignUp(data: SignUpCredential) {
-  return ApiService.fetchDataWithAxios<SignUpResponse>({
-    url: '/user/cold-lead-register',
     method: 'post',
     data,
   });
@@ -175,7 +165,7 @@ export async function apiVerifyRegistration(data: VerifyRegistrationBody) {
   });
 }
 
-export async function apiClaimYourAccount(data: ClaimYourAccountBody) {
+export async function apiHotLeadRegister(data: ClaimYourAccountBody) {
   return ApiService.fetchDataWithAxios<ClaimYourAccountResponse>({
     url: '/user/claim-your-account',
     method: 'post',

@@ -143,7 +143,8 @@ export type InitiateStripeConnectResponse = {
 };
 
 export type UpdateUserProfileBody = {
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   dial_code: string;
   phone: string;
