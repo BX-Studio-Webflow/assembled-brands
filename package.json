@@ -19,6 +19,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"pnpm --filter @assembled-brands/frontend dev\" \"pnpm --filter server dev\"",
+    "build": "concurrently \"pnpm --filter @assembled-brands/frontend build\" \"pnpm --filter server build\"",
     "frontend:dev": "pnpm --filter @assembled-brands/frontend dev",
     "frontend:build": "pnpm --filter @assembled-brands/frontend build",
     "server:dev": "wrangler dev",
