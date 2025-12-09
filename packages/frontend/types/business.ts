@@ -33,3 +33,14 @@ export interface UploadBusinessLogoRequest {
   fileName: string;
   [key: string]: unknown;
 }
+
+export type BusinessQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+};
+
+export type GetAllBusinessesResponse = {
+  businesses: Business[];
+  total: number;
+};

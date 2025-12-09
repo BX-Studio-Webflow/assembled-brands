@@ -1,4 +1,9 @@
-import type { GetBusinessResponse, UpdateBusinessRequest } from '../types/business';
+import type {
+  BusinessQuery,
+  GetAllBusinessesResponse,
+  GetBusinessResponse,
+  UpdateBusinessRequest,
+} from '../types/business';
 import ApiService from './ApiService';
 
 export const apiGetBusiness = () => {
@@ -13,5 +18,13 @@ export const apiUpdateBusiness = (data: UpdateBusinessRequest) => {
     url: '/business/my',
     method: 'post',
     data,
+  });
+};
+
+export const apiGetAllBusinesses = (params?: BusinessQuery) => {
+  return ApiService.fetchDataWithAxios<GetAllBusinessesResponse>({
+    url: '/business',
+    method: 'get',
+    params,
   });
 };

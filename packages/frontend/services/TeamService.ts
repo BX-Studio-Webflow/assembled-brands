@@ -1,4 +1,15 @@
-import type { GetTeamsResponse } from '../types/team';
+import type {
+  AcceptInvitationResponse,
+  CreateTeamBody,
+  CreateTeamResponse,
+  GetMyInvitationsResponse,
+  GetMyTeamMembersResponse,
+  GetMyTeamsResponse,
+  GetTeamInvitationsResponse,
+  GetTeamsResponse,
+  RejectInvitationResponse,
+  TeamQuery,
+} from '../types/team';
 import ApiService from './ApiService';
 
 export async function apiGetTeamDashboard() {
@@ -8,15 +19,54 @@ export async function apiGetTeamDashboard() {
   });
 }
 
+export const apiCreateTeam = (data: CreateTeamBody) => {
+  return ApiService.fetchDataWithAxios<CreateTeamResponse>({
+    url: '/team/create',
+    method: 'post',
+    data,
+  });
+};
+
+export const apiGetTeamInvitations = (params?: TeamQuery) => {
+  return ApiService.fetchDataWithAxios<GetTeamInvitationsResponse>({
+    url: '/team/invitations',
+    method: 'get',
+    params,
+  });
+};
+
+export const apiGetMyInvitations = (params?: TeamQuery) => {
+  return ApiService.fetchDataWithAxios<GetMyInvitationsResponse>({
+    url: '/team/my-invitations',
+    method: 'get',
+    params,
+  });
+};
+
+export const apiGetMyTeamMembers = (params?: TeamQuery) => {
+  return ApiService.fetchDataWithAxios<GetMyTeamMembersResponse>({
+    url: '/team/my-team/members',
+    method: 'get',
+    params,
+  });
+};
+
+export const apiGetMyTeams = () => {
+  return ApiService.fetchDataWithAxios<GetMyTeamsResponse>({
+    url: '/team/my-teams',
+    method: 'get',
+  });
+};
+
 export async function apiAcceptTeamInvitation(invitationId: number) {
-  return ApiService.fetchDataWithAxios<void>({
+  return ApiService.fetchDataWithAxios<AcceptInvitationResponse>({
     url: `/team/invitations/${invitationId}/accept`,
     method: 'post',
   });
 }
 
 export async function apiRejectTeamInvitation(invitationId: number) {
-  return ApiService.fetchDataWithAxios<void>({
+  return ApiService.fetchDataWithAxios<RejectInvitationResponse>({
     url: `/team/invitations/${invitationId}/reject`,
     method: 'post',
   });

@@ -63,3 +63,58 @@ export interface GetTeamsResponse {
   my_invitations: MyInvitation[];
   team_invitations: TeamInvitation[];
 }
+
+export type CreateTeamBody = {
+  name: string;
+};
+
+export type TeamQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+};
+
+export type CreateTeamResponse = {
+  message: string;
+  team: {
+    id: number;
+    name: string;
+    host_id: number;
+    created_at: string;
+    updated_at: string;
+  };
+};
+
+export type GetTeamInvitationsResponse = TeamInvitation[];
+
+export type GetMyInvitationsResponse = MyInvitation[];
+
+export type GetMyTeamMembersResponse = TeamMembers;
+
+export type GetMyTeamsResponse = MyTeam[];
+
+export type AcceptInvitationResponse = {
+  message: string;
+  invitation: {
+    id: number;
+    team_id: number;
+    inviter_id: number;
+    invitee_email: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+  };
+};
+
+export type RejectInvitationResponse = {
+  message: string;
+  invitation: {
+    id: number;
+    team_id: number;
+    inviter_id: number;
+    invitee_email: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+  };
+};

@@ -1,5 +1,9 @@
 import type {
   BusinessDetails,
+  ClaimYourAccountBody,
+  ClaimYourAccountResponse,
+  ColdLeadRegisterBody,
+  ColdLeadRegisterResponse,
   DashboardResponse,
   ForgotPassword,
   InitiateStripeConnectResponse,
@@ -7,14 +11,20 @@ import type {
   ResetPasswordInAppBody,
   SaveOauthStateBody,
   SaveOauthStateResponse,
+  SendVerificationCodeBody,
+  SendVerificationCodeResponse,
   SignInCredential,
   SignInResponse,
   SignUpCredential,
   SignUpResponse,
+  StartAccountRecoveryBody,
+  StartAccountRecoveryResponse,
   UpdateSettingsNotificationBody,
   UpdateUserProfileBody,
   UpdateUserProfileResponse,
   UploadProfileImageBody,
+  VerifyRegistrationBody,
+  VerifyRegistrationResponse,
 } from '../types/auth';
 import type { UploadBusinessLogoRequest } from '../types/business';
 import ApiService from './ApiService';
@@ -146,5 +156,45 @@ export async function apiGetLandingPage() {
   return ApiService.fetchDataWithAxios<string>({
     url: '/proxy/landing',
     method: 'get',
+  });
+}
+
+export async function apiColdLeadRegister(data: ColdLeadRegisterBody) {
+  return ApiService.fetchDataWithAxios<ColdLeadRegisterResponse>({
+    url: '/user/cold-lead-register',
+    method: 'post',
+    data,
+  });
+}
+
+export async function apiVerifyRegistration(data: VerifyRegistrationBody) {
+  return ApiService.fetchDataWithAxios<VerifyRegistrationResponse>({
+    url: '/user/verify-registration',
+    method: 'post',
+    data,
+  });
+}
+
+export async function apiClaimYourAccount(data: ClaimYourAccountBody) {
+  return ApiService.fetchDataWithAxios<ClaimYourAccountResponse>({
+    url: '/user/claim-your-account',
+    method: 'post',
+    data,
+  });
+}
+
+export async function apiSendVerificationCode(data: SendVerificationCodeBody) {
+  return ApiService.fetchDataWithAxios<SendVerificationCodeResponse>({
+    url: '/user/send-verification-code',
+    method: 'post',
+    data,
+  });
+}
+
+export async function apiStartAccountRecovery(data: StartAccountRecoveryBody) {
+  return ApiService.fetchDataWithAxios<StartAccountRecoveryResponse>({
+    url: '/user/start-account-recovery',
+    method: 'post',
+    data,
   });
 }

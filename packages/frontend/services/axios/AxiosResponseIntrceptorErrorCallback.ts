@@ -1,10 +1,10 @@
 import type { AxiosError } from 'axios';
 
-const unauthorizedCode = [401, 419, 440];
+//const unauthorizedCode = [401, 419, 440];
 
 const AxiosResponseIntrceptorErrorCallback = (error: AxiosError) => {
-  const { response } = error;
-  const { setToken } = useToken();
+  //const { response } = error;
+  /*const { setToken } = useToken();
 
   if (response && unauthorizedCode.includes(response.status)) {
     setToken('');
@@ -17,7 +17,7 @@ const AxiosResponseIntrceptorErrorCallback = (error: AxiosError) => {
       role: '',
     });
     useSessionUser.getState().setSessionSignedIn(false);
-  }
+  }*/
 };
 
 export default AxiosResponseIntrceptorErrorCallback;

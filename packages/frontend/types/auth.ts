@@ -341,3 +341,54 @@ export type SaveOauthStateResponse = {
   success: boolean;
   accountId: string;
 };
+
+export type ColdLeadRegisterBody = {
+  work_email: string;
+};
+
+export type ColdLeadRegisterResponse = {
+  success: boolean;
+  message: string;
+};
+
+export type VerifyRegistrationBody = {
+  token: number;
+  id: number;
+  password: string;
+};
+
+export type VerifyRegistrationResponse = {
+  token: string;
+  user: User;
+};
+
+export type ClaimYourAccountBody = {
+  work_email: string;
+  first_name: string;
+  last_name: string;
+  password: string;
+  loan_urgency: 'yesterday' | 'this-month' | '3-months' | 'this-year';
+};
+
+export type ClaimYourAccountResponse = {
+  token: string;
+  user: User;
+};
+
+export type SendVerificationCodeBody = {
+  email: string;
+};
+
+export type SendVerificationCodeResponse = {
+  success: boolean;
+  message: string;
+};
+
+export type StartAccountRecoveryBody = {
+  email: string;
+};
+
+export type StartAccountRecoveryResponse = {
+  success: boolean;
+  message: string;
+};

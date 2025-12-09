@@ -111,3 +111,32 @@ export type OnboardingProgressApiResponse = {
 export type OnboardingResetResponse = {
   message: string;
 };
+
+// Update Step
+export type UpdateStepBody = {
+  step: number; // 1-3
+};
+
+export type UpdateStepResponse = {
+  message: string;
+  application: {
+    id: number;
+    user_id: number;
+    current_step: number;
+    is_complete: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+};
+
+export type CompleteApplicationResponse = {
+  message: string;
+  application: {
+    id: number;
+    user_id: number;
+    current_step: number;
+    is_complete: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+};
