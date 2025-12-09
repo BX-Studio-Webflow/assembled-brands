@@ -136,13 +136,17 @@ export class Server {
 
 		user.get('/me', authCheck, authCtrl.me);
 		user.post('/login', loginValidator, authCtrl.login);
+
 		user.post('/cold-lead-register', registrationValidator, authCtrl.coldRegister);
+		user.post('/verify-registration', verifyEmailAndSetPasswordValidator, authCtrl.verifyEmailAndSetPassword);
+
 		user.post('/claim-your-account', claimYourAccountValidator, authCtrl.claimYourAccount);
 
 		user.post('/send-verification-code', emailVerificationValidator, authCtrl.sendToken);
-		user.post('/verify-registration', verifyEmailAndSetPasswordValidator, authCtrl.verifyEmailAndSetPassword);
+
 		user.post('/start-account-recovery', requestResetPasswordValidator, authCtrl.startPasswordReset);
 		user.post('/reset-password', resetPasswordValidator, authCtrl.resetPassword);
+
 		user.put('/details', authCheck, updateUserDetailsValidator, authCtrl.updateUserDetails);
 
 		api.route('/user', user);

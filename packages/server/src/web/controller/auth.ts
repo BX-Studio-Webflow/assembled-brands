@@ -241,6 +241,7 @@ export class AuthController {
 					401,
 				);
 			}
+
 			//6 digint random number
 			const token = Math.floor(100000 + Math.random() * 900000).toString();
 			await this.userRepository.update(user.id, { email_token: token });
@@ -357,8 +358,8 @@ export class AuthController {
 				return serveBadRequest(c, ERRORS.INVALID_TOKEN);
 			}
 			const hashedPassword = encrypt(body.password);
-			await this.service.update(user.id, { password: hashedPassword });
-			await this.userRepository.update(user.id, { reset_token: null });
+			await this.service.update(user.id, { password: hashedPassword, reset_token: null });
+
 			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
 				subject: 'Password reset',
 				title: 'Password reset',
