@@ -14,15 +14,12 @@ import { generateSecurePassword, getContentType } from '../../util/string.ts';
 import type {
 	ClaimYourAccountBody,
 	EmailVerificationBody,
-	InAppResetPasswordBody,
 	LoginBody,
 	RegisterTokenBody,
 	RegistrationBody,
 	RequestResetPasswordBody,
 	ResetPasswordBody,
-	StartAccountRecoveryBody,
 	UpdateUserDetailsBody,
-	UploadProfileImageBody,
 } from '../validator/user.js';
 import { ERRORS, MAIL_CONTENT, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { serveData } from './resp/resp.js';
@@ -306,36 +303,12 @@ export class AuthController {
 	};
 
 	/**
-	 * Verifies the registration token sent to user's email
-	 * @param {Context} c - The Hono context containing token and user ID
-	 * @returns {Promise<Response>} Response indicating verification status
-	 * @throws {Error} When token verification fails
-	 */
-	public startAccountRecovery = async (c: Context) => {
-		try {
-			const body: StartAccountRecoveryBody = await c.req.json();
-			const user = await this.service.findByEmail(body.email);
-			if (!user) {
-				serveBadRequest(c, 'Ops, we cannot find your details, please check your email and try again');
-			}
-
-			return serveData(c, {
-				success: true,
-				message: 'Email verified successfully',
-			});
-		} catch (err) {
-			logger.error(err);
-			return serveInternalServerError(c, err);
-		}
-	};
-
-	/**
 	 * Initiates password reset process by sending reset token
 	 * @param {Context} c - The Hono context containing email information
 	 * @returns {Promise<Response>} Response indicating reset link sent status
 	 * @throws {Error} When reset token generation or email sending fails
 	 */
-	public requestResetPassword = async (c: Context) => {
+	public startPasswordReset = async (c: Context) => {
 		try {
 			const body: RequestResetPasswordBody = await c.req.json();
 			const user = await this.service.findByEmail(body.email);
@@ -412,43 +385,6 @@ export class AuthController {
 	};
 
 	/**
-	 * Resets user's password while logged in
-	 * @param {Context} c - The Hono context containing new password
-	 * @returns {Promise<Response>} Response indicating password reset status
-	 * @throws {Error} When password reset fails
-	 */
-	public resetPasswordInApp = async (c: Context) => {
-		try {
-			const user = await this.getUser(c);
-			if (!user) {
-				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
-			}
-
-			const body: InAppResetPasswordBody = await c.req.json();
-
-			// Verify old password
-			const isOldPasswordValid = verify(body.oldPassword, user.password);
-			if (!isOldPasswordValid) {
-				return serveBadRequest(c, ERRORS.AUTH_INVALID_PASSWORD);
-			}
-			const hashedPassword = encrypt(body.newPassword);
-			// Update password
-			await this.service.update(user.id, { password: hashedPassword });
-
-			// Send confirmation email
-			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, MAIL_CONTENT.PASSWORD_CHANGED_IN_APP);
-
-			return serveData(c, {
-				success: true,
-				message: 'Password changed successfully',
-			});
-		} catch (error) {
-			logger.error(error);
-			return serveInternalServerError(c, error);
-		}
-	};
-
-	/**
 	 * Retrieves current user's profile information
 	 * @param {Context} c - The Hono context containing user information
 	 * @returns {Promise<Response>} Response containing user profile data
@@ -511,7 +447,7 @@ export class AuthController {
 		}
 	};
 
-	public uploadProfileImage = async (c: Context) => {
+	/*public uploadProfileImage = async (c: Context) => {
 		try {
 			const user = await this.getUser(c);
 			if (!user) {
@@ -555,5 +491,5 @@ export class AuthController {
 			logger.error(error);
 			return serveInternalServerError(c, error);
 		}
-	};
+	};*/
 }

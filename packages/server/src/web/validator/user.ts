@@ -16,11 +16,6 @@ const registrationSchema = z.object({
 	work_email: z.email(),
 });
 
-const uploadProfileImageSchema = z.object({
-	imageBase64: z.string().nullable().optional(),
-	fileName: z.string().nullable().optional(),
-});
-
 const startAccountRecoverySchema = z.object({
 	email: z.email(),
 });
@@ -80,16 +75,6 @@ const resetPasswordValidator = validator('json', (value, c) => {
 	return validateSchema(c, resetPasswordSchema, value);
 });
 
-const inAppResetPasswordSchema = z.object({
-	oldPassword: z.string().min(8).max(20),
-	newPassword: z.string().min(8).max(20),
-	confirmPassword: z.string().min(8).max(20),
-});
-
-const inAppResetPasswordValidator = validator('json', (value, c) => {
-	return validateSchema(c, inAppResetPasswordSchema, value);
-});
-
 const updateUserDetailsSchema = z.object({
 	first_name: z.string().min(2).max(40),
 	last_name: z.string().min(2).max(40),
@@ -102,29 +87,21 @@ const updateUserDetailsValidator = validator('json', (value, c) => {
 	return validateSchema(c, updateUserDetailsSchema, value);
 });
 
-const uploadProfileImageValidator = validator('json', (value, c) => {
-	return validateSchema(c, uploadProfileImageSchema, value);
-});
-
 type LoginBody = z.infer<typeof loginSchema>;
 type RegistrationBody = z.infer<typeof registrationSchema>;
 type EmailVerificationBody = z.infer<typeof emailVerificationSchema>;
 type RegisterTokenBody = z.infer<typeof registerTokenSchema>;
 type RequestResetPasswordBody = z.infer<typeof requestResetPasswordSchema>;
 type ResetPasswordBody = z.infer<typeof resetPasswordSchema>;
-type InAppResetPasswordBody = z.infer<typeof inAppResetPasswordSchema>;
 type StartAccountRecoveryBody = z.infer<typeof startAccountRecoverySchema>;
 type ClaimYourAccountBody = z.infer<typeof claimYourAccountSchema>;
 type UpdateUserDetailsBody = z.infer<typeof updateUserDetailsSchema>;
-type UploadProfileImageBody = z.infer<typeof uploadProfileImageSchema>;
 
 export {
 	type ClaimYourAccountBody,
 	claimYourAccountValidator,
 	type EmailVerificationBody,
 	emailVerificationValidator,
-	type InAppResetPasswordBody,
-	inAppResetPasswordValidator,
 	type LoginBody,
 	loginValidator,
 	type RegisterTokenBody,
@@ -139,6 +116,4 @@ export {
 	startAccountRecoveryValidator,
 	type UpdateUserDetailsBody,
 	updateUserDetailsValidator,
-	type UploadProfileImageBody,
-	uploadProfileImageValidator,
 };

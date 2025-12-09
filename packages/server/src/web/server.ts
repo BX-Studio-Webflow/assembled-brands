@@ -34,7 +34,6 @@ import { createTeamValidator, inviteMemberValidator, revokeAccessValidator, team
 import {
 	claimYourAccountValidator,
 	emailVerificationValidator,
-	inAppResetPasswordValidator,
 	loginValidator,
 	registerTokenValidator,
 	registrationValidator,
@@ -42,7 +41,6 @@ import {
 	resetPasswordValidator,
 	startAccountRecoveryValidator,
 	updateUserDetailsValidator,
-	uploadProfileImageValidator,
 } from './validator/user.js';
 
 export class Server {
@@ -131,14 +129,12 @@ export class Server {
 		user.post('/register-get-started', registrationValidator, authCtrl.register);
 		user.post('/claim-your-account', claimYourAccountValidator, authCtrl.claimYourAccount);
 
-		user.post('/send-token', emailVerificationValidator, authCtrl.sendToken);
+		user.post('/send-verification-code', emailVerificationValidator, authCtrl.sendToken);
 		user.post('/verify-registration', registerTokenValidator, authCtrl.verifyRegistrationToken);
-		user.post('/request-reset-password', requestResetPasswordValidator, authCtrl.requestResetPassword);
-		user.post('/start-account-recovery', startAccountRecoveryValidator, authCtrl.startAccountRecovery);
+		user.post('/start-account-recovery', requestResetPasswordValidator, authCtrl.startPasswordReset);
 		user.post('/reset-password', resetPasswordValidator, authCtrl.resetPassword);
-		user.post('/reset-password-in-app', authCheck, inAppResetPasswordValidator, authCtrl.resetPasswordInApp);
 		user.put('/details', authCheck, updateUserDetailsValidator, authCtrl.updateUserDetails);
-		user.post('/upload-profile-image', authCheck, uploadProfileImageValidator, authCtrl.uploadProfileImage);
+
 		api.route('/user', user);
 	}
 
