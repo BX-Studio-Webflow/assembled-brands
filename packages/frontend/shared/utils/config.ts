@@ -14,7 +14,7 @@ export const appConfig = {
         ? API_REMOTE_DEV_URL
         : API_PROD_URL,
   apiVersion: '/api/v1',
-  accessTokenPersistStrategy: 'localStorage',
+  accessTokenPersistStrategy: 'cookie',
   TOKEN_NAME_IN_STORAGE: 'accessToken',
   TOKEN_TYPE: 'Bearer',
   REQUEST_HEADER_AUTH_KEY: 'Authorization',

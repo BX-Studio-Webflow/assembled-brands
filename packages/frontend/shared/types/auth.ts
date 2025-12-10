@@ -58,17 +58,13 @@ export type Token = {
 };
 
 export type SignInResponse = {
-  data: {
-    token: string;
-    user: User;
-  };
+  token: string;
+  user: User;
 };
 
 export type SignUpResponse = {
-  data: {
-    token: string;
-    user: User;
-  };
+  token: string;
+  user: User;
 };
 
 export type BusinessDetails = {
@@ -151,25 +147,23 @@ export type UpdateUserProfileBody = {
 };
 
 export type UpdateUserProfileResponse = {
-  data: {
-    success: boolean;
-    message: string;
-    user: {
-      id: number;
-      email: string;
-      name: string;
-      createdAt: string;
-      is_verified: boolean;
-      role: string;
-      phone: string;
-      profile_picture: string;
-      bio: string | null;
-      is_banned: boolean;
-      is_deleted: boolean;
-      stripe_connect_id: string;
-      subscription_status: 'active' | 'inactive' | 'expired';
-      auth_provider: 'email';
-    };
+  success: boolean;
+  message: string;
+  user: {
+    id: number;
+    email: string;
+    name: string;
+    createdAt: string;
+    is_verified: boolean;
+    role: string;
+    phone: string;
+    profile_picture: string;
+    bio: string | null;
+    is_banned: boolean;
+    is_deleted: boolean;
+    stripe_connect_id: string;
+    subscription_status: 'active' | 'inactive' | 'expired';
+    auth_provider: 'email';
   };
 };
 

@@ -1,10 +1,12 @@
 import type { InternalAxiosRequestConfig } from 'axios';
 import { appConfig } from 'shared/utils/config';
 
+import { getCookie } from '$utils/cookies';
+
 const AxiosRequestIntrceptorConfigCallback = (config: InternalAxiosRequestConfig) => {
   const storage = appConfig.accessTokenPersistStrategy;
 
-  if (storage === 'localStorage' || storage === 'sessionStorage') {
+  if (storage === 'localStorage' || storage === 'sessionStorage' || storage === 'cookie') {
     let accessToken = '';
 
     if (storage === 'localStorage') {
@@ -15,8 +17,12 @@ const AxiosRequestIntrceptorConfigCallback = (config: InternalAxiosRequestConfig
       accessToken = sessionStorage.getItem(appConfig.TOKEN_NAME_IN_STORAGE) || '';
     }
 
+    if (storage === 'cookie') {
+      accessToken = getCookie(appConfig.TOKEN_NAME_IN_STORAGE) || '';
+    }
+
     if (accessToken) {
-      config.headers[appConfig.REQUEST_HEADER_AUTH_KEY] = `${appConfig.TOKEN_TYPE}${accessToken}`;
+      config.headers[appConfig.REQUEST_HEADER_AUTH_KEY] = `${appConfig.TOKEN_TYPE} ${accessToken}`;
     }
   }
 
