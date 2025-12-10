@@ -23,7 +23,6 @@ import type {
 	VerifyEmailAndSetPasswordBody,
 } from '../validator/user.js';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
-import { serveData } from './resp/resp.js';
 import { serializeUser } from './serializer/user.js';
 
 export class AuthController {
@@ -81,7 +80,10 @@ export class AuthController {
 
 			const token = await encode(user.id, user.email);
 			const serializedUser = await serializeUser(user);
-			return serveData(c, { token, user: serializedUser });
+			return c.json({
+				token,
+				user: serializedUser,
+			});
 		} catch (err) {
 			logger.error(err);
 			return serveInternalServerError(c, err);
@@ -163,7 +165,7 @@ export class AuthController {
 				buttonLink: link,
 			});
 
-			return serveData(c, { success: true, message: 'User created successfully, please check your email for your verification code' });
+			return c.json({ message: 'User created successfully, please check your email for your verification code' });
 		} catch (err) {
 			return serveInternalServerError(c, err);
 		}
@@ -228,7 +230,7 @@ export class AuthController {
 
 			const token = await encode(user.id, user.email);
 			const serializedUser = await serializeUser(user);
-			return serveData(c, { token, user: serializedUser });
+			return c.json({ token, user: serializedUser });
 		} catch (err) {
 			return serveInternalServerError(c, err);
 		}
@@ -268,8 +270,7 @@ export class AuthController {
 				buttonLink: `${env.FRONTEND_URL}`,
 			});
 
-			return serveData(c, {
-				success: true,
+			return c.json({
 				message: 'Email token sent successfully',
 			});
 		} catch (err) {
@@ -302,7 +303,7 @@ export class AuthController {
 			//generate token and serialize user
 			const token = await encode(user.id, user.email);
 			const serializedUser = await serializeUser(user);
-			return serveData(c, { token, user: serializedUser });
+			return c.json({ token, user: serializedUser });
 		} catch (err) {
 			logger.error(err);
 			return serveInternalServerError(c, err);
@@ -332,8 +333,7 @@ export class AuthController {
 				buttonText: 'Reset password',
 				buttonLink: `${env.FRONTEND_URL}/reset-password?token=${token}&email=${user.email}`,
 			});
-			return serveData(c, {
-				success: true,
+			return c.json({
 				message: 'Reset password link sent successfully',
 			});
 		} catch (err) {
@@ -381,8 +381,7 @@ export class AuthController {
 				buttonText: 'Ok, got it',
 				buttonLink: `${env.FRONTEND_URL}`,
 			});
-			return serveData(c, {
-				success: true,
+			return c.json({
 				message: 'Password reset successfully',
 			});
 		} catch (err) {
@@ -405,7 +404,7 @@ export class AuthController {
 		}
 
 		const serializedUser = await serializeUser(user);
-		return serveData(c, { user: serializedUser });
+		return c.json({ user: serializedUser });
 	};
 
 	/**
@@ -443,8 +442,7 @@ export class AuthController {
 			}
 
 			const serializedUser = await serializeUser(updatedUser);
-			return serveData(c, {
-				success: true,
+			return c.json({
 				message: 'User details updated successfully',
 				user: serializedUser,
 			});
@@ -489,8 +487,8 @@ export class AuthController {
 
 			// Update user profile image with the asset URL
 			await this.service.updateProfileImage(user.id, asset.asset_url);
-			return serveData(c, {
-				success: true,
+			return c.json({
+				
 				message: 'Profile image updated successfully',
 				asset: asset,
 			});

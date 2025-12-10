@@ -1,23 +1,24 @@
 import type { AxiosError } from 'axios';
-import { apiColdLeadRegister } from 'shared/services/AuthService';
+import { apiSignIn } from 'shared/services/AuthService';
 
 import { isValidEmail } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const initLoginPage = () => {
-  console.log('Log page');
   const form = document.querySelector('[dev-target="login-form"]');
   if (!form) {
-    console.error('Login form not found');
+    console.error('Login form not found. Element: [dev-target="login-form"] not found');
     return;
   }
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
     event.stopPropagation();
     const email = queryElement<HTMLInputElement>('[dev-target="email-input"]', form);
     const password = queryElement<HTMLInputElement>('[dev-target="password-input"]', form);
     if (!email || !password) {
-      console.error('Email or password input not found');
+      console.error(
+        'Email or password input not found. Elements: [dev-target="email-input"] or [dev-target="password-input"] not found'
+      );
       return;
     }
     //validate email
@@ -41,9 +42,11 @@ const initLoginPage = () => {
       return;
     }
     try {
-      apiColdLeadRegister({
-        work_email: email.value,
+      const response = await apiSignIn({
+        email: email.value,
+        password: password.value,
       });
+      console.log(response);
     } catch (error) {
       const { message } = error as AxiosError;
       console.error(message);
