@@ -1,7 +1,7 @@
 import type { Context } from 'hono';
 import { env } from 'process';
 
-import { sendTransactionalEmail } from '../../lib/email-processor.ts';
+import { sendTemplateEmail, sendTransactionalEmail } from '../../lib/email-processor.ts';
 import { encrypt, verify } from '../../lib/encryption.js';
 import { encode, type JWTPayload } from '../../lib/jwt.ts';
 import { logger } from '../../lib/logger.ts';
@@ -102,12 +102,12 @@ export class AuthController {
 			const { work_email } = body;
 			const existingUser = await this.service.findByEmail(work_email);
 			if (existingUser) {
-				return c.json({ message: ERRORS.USER_EXISTS, code: 'USER_EXISTS' }, 400);
+				return serveBadRequest(c, ERRORS.USER_EXISTS);
 			}
 
 			//reject personal emails
 			const rejectedEmails = [
-				'gmail.com',
+				//'gmail.com',
 				'yahoo.com',
 				'hotmail.com',
 				'outlook.com',
@@ -128,7 +128,7 @@ export class AuthController {
 				'yahoo.com.vn',
 			];
 			if (rejectedEmails.includes(work_email.split('@')[1])) {
-				return c.json({ message: 'We are not accepting personal emails at the moment', code: 'INVALID_EMAIL' }, 400);
+				return serveBadRequest(c, 'We are not accepting personal emails at the moment');
 			}
 
 			const randomPassword = generateSecurePassword(6);
@@ -151,12 +151,12 @@ export class AuthController {
 
 			const user = await this.service.findByEmail(work_email);
 			if (!user) {
-				return c.json({ message: ERRORS.USER_NOT_FOUND, code: 'USER_NOT_FOUND' }, 500);
+				return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
 			}
 
 			const link = `${env.FRONTEND_URL}/verify-registration?token=${token}&email=${user.email}`;
 
-			await sendTransactionalEmail(user.email, `Sign up code`, 12, {
+			await sendTemplateEmail(user.email, `Dear User`, 'd-3f05d1f7f1604a06a2b9e072c42fec3a', {
 				subject: 'Click the link to verify your email',
 				title: 'Click the link to verify your email',
 				subtitle: `Let's get you verified`,
@@ -183,7 +183,7 @@ export class AuthController {
 			const { work_email, first_name, last_name, password, loan_urgency } = body;
 			const existingUser = await this.service.findByEmail(work_email);
 			if (!existingUser) {
-				return c.json({ message: ERRORS.USER_EXISTS, code: 'USER_EXISTS' }, 400);
+				return serveBadRequest(c, ERRORS.USER_EXISTS);
 			}
 
 			//reject personal emails
@@ -209,14 +209,14 @@ export class AuthController {
 				'yahoo.com.vn',
 			];
 			if (rejectedEmails.includes(work_email.split('@')[1])) {
-				return c.json({ message: 'We are not accepting personal emails at the moment', code: 'INVALID_EMAIL' }, 400);
+				return serveBadRequest(c, 'We are not accepting personal emails at the moment');
 			}
 
 			await this.service.update(existingUser.id, { first_name, last_name, password, loan_urgency });
 
 			const user = await this.service.findByEmail(work_email);
 			if (!user) {
-				return c.json({ message: ERRORS.USER_NOT_FOUND, code: 'USER_NOT_FOUND' }, 500);
+				return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
 			}
 
 			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
@@ -247,7 +247,14 @@ export class AuthController {
 			const body: EmailVerificationBody = await c.req.json();
 			const user = await this.service.findByEmail(body.email);
 			if (!user) {
-				return c.json({ message: 'Invalid email, please check', code: 'INVALID_EMAIL' }, 400);
+				return c.json(
+					{
+						success: false,
+						message: 'Invalid email, please check',
+						code: 'AUTH_INVALID_CREDENTIALS',
+					},
+					401,
+				);
 			}
 
 			//6 digint random number
@@ -283,10 +290,10 @@ export class AuthController {
 			const body: VerifyEmailAndSetPasswordBody = await c.req.json();
 			const user = await this.service.find(body.id);
 			if (!user) {
-				return c.json({ message: ERRORS.USER_NOT_FOUND, code: 'USER_NOT_FOUND' }, 400);
+				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 			if (user.email_token !== String(body.token)) {
-				return c.json({ message: ERRORS.INVALID_TOKEN, code: 'INVALID_TOKEN' }, 400);
+				return serveBadRequest(c, ERRORS.INVALID_TOKEN);
 			}
 
 			//set password
