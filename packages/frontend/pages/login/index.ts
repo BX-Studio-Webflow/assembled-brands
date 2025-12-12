@@ -34,7 +34,6 @@ const initLoginPage = () => {
 </svg>`;
 
   if (eyeIcon) {
-    console.log('eyeIcon found');
     eyeIcon.addEventListener('click', () => {
       password.type = password.type === 'password' ? 'text' : 'password';
       eyeIcon.innerHTML = password.type === 'password' ? EYE_OPEN_SVG : EYE_CLOSED_SVG;
@@ -89,11 +88,22 @@ const initLoginPage = () => {
     } catch (error) {
       const { message } = error as AxiosError;
       const { code } = (error as AxiosError).response?.data as { code: string };
-      console.error(message, code);
+
       if (code === 'AUTH_INVALID_CREDENTIALS') {
         submitButton.classList.add('is-error');
         submitButton.value = message;
-        return;
+
+        const recoverAccountDiv = queryElement<HTMLDivElement>(
+          '[dev-target="recover-account"]',
+          form
+        );
+        if (!recoverAccountDiv) {
+          console.error(
+            'Recover account div not found. Element: [dev-target="recover-account"] not found'
+          );
+          return;
+        }
+        recoverAccountDiv.classList.remove('hide');
       }
     }
   });

@@ -54,9 +54,22 @@ const initLoginPage = () => {
       const { message } = error as AxiosError;
       const { code } = (error as AxiosError).response?.data as { code: string };
       console.error(message);
-      if (['AUTH_INVALID_CREDENTIALS', 'USER_NOT_FOUND'].includes(code)) {
+      if (['AUTH_INVALID_CREDENTIALS', 'USER_NOT_FOUND', 'USER_EXISTS'].includes(code)) {
         submitButton.classList.add('is-error');
         submitButton.value = message;
+      }
+      if (code === 'USER_EXISTS') {
+        const recoverAccountDiv = queryElement<HTMLDivElement>(
+          '[dev-target="recover-account"]',
+          form
+        );
+        if (!recoverAccountDiv) {
+          console.error(
+            'Recover account div not found. Element: [dev-target="recover-account"] not found'
+          );
+          return;
+        }
+        recoverAccountDiv.classList.remove('hide');
       }
     }
   });
