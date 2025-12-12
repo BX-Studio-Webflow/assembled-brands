@@ -44,7 +44,7 @@ export async function apiSignOut() {
 
 export async function apiForgotPassword<T>(data: ForgotPassword) {
   return ApiService.fetchDataWithAxios<T>({
-    url: '/user/request-reset-password',
+    url: '/user/start-account-recovery',
     method: 'post',
     data,
   });

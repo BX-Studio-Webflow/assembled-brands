@@ -1,13 +1,13 @@
 import type { AxiosError } from 'axios';
-import { apiColdLeadRegister } from 'shared/services/AuthService';
+import { apiForgotPassword } from 'shared/services/AuthService';
 
 import { isValidEmail } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const initLoginPage = () => {
-  const form = document.querySelector('[dev-target="signup-form"]');
+  const form = document.querySelector('[dev-target="reset-form"]');
   if (!form) {
-    console.error('Login form not found. Element: [dev-target="signup-form"] not found');
+    console.error('Login form not found. Element: [dev-target="reset-form"] not found');
     return;
   }
 
@@ -29,7 +29,7 @@ const initLoginPage = () => {
     email.addEventListener('input', () => {
       email.classList.remove('is-error');
       submitButton.classList.remove('is-error');
-      submitButton.value = 'CONTINUE';
+      submitButton.value = 'SUBMIT';
     });
 
     //validate email
@@ -44,8 +44,8 @@ const initLoginPage = () => {
       return;
     }
     try {
-      await apiColdLeadRegister({
-        work_email: email.value,
+      await apiForgotPassword({
+        email: email.value,
       });
 
       submitButton.classList.add('is-success');
@@ -54,7 +54,7 @@ const initLoginPage = () => {
       const { message } = error as AxiosError;
       const { code } = (error as AxiosError).response?.data as { code: string };
       console.error(message);
-      if (['AUTH_INVALID_CREDENTIALS', 'USER_NOT_FOUND'].includes(code)) {
+      if (['INVALID_EMAIL', 'USER_EXISTS', 'USER_NOT_FOUND'].includes(code)) {
         submitButton.classList.add('is-error');
         submitButton.value = message;
       }

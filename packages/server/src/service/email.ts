@@ -1,4 +1,4 @@
-import { sendTransactionalEmail } from '../lib/email-processor.ts';
+import { sendTemplateEmail } from '../lib/email-processor.ts';
 import { logger } from '../lib/logger.ts';
 import type { EmailRepository } from '../repository/email.ts';
 import type { Email, NewEmail } from '../schema/schema.ts';
@@ -20,7 +20,7 @@ export class EmailService {
 		try {
 			const email = await this.repository.createEmail(data);
 			// Queue the email for processing
-			await sendTransactionalEmail(data.email, data.email.split('@')[0], 12, {
+			await sendTemplateEmail(data.email, data.email.split('@')[0], 'd-85053bc3d243484cbe9e3d493ae3b56b', {
 				subject: data.subject,
 				title: data.title,
 				subtitle: data.subtitle,
@@ -53,10 +53,11 @@ export class EmailService {
 		try {
 			// Queue each email for processing
 			const promises = data.map((item) =>
-				sendTransactionalEmail(item.email, item.name, item.templateId, {
+				sendTemplateEmail(item.email, item.name, 'd-85053bc3d243484cbe9e3d493ae3b56b', {
 					subject: item.params.subject,
 					title: item.params.title,
 					subtitle: item.params.subtitle,
+					name: item.name,
 					body: item.params.body,
 					buttonText: item.params.button_text,
 					buttonLink: item.params.button_link,

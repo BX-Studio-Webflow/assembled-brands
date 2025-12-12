@@ -1,7 +1,7 @@
 import type { Context } from 'hono';
 import { env } from 'process';
 
-import { sendTemplateEmail, sendTransactionalEmail } from '../../lib/email-processor.ts';
+import { sendTemplateEmail } from '../../lib/email-processor.ts';
 import { encrypt, verify } from '../../lib/encryption.js';
 import { encode, type JWTPayload } from '../../lib/jwt.ts';
 import { logger } from '../../lib/logger.ts';
@@ -249,10 +249,11 @@ export class AuthController {
 				);
 			}
 
-			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
+			await sendTemplateEmail(user.email, user.first_name || 'Dear User', 'd-3f05d1f7f1604a06a2b9e072c42fec3a', {
 				subject: 'Welcome to Assembled Brands',
 				title: 'Welcome to Assembled Brands',
 				subtitle: `Welcome to Assembled Brands`,
+				name: user.first_name || 'Dear User',
 				body: `Welcome to Assembled Brands. We have are glad to have you on board.`,
 				buttonText: 'Ok, got it',
 				buttonLink: `${env.FRONTEND_URL}`,
@@ -290,10 +291,11 @@ export class AuthController {
 			const token = Math.floor(100000 + Math.random() * 900000).toString();
 			await this.userRepository.update(user.id, { email_token: token });
 
-			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
-				subject: 'Your code',
-				title: 'Thanks for signing up',
+			await sendTemplateEmail(user.email, user.first_name || 'Dear User', 'd-3f05d1f7f1604a06a2b9e072c42fec3a', {
+				subject: 'Your verification code',
+				title: 'Your verification code',
 				subtitle: `${token}`,
+				name: user.first_name || 'Dear User',
 				body: `Welcome to ${env.BRAND_NAME}. Your verification code code is ${token}`,
 				buttonText: 'Ok, got it',
 				buttonLink: `${env.FRONTEND_URL}`,
@@ -360,13 +362,14 @@ export class AuthController {
 			}
 			const token = Math.floor(100000 + Math.random() * 900000).toString();
 			await this.userRepository.update(user.id, { reset_token: token });
-			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
-				subject: 'Reset password',
-				title: 'Reset password',
+			await sendTemplateEmail(user.email, `${user.first_name || 'Dear User'}`, 'd-fd5ab39952154cf6a94b41e57ff87c43', {
+				subject: 'Reset your password',
+				title: 'Reset your password',
 				subtitle: `${token}`,
+				name: user.first_name || 'Dear User',
 				body: `Please click this link to reset your password: ${env.FRONTEND_URL}/reset-password?token=${token}&email=${user.email}`,
-				buttonText: 'Reset password',
-				buttonLink: `${env.FRONTEND_URL}/reset-password?token=${token}&email=${user.email}`,
+				buttonText: 'Reset password now',
+				buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/reset-password?token=${token}&email=${user.email}`,
 			});
 			return c.json({
 				message: 'Reset password link sent successfully',
@@ -420,7 +423,7 @@ export class AuthController {
 			const hashedPassword = encrypt(body.password);
 			await this.service.update(user.id, { password: hashedPassword, reset_token: null });
 
-			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
+			await sendTemplateEmail(user.email, user.first_name || 'Dear User', 'd-85053bc3d243484cbe9e3d493ae3b56', {
 				subject: 'Password reset',
 				title: 'Password reset',
 				subtitle: `Your password has been reset successfully`,

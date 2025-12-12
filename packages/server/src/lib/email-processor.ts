@@ -3,53 +3,6 @@ import { env } from 'process';
 import { logger } from '../lib/logger.ts';
 
 const SENDGRID_API_URL = 'https://api.sendgrid.com/v3/mail/send';
-const sendTransactionalEmail = async (
-	email: string,
-	name: string,
-	templateId: number,
-	params: {
-		subject: string;
-		title: string;
-		subtitle: string;
-		body: string;
-		buttonText: string;
-		buttonLink: string;
-		busname?: string;
-	},
-) => {
-	try {
-		const response = await fetch(SENDGRID_API_URL, {
-			method: 'POST',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${env.SENDGRID_API_KEY}`,
-			},
-			body: JSON.stringify({
-				templateId: templateId,
-				to: [
-					{
-						email: email,
-						name: name,
-					},
-				],
-				params: params,
-			}),
-		});
-
-		if (!response.ok) {
-			const error = await response.json();
-
-			logger.info(error);
-			throw new Error(error as string);
-		}
-
-		logger.info(`Email sent to ${email} using template ${templateId}`);
-		return;
-	} catch (error) {
-		logger.error(error);
-	}
-};
 
 const sendTemplateEmail = async (
 	email: string,
@@ -100,4 +53,4 @@ const sendTemplateEmail = async (
 	}
 };
 
-export { sendTemplateEmail, sendTransactionalEmail };
+export { sendTemplateEmail };

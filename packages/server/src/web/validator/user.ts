@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { validateSchema } from './validator.js';
 
 const loginSchema = z.object({
-	email: z.string(),
+	email: z.email(),
 	password: z.string().min(8).max(40),
 });
 
@@ -41,7 +41,7 @@ const registrationValidator = validator('json', (value, c) => {
 });
 
 const emailVerificationSchema = z.object({
-	email: z.string().email(),
+	email: z.email(),
 });
 
 const emailVerificationValidator = validator('json', (value, c) => {
@@ -51,7 +51,7 @@ const emailVerificationValidator = validator('json', (value, c) => {
 const verifyEmailAndSetPasswordSchema = z.object({
 	token: z.number(),
 	id: z.number(),
-	password: z.string().min(8).max(20),
+	password: z.string().min(8).max(40),
 });
 
 const verifyEmailAndSetPasswordValidator = validator('json', (value, c) => {
@@ -59,7 +59,7 @@ const verifyEmailAndSetPasswordValidator = validator('json', (value, c) => {
 });
 
 const requestResetPasswordSchema = z.object({
-	email: z.string().email(),
+	email: z.email(),
 });
 
 const requestResetPasswordValidator = validator('json', (value, c) => {
@@ -68,8 +68,8 @@ const requestResetPasswordValidator = validator('json', (value, c) => {
 
 const resetPasswordSchema = z.object({
 	token: z.number(),
-	email: z.string().email(),
-	password: z.string().min(8).max(20),
+	email: z.email(),
+	password: z.string().min(8).max(40),
 });
 
 const resetPasswordValidator = validator('json', (value, c) => {
@@ -79,7 +79,7 @@ const resetPasswordValidator = validator('json', (value, c) => {
 const updateUserDetailsSchema = z.object({
 	first_name: z.string().min(2).max(40),
 	last_name: z.string().min(2).max(40),
-	email: z.string().email(),
+	email: z.email(),
 	dial_code: z.string(),
 	phone: z.string(),
 });
