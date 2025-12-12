@@ -23,9 +23,9 @@ export const appConfig = {
 //navigae to path depending on dev mode
 export const navigateToPath = (path: string) => {
   if (devMode === 'local') {
-    window.location.href = `/dev/${path}`;
+    window.location.href = `/dev${path}`;
   } else if (devMode === 'remote-dev') {
-    window.location.href = `/dev/${path}`;
+    window.location.href = `/dev${path}`;
   } else {
     window.location.href = `/${path}`;
   }
