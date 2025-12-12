@@ -1,5 +1,5 @@
 import type { AxiosError } from 'axios';
-import { apiGetUserMe, apiSignIn } from 'shared/services/AuthService';
+import { apiSignIn } from 'shared/services/AuthService';
 
 import { setCookie } from '$utils/cookies';
 import { isValidEmail } from '$utils/helpers';

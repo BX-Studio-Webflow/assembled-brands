@@ -8,6 +8,7 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2025-12-02",
 	"compatibility_flags": ["nodejs_compat"],
+	"account_id": "e8a9920aa94111ca60571c30408287d9",
 	"observability": {
 		"enabled": true,
 	},
@@ -18,7 +19,7 @@
 				{
 					"binding": "DB",
 					"database_name": "assembled-prod",
-					"database_id": "759f912b-f645-499f-8f7f-10f494f22c7f",
+					"database_id": "37f9f9ea-2c62-4314-b8f1-22d80fa9b3f3",
 					"remote": true,
 					"migrations_dir": "./src/schema/migrations",
 				},
@@ -27,7 +28,7 @@
 				"LOG_LEVEL": "info",
 				"NODE_ENV": "production",
 				"SECRET_KEY": "assembled-brands-secret-key",
-				"BREVO_API_KEY": "xxx",
+				"SENDGRID_API_KEY": "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",
 				"AWS_REGION": "us-east-1",
 				"AWS_ACCESS_KEY": "xxx",
 				"AWS_SECRET_KEY": "xxx",
@@ -45,7 +46,7 @@
 				{
 					"binding": "DB",
 					"database_name": "assembled-dev",
-					"database_id": "b104f47c-9d4e-478e-9f90-b6f070956f37",
+					"database_id": "088996ad-1663-49c3-9ba6-544bf6961b55",
 					"remote": true,
 					"migrations_dir": "./src/schema/migrations",
 				},
@@ -54,7 +55,7 @@
 				"LOG_LEVEL": "info",
 				"NODE_ENV": "development",
 				"SECRET_KEY": "assembled-brands-secret-key",
-				"BREVO_API_KEY": "xxx",
+				"SENDGRID_API_KEY": "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",
 				"AWS_REGION": "us-east-1",
 				"AWS_ACCESS_KEY": "xxx",
 				"AWS_SECRET_KEY": "xxx",

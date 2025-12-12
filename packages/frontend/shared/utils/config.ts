@@ -3,8 +3,8 @@ type DevMode = 'local' | 'remote-dev' | 'production';
 const devMode: DevMode = localStorage.getItem('dev-mode') as DevMode;
 
 const API_LOCAL_DEV_URL = 'http://127.0.0.1:8787';
-const API_REMOTE_DEV_URL = 'https://assembled-brands-dev.bx-reverse-proxy.workers.dev';
-const API_PROD_URL = 'https://assembled-brands-prod.bx-reverse-proxy.workers.dev';
+const API_REMOTE_DEV_URL = 'https://assembled-brands-dev.crystal-e8a.workers.dev';
+const API_PROD_URL = 'https://assembled-brands-prod.crystal-e8a.workers.dev';
 
 export const appConfig = {
   apiBaseUrl:

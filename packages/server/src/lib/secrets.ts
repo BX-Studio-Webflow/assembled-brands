@@ -11,7 +11,7 @@ export const envSchema = z.object({
 	DB_NAME: z.string().optional(),
 	REDIS_HOST: z.string().default('localhost'),
 	REDIS_PORT: z.string().default('6379'),
-	BREVO_API_KEY: z.string(),
+	SENDGRID_API_KEY: z.string(),
 	AWS_REGION: z.string(),
 	AWS_ACCESS_KEY: z.string(),
 	AWS_SECRET_KEY: z.string(),
