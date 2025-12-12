@@ -102,7 +102,13 @@ export class AuthController {
 			const { work_email } = body;
 			const existingUser = await this.service.findByEmail(work_email);
 			if (existingUser) {
-				return serveBadRequest(c, ERRORS.USER_EXISTS);
+				return c.json(
+					{
+						message: ERRORS.USER_EXISTS,
+						code: 'USER_EXISTS',
+					},
+					400,
+				);
 			}
 
 			//reject personal emails
@@ -128,7 +134,13 @@ export class AuthController {
 				'yahoo.com.vn',
 			];
 			if (rejectedEmails.includes(work_email.split('@')[1])) {
-				return serveBadRequest(c, 'We are not accepting personal emails at the moment');
+				return c.json(
+					{
+						message: 'We are not accepting personal emails at the moment',
+						code: 'INVALID_EMAIL',
+					},
+					400,
+				);
 			}
 
 			const randomPassword = generateSecurePassword(6);
@@ -183,7 +195,13 @@ export class AuthController {
 			const { work_email, first_name, last_name, password, loan_urgency } = body;
 			const existingUser = await this.service.findByEmail(work_email);
 			if (!existingUser) {
-				return serveBadRequest(c, ERRORS.USER_EXISTS);
+				return c.json(
+					{
+						message: ERRORS.USER_EXISTS,
+						code: 'USER_EXISTS',
+					},
+					400,
+				);
 			}
 
 			//reject personal emails
@@ -209,14 +227,26 @@ export class AuthController {
 				'yahoo.com.vn',
 			];
 			if (rejectedEmails.includes(work_email.split('@')[1])) {
-				return serveBadRequest(c, 'We are not accepting personal emails at the moment');
+				return c.json(
+					{
+						message: 'We are not accepting personal emails at the moment',
+						code: 'INVALID_EMAIL',
+					},
+					400,
+				);
 			}
 
 			await this.service.update(existingUser.id, { first_name, last_name, password, loan_urgency });
 
 			const user = await this.service.findByEmail(work_email);
 			if (!user) {
-				return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
+				return c.json(
+					{
+						message: ERRORS.USER_NOT_FOUND,
+						code: 'USER_NOT_FOUND',
+					},
+					400,
+				);
 			}
 
 			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
@@ -249,7 +279,6 @@ export class AuthController {
 			if (!user) {
 				return c.json(
 					{
-						success: false,
 						message: 'Invalid email, please check',
 						code: 'AUTH_INVALID_CREDENTIALS',
 					},
@@ -321,7 +350,13 @@ export class AuthController {
 			const body: RequestResetPasswordBody = await c.req.json();
 			const user = await this.service.findByEmail(body.email);
 			if (!user) {
-				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+				return c.json(
+					{
+						message: ERRORS.USER_NOT_FOUND,
+						code: 'USER_NOT_FOUND',
+					},
+					400,
+				);
 			}
 			const token = Math.floor(100000 + Math.random() * 900000).toString();
 			await this.userRepository.update(user.id, { reset_token: token });
@@ -365,10 +400,22 @@ export class AuthController {
 			const body: ResetPasswordBody = await c.req.json();
 			const user = await this.service.findByEmail(body.email);
 			if (!user) {
-				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+				return c.json(
+					{
+						message: ERRORS.USER_NOT_FOUND,
+						code: 'USER_NOT_FOUND',
+					},
+					400,
+				);
 			}
 			if (user.reset_token !== String(body.token)) {
-				return serveBadRequest(c, ERRORS.INVALID_TOKEN);
+				return c.json(
+					{
+						message: ERRORS.INVALID_TOKEN,
+						code: 'INVALID_TOKEN',
+					},
+					400,
+				);
 			}
 			const hashedPassword = encrypt(body.password);
 			await this.service.update(user.id, { password: hashedPassword, reset_token: null });
@@ -400,7 +447,13 @@ export class AuthController {
 		const payload: JWTPayload = c.get('jwtPayload');
 		const user = await this.service.findByEmail(payload.email as string);
 		if (!user) {
-			return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
+			return c.json(
+				{
+					message: ERRORS.USER_NOT_FOUND,
+					code: 'USER_NOT_FOUND',
+				},
+				400,
+			);
 		}
 
 		const serializedUser = await serializeUser(user);
@@ -417,7 +470,13 @@ export class AuthController {
 		try {
 			const user = await this.getUser(c);
 			if (!user) {
-				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+				return c.json(
+					{
+						message: ERRORS.USER_NOT_FOUND,
+						code: 'USER_NOT_FOUND',
+					},
+					400,
+				);
 			}
 
 			const body: UpdateUserDetailsBody = await c.req.json();
@@ -426,7 +485,13 @@ export class AuthController {
 			if (body.email && body.email !== user.email) {
 				const existingUser = await this.service.findByEmail(body.email);
 				if (existingUser) {
-					return serveBadRequest(c, ERRORS.USER_EXISTS);
+					return c.json(
+						{
+							message: ERRORS.USER_EXISTS,
+							code: 'USER_EXISTS',
+						},
+						400,
+					);
 				}
 			}
 
@@ -438,7 +503,13 @@ export class AuthController {
 			// Get updated user
 			const updatedUser = await this.service.find(user.id);
 			if (!updatedUser) {
-				return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
+				return c.json(
+					{
+						message: ERRORS.USER_NOT_FOUND,
+						code: 'USER_NOT_FOUND',
+					},
+					400,
+				);
 			}
 
 			const serializedUser = await serializeUser(updatedUser);
