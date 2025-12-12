@@ -22,7 +22,7 @@ import type {
 	UpdateUserDetailsBody,
 	VerifyEmailAndSetPasswordBody,
 } from '../validator/user.js';
-import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
+import { ERRORS, serveInternalServerError } from './resp/error.js';
 import { serializeUser } from './serializer/user.js';
 
 export class AuthController {
@@ -166,7 +166,7 @@ export class AuthController {
 				return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
 			}
 
-			const link = `${env.FRONTEND_URL}/verify-registration?token=${token}&email=${user.email}`;
+			const link = `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/account-setup-finish-verification?token=${token}&email=${user.email}&id=${user.id}`;
 
 			await sendTemplateEmail(user.email, `Dear User`, 'd-3f05d1f7f1604a06a2b9e072c42fec3a', {
 				subject: 'Click the link to verify your email',
@@ -321,10 +321,22 @@ export class AuthController {
 			const body: VerifyEmailAndSetPasswordBody = await c.req.json();
 			const user = await this.service.find(body.id);
 			if (!user) {
-				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+				return c.json(
+					{
+						message: ERRORS.USER_NOT_FOUND,
+						code: 'USER_NOT_FOUND',
+					},
+					400,
+				);
 			}
 			if (user.email_token !== String(body.token)) {
-				return serveBadRequest(c, ERRORS.INVALID_TOKEN);
+				return c.json(
+					{
+						message: ERRORS.INVALID_TOKEN,
+						code: 'INVALID_TOKEN',
+					},
+					400,
+				);
 			}
 
 			//set password
