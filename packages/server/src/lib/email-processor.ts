@@ -56,9 +56,11 @@ const sendTemplateEmail = async (
 	name: string,
 	templateId: string,
 	params: Record<string, string>,
-	attachment?: {
+	attachments?: {
 		content: string;
-		name: string;
+		type: string;
+		filename: string;
+		disposition: string;
 	}[],
 ) => {
 	try {
@@ -71,6 +73,7 @@ const sendTemplateEmail = async (
 			],
 			from: { email: 'support@assembledbrands.com', name: 'Assembled Brands' },
 			template_id: templateId,
+			attachments: attachments,
 		};
 
 		const response = await fetch(SENDGRID_API_URL, {

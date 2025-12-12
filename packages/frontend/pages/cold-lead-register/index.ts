@@ -48,6 +48,9 @@ const initLoginPage = () => {
         work_email: email.value,
       });
 
+      submitButton.classList.add('is-success');
+      submitButton.value = 'Please check your email for your verification';
+
       console.log(response);
     } catch (error) {
       const { message } = error as AxiosError;
