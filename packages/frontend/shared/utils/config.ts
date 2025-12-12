@@ -19,3 +19,14 @@ export const appConfig = {
   TOKEN_TYPE: 'Bearer',
   REQUEST_HEADER_AUTH_KEY: 'Authorization',
 };
+
+//navigae to path depending on dev mode
+export const navigateToPath = (path: string) => {
+  if (devMode === 'local') {
+    window.location.href = `/dev/${path}`;
+  } else if (devMode === 'remote-dev') {
+    window.location.href = `/dev/${path}`;
+  } else {
+    window.location.href = `/${path}`;
+  }
+};

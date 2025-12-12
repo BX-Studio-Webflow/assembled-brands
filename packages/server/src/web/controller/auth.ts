@@ -346,6 +346,15 @@ export class AuthController {
 			//generate token and serialize user
 			const token = await encode(user.id, user.email);
 			const serializedUser = await serializeUser(user);
+
+			//send template email to user
+			await sendTemplateEmail(user.email, user.first_name || 'Dear User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
+				subject: 'Your account has been verified',
+				title: 'Your account has been verified',
+				subtitle: `Your account has been verified`,
+				name: user.first_name || 'Dear User',
+				body: `Your account has been verified. You can now login to your account.`,
+			});
 			return c.json({ token, user: serializedUser });
 		} catch (err) {
 			logger.error(err);
@@ -435,7 +444,7 @@ export class AuthController {
 			const hashedPassword = encrypt(body.password);
 			await this.service.update(user.id, { password: hashedPassword, reset_token: null });
 
-			await sendTemplateEmail(user.email, user.first_name || 'Dear User', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
+			await sendTemplateEmail(user.email, user.first_name || 'Dear User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 				subject: 'Password reset',
 				title: 'Password reset',
 				subtitle: `Your password has been reset successfully`,

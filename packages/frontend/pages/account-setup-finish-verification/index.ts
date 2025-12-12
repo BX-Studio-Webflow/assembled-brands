@@ -1,6 +1,8 @@
 import type { AxiosError } from 'axios';
 import { apiVerifyRegistration } from 'shared/services/AuthService';
 
+import { navigateToPath } from '$utils/config';
+import { setCookie } from '$utils/cookies';
 import { queryElement } from '$utils/selectors';
 
 const initLoginPage = () => {
@@ -101,14 +103,20 @@ const initLoginPage = () => {
       return;
     }
     try {
-      await apiVerifyRegistration({
+      const response = await apiVerifyRegistration({
         token: Number(token),
         id: Number(id),
         password: password.value,
       });
 
+      setCookie('accessToken', response.token, 10);
+
       submitButton.classList.add('is-success');
-      submitButton.value = 'Great! Your password has been reset';
+      submitButton.value = 'Great! Your account is now active.';
+
+      setTimeout(() => {
+        navigateToPath('/onboarding-step-1');
+      }, 2000);
     } catch (error) {
       const { message } = error as AxiosError;
       const { code } = (error as AxiosError).response?.data as { code: string };
