@@ -423,7 +423,7 @@ export class AuthController {
 			const hashedPassword = encrypt(body.password);
 			await this.service.update(user.id, { password: hashedPassword, reset_token: null });
 
-			await sendTemplateEmail(user.email, user.first_name || 'Dear User', 'd-85053bc3d243484cbe9e3d493ae3b56', {
+			await sendTemplateEmail(user.email, user.first_name || 'Dear User', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
 				subject: 'Password reset',
 				title: 'Password reset',
 				subtitle: `Your password has been reset successfully`,
