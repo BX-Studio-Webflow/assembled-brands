@@ -4,13 +4,11 @@
     "rootDir": ".",
     "baseUrl": "./",
     "allowImportingTsExtensions": true,
-    "paths": {
-      "$utils/*": [
-        "packages/frontend/utils/*"
-      ]
-    },
-    "types": [
-      "@finsweet/ts-utils"
-    ]
-  }
+    "noEmit": true
+  },
+  "exclude": [
+    "node_modules",
+    "packages/frontend",
+    "packages/server"
+  ]
 }

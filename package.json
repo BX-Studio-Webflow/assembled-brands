@@ -17,20 +17,19 @@
     "url": "https://github.com/finsweet/developer-starter/issues"
   },
   "type": "module",
-  "main": "packages/index.ts",
-  "module": "packages/index.ts",
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "dev": "cross-env NODE_ENV=development node ./bin/build.js",
-    "build": "cross-env NODE_ENV=production node ./bin/build.js",
-    "lint": "eslint ./packages && prettier --check ./packages",
-    "lint:fix": "eslint ./packages --fix",
-    "check": "tsc --noEmit",
+    "dev": "concurrently \"pnpm --filter @assembled-brands/frontend dev\" \"pnpm --filter server dev\"",
+    "build": "concurrently \"pnpm --filter @assembled-brands/frontend build\" \"pnpm --filter server build\"",
+    "frontend:dev": "pnpm --filter @assembled-brands/frontend dev",
+    "frontend:build": "pnpm --filter @assembled-brands/frontend build",
+    "server:dev": "wrangler dev",
+    "server:build": "wrangler deploy",
+    "lint": "concurrently \"pnpm -r lint\" \"prettier --check ./packages --ignore-path .prettierignore\"",
+    "lint:fix": "concurrently \"pnpm -r lint:fix\" \"prettier --write ./packages --ignore-path .prettierignore\"",
+    "check": "pnpm --filter @assembled-brands/frontend check && pnpm --filter server check && tsc --noEmit",
     "format": "prettier --write ./packages",
-    "test": "playwright test",
-    "test:ui": "playwright test --ui",
+    "test": "playwright test --config=packages/frontend/playwright.config.ts",
+    "test:ui": "playwright test --ui --config=packages/frontend/playwright.config.ts",
     "release": "changeset publish",
     "update": "pnpm update -i -L -r",
     "wrangler:login": "wrangler login",
@@ -45,6 +44,7 @@
     "@finsweet/tsconfig": "^1.4.2",
     "@playwright/test": "^1.50.1",
     "@types/node": "^24.10.1",
+    "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
     "esbuild": "^0.24.2",
     "eslint": "^9.19.0",
@@ -57,8 +57,7 @@
     "wrangler": "^4.52.1"
   },
   "dependencies": {
-    "@finsweet/ts-utils": "^0.40.0",
-    "axios": "^1.13.2"
+    "@assembled-brands/frontend": "workspace:*"
   },
   "engines": {
     "pnpm": ">=10"

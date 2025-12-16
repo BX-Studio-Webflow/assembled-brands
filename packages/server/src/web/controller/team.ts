@@ -100,7 +100,14 @@ export class TeamController {
 				}
 			}
 
-			const invitation = await this.service.inviteMember(team.id, user.id, invitee_email, team.name, user.name, new Date().getTime());
+			const invitation = await this.service.inviteMember(
+				team.id,
+				user.id,
+				invitee_email,
+				team.name,
+				user.first_name + ' ' + user.last_name,
+				new Date().getTime(),
+			);
 
 			return c.json({
 				message: 'Invitation sent successfully',
@@ -158,7 +165,7 @@ export class TeamController {
 				id: invitation.id,
 				team_id: invitation.team_id,
 				team_name: invitation.team?.name || 'Unknown Team',
-				inviter_name: invitation.inviter?.name || 'Unknown',
+				inviter_name: invitation.inviter?.first_name + ' ' + invitation.inviter?.last_name || 'Unknown',
 				inviter_email: invitation.inviter?.email || 'Unknown',
 				status: invitation.status,
 				created_at: invitation.created_at,
@@ -268,9 +275,9 @@ export class TeamController {
 
 			// Format response to include only name, email, phone, and role
 			const formattedMembers = members.members.map((member) => ({
-				name: member.user?.name || 'Unknown',
-				email: member.user?.email || 'Unknown',
-				phone: member.user?.phone || 'Unknown',
+				name: member.user?.first_name + ' ' + member.user?.last_name || 'Unknown',
+				email: member.user?.email || 'Unknown email',
+				phone: member.user?.phone || 'Unknown phone',
 				role: member.role,
 				memberId: member.id,
 			}));

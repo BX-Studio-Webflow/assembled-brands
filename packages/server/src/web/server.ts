@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { drizzle } from 'drizzle-orm/d1';
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { jwt } from 'hono/jwt';
 
 import { loadEnvironmentVariables } from '../lib/secrets.ts';
@@ -69,6 +70,14 @@ export class Server {
 		this.app.onError((err, c) => {
 			return serveInternalServerError(c, err);
 		});
+
+		//Allow any origin
+		this.app.use(
+			'*',
+			cors({
+				origin: '*',
+			}),
+		);
 
 		const api = this.app.basePath('/api/v1');
 

@@ -3,7 +3,8 @@ import type { User } from '../../../schema/schema.js';
 type UserResponse = {
 	id: number;
 	email: string;
-	name: string;
+	first_name: string;
+	last_name: string;
 	createdAt: Date | null;
 	is_verified: boolean | null;
 	role: string | null;
@@ -18,7 +19,8 @@ export async function serializeUser(user: User): Promise<UserResponse> {
 	return {
 		id: user.id,
 		email: user.email,
-		name: user.name,
+		first_name: user.first_name,
+		last_name: user.last_name,
 		createdAt: user.createdAt,
 		is_verified: user.is_verified,
 		role: user.role,

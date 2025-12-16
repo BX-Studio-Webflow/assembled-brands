@@ -1,6 +1,6 @@
 import { logger } from '../lib/logger.ts';
 import type { FinancialWizardRepository } from '../repository/financial-wizard.ts';
-import { NewFinancialDocument } from '../schema/index.ts';
+import { type NewFinancialDocument } from '../schema/index.ts';
 import type { FinancialOverviewBody, FinancialWizardProgressResponse } from '../web/validator/financial-wizard.ts';
 import type { AssetService } from './asset.js';
 

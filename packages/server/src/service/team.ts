@@ -1,6 +1,6 @@
 import { env } from 'process';
 
-import { sendTransactionalEmail } from '../lib/email-processor.ts';
+import { sendTemplateEmail } from '../lib/email-processor.ts';
 import { logger } from '../lib/logger.ts';
 import type { TeamRepository } from '../repository/team.ts';
 import type { User } from '../schema/schema.ts';
@@ -66,7 +66,7 @@ export class TeamService {
 			const acceptUrl = `${env.FRONTEND_URL}/accept-team-invitation?invitation_id=${invitationId}&team_id=${teamId}&team_name=${teamName}&inviter_name=${inviterName}&timestamp=${timestamp}`;
 
 			// Send invitation email
-			await sendTransactionalEmail(inviteeEmail, 'Team Invitation', 12, {
+			await sendTemplateEmail(inviteeEmail, 'Team Invitation', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
 				subject: 'Team Invitation',
 				title: "You've been invited to join a team",
 				subtitle: 'Join the team to collaborate',
@@ -119,24 +119,30 @@ export class TeamService {
 			if (!user) {
 				// Create user with default password (they'll need to reset it)
 				const tempPassword = generateSecurePassword(9);
-				await this.userService.create(
-					invitation.invitee_email.split('@')[0], // Use email prefix as name
-					invitation.invitee_email,
-					tempPassword, // User will need to reset this
-					'host',
-					'',
-					'',
-					{ is_verified: true, subscription_status: 'active' },
-				);
+				await this.userService.create({
+					email: invitation.invitee_email,
+					phone: '',
+					dial_code: '',
+					password: tempPassword, // User will need to reset this
+					role: 'user',
+					is_verified: true,
+					subscription_status: 'active',
+					first_name: '',
+					last_name: '',
+					loan_urgency: 'none',
+				});
+
 				user = (await this.userService.findByEmail(invitation.invitee_email)) ?? null;
 				if (!user) {
 					throw new Error('Failed to create or find user');
 				}
+
 				//send transactional email
-				sendTransactionalEmail(user.email, 'Temporary Password', 12, {
+				sendTemplateEmail(user.email, 'Temporary Password', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
 					subject: 'New account created',
 					title: `Welcome to ${env.BRAND_NAME}`,
 					subtitle: 'Change your password',
+					name: user.first_name || 'Dear User',
 					body: `A new account was created with your email ${user.email}. We also created a random temporary password for you. Please change your password immediately after logging in. Your temporary password is ${tempPassword}`,
 					buttonText: 'Ok, got it',
 					buttonLink: `${env.FRONTEND_URL}`,
@@ -153,10 +159,11 @@ export class TeamService {
 			// Update invitation status
 			await this.repo.updateInvitationStatus(invitationId, 'accepted');
 			// Send welcome email
-			await sendTransactionalEmail(user.email, 'Welcome to the team', 12, {
+			await sendTemplateEmail(user.email, 'Welcome to the team', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
 				subject: "You're officially on the team!",
 				title: 'Welcome aboard 🎉',
 				subtitle: 'Team invite accepted',
+				name: user.first_name || 'Dear User',
 				body: "You've successfully joined the team. Start collaborating and making things happen with your teammates!",
 				buttonText: 'Ok, got it',
 				buttonLink: `${env.FRONTEND_URL}`,

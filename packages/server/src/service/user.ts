@@ -1,7 +1,7 @@
 import { encrypt } from '../lib/encryption.ts';
 import { logger } from '../lib/logger.ts';
 import type { UserRepository } from '../repository/user.ts';
-import type { User } from '../schema/schema.ts';
+import { type NewUser, type User } from '../schema/schema.ts';
 
 /**
  * Service class for managing users, including creation, authentication, and profile management
@@ -21,44 +21,22 @@ export class UserService {
 
 	/**
 	 * Creates a new user
-	 * @param {string} name - User's name
-	 * @param {string} email - User's email address
-	 * @param {string} password - User's password (will be encrypted)
-	 * @param {'user'|'admin'|'super-admin'} role - User's role
-	 * @param {string} phone - User's phone number
-	 * @param {Partial<User>} [additionalFields={}] - Optional additional user fields
+	 * @param {NewUser} user - User's data
 	 * @returns {Promise<User>} Created user
 	 * @throws {Error} When user creation fails
 	 */
-	public async create(
-		email: string,
-		password: string,
-		role: 'user' | 'admin' | 'super-admin',
-		dial_code: string,
-		phone: string,
-		first_name: string,
-		last_name: string,
-		loan_urgency: 'none' | 'yesterday' | 'this-month' | '3-months' | 'this-year',
-		additionalFields: Partial<User> = {},
-	) {
+	public async create(user: NewUser) {
 		try {
-			const hashedPassword = encrypt(password);
+			const hashedPassword = encrypt(user.password);
 
 			// Create user with all fields
-			const user = await this.repo.create({
-				email,
+			const createdUser = await this.repo.create({
+				...user,
 				password: hashedPassword,
-				role,
-				dial_code,
-				phone,
 				auth_provider: 'local',
-				first_name,
-				last_name,
-				loan_urgency,
-				...additionalFields,
 			});
 
-			return user;
+			return createdUser;
 		} catch (error) {
 			logger.error(error);
 			throw error;

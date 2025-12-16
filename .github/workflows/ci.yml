@@ -5,8 +5,29 @@ on:
 
 jobs:
   Lint:
-    uses: finsweet/workflow-ci-lint/.github/workflows/lint.yml@main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
 
-  # Comment this job out if your project doesn't have any tests
-  Tests:
-    uses: finsweet/workflow-ci-test/.github/workflows/test.yml@main
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: pnpm
+
+      - name: Install Dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build Project
+        run: pnpm build
+
+      - name: Lint & Check
+        run: |
+          pnpm lint
+          pnpm check

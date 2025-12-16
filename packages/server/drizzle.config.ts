@@ -13,15 +13,15 @@ const isDevelopment = process.env.NODE_ENV === 'development';
  * https://sat0shi.dev/posts/drizzle-intro/
  */
 export default defineConfig({
-  dialect: 'sqlite',
-  driver: 'd1-http',
-  schema: './src/schema/schema.ts',
-  out: './src/schema/migrations',
-  dbCredentials: {
-    accountId: isDevelopment ? process.env.DEV_DB_ACCOUNT_ID! : process.env.PROD_DB_ACCOUNT_ID!,
-    databaseId: isDevelopment ? process.env.DEV_DB_DATABASE_ID! : process.env.PROD_DB_DATABASE_ID!,
-    token: isDevelopment ? process.env.DEV_DB_TOKEN! : process.env.PROD_DB_TOKEN!,
-  },
-  verbose: true,
-  strict: true,
+	dialect: 'sqlite',
+	driver: 'd1-http',
+	schema: './src/schema/schema.ts',
+	out: './src/schema/migrations',
+	dbCredentials: {
+		accountId: isDevelopment ? process.env.DEV_DB_ACCOUNT_ID! : process.env.PROD_DB_ACCOUNT_ID!,
+		databaseId: isDevelopment ? process.env.DEV_DB_DATABASE_ID! : process.env.PROD_DB_DATABASE_ID!,
+		token: isDevelopment ? process.env.DEV_DB_TOKEN! : process.env.PROD_DB_TOKEN!,
+	},
+	verbose: true,
+	strict: true,
 });

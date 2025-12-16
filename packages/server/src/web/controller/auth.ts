@@ -1,11 +1,12 @@
 import type { Context } from 'hono';
 import { env } from 'process';
 
-import { sendTransactionalEmail } from '../../lib/email-processor.ts';
+import { sendTemplateEmail } from '../../lib/email-processor.ts';
 import { encrypt, verify } from '../../lib/encryption.js';
 import { encode, type JWTPayload } from '../../lib/jwt.ts';
 import { logger } from '../../lib/logger.ts';
 import type { UserRepository } from '../../repository/user.js';
+import { NewUser } from '../../schema/schema.ts';
 import type { AssetService } from '../../service/asset.js';
 import type { BusinessService } from '../../service/business.js';
 import type { S3Service } from '../../service/s3.js';
@@ -21,8 +22,7 @@ import type {
 	UpdateUserDetailsBody,
 	VerifyEmailAndSetPasswordBody,
 } from '../validator/user.js';
-import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
-import { serveData } from './resp/resp.js';
+import { ERRORS, serveInternalServerError } from './resp/error.js';
 import { serializeUser } from './serializer/user.js';
 
 export class AuthController {
@@ -80,7 +80,10 @@ export class AuthController {
 
 			const token = await encode(user.id, user.email);
 			const serializedUser = await serializeUser(user);
-			return serveData(c, { token, user: serializedUser });
+			return c.json({
+				token,
+				user: serializedUser,
+			});
 		} catch (err) {
 			logger.error(err);
 			return serveInternalServerError(c, err);
@@ -99,12 +102,18 @@ export class AuthController {
 			const { work_email } = body;
 			const existingUser = await this.service.findByEmail(work_email);
 			if (existingUser) {
-				return serveBadRequest(c, ERRORS.USER_EXISTS);
+				return c.json(
+					{
+						message: ERRORS.USER_EXISTS,
+						code: 'USER_EXISTS',
+					},
+					400,
+				);
 			}
 
 			//reject personal emails
 			const rejectedEmails = [
-				'gmail.com',
+				//'gmail.com',
 				'yahoo.com',
 				'hotmail.com',
 				'outlook.com',
@@ -125,23 +134,41 @@ export class AuthController {
 				'yahoo.com.vn',
 			];
 			if (rejectedEmails.includes(work_email.split('@')[1])) {
-				return serveBadRequest(c, 'We are not accepting personal emails at the moment');
+				return c.json(
+					{
+						message: 'We are not accepting personal emails at the moment',
+						code: 'INVALID_EMAIL',
+					},
+					400,
+				);
 			}
 
 			const randomPassword = generateSecurePassword(6);
 
 			//6 digint random number
 			const token = Math.floor(100000 + Math.random() * 900000).toString();
-			await this.service.create(work_email, randomPassword, 'user', '+1', '1234567890', '', '', 'none', { email_token: token });
+			const newUser: NewUser = {
+				email: work_email,
+				password: randomPassword,
+				role: 'user',
+				dial_code: '+1',
+				phone: '1234567890',
+				first_name: '',
+				last_name: '',
+				loan_urgency: 'none',
+				email_token: token,
+			};
+
+			await this.service.create(newUser);
 
 			const user = await this.service.findByEmail(work_email);
 			if (!user) {
 				return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
 			}
 
-			const link = `${env.FRONTEND_URL}/verify-registration?token=${token}&email=${user.email}`;
+			const link = `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/account-setup-finish-verification?token=${token}&email=${user.email}&id=${user.id}`;
 
-			await sendTransactionalEmail(user.email, `Sign up code`, 12, {
+			await sendTemplateEmail(user.email, `Dear User`, 'd-3f05d1f7f1604a06a2b9e072c42fec3a', {
 				subject: 'Click the link to verify your email',
 				title: 'Click the link to verify your email',
 				subtitle: `Let's get you verified`,
@@ -150,7 +177,7 @@ export class AuthController {
 				buttonLink: link,
 			});
 
-			return serveData(c, { success: true, message: 'User created successfully, please check your email for your verification code' });
+			return c.json({ message: 'User created successfully, please check your email for your verification code' });
 		} catch (err) {
 			return serveInternalServerError(c, err);
 		}
@@ -168,7 +195,13 @@ export class AuthController {
 			const { work_email, first_name, last_name, password, loan_urgency } = body;
 			const existingUser = await this.service.findByEmail(work_email);
 			if (!existingUser) {
-				return serveBadRequest(c, ERRORS.USER_EXISTS);
+				return c.json(
+					{
+						message: ERRORS.USER_EXISTS,
+						code: 'USER_EXISTS',
+					},
+					400,
+				);
 			}
 
 			//reject personal emails
@@ -194,20 +227,33 @@ export class AuthController {
 				'yahoo.com.vn',
 			];
 			if (rejectedEmails.includes(work_email.split('@')[1])) {
-				return serveBadRequest(c, 'We are not accepting personal emails at the moment');
+				return c.json(
+					{
+						message: 'We are not accepting personal emails at the moment',
+						code: 'INVALID_EMAIL',
+					},
+					400,
+				);
 			}
 
 			await this.service.update(existingUser.id, { first_name, last_name, password, loan_urgency });
 
 			const user = await this.service.findByEmail(work_email);
 			if (!user) {
-				return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
+				return c.json(
+					{
+						message: ERRORS.USER_NOT_FOUND,
+						code: 'USER_NOT_FOUND',
+					},
+					400,
+				);
 			}
 
-			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
+			await sendTemplateEmail(user.email, user.first_name || 'Dear User', 'd-3f05d1f7f1604a06a2b9e072c42fec3a', {
 				subject: 'Welcome to Assembled Brands',
 				title: 'Welcome to Assembled Brands',
 				subtitle: `Welcome to Assembled Brands`,
+				name: user.first_name || 'Dear User',
 				body: `Welcome to Assembled Brands. We have are glad to have you on board.`,
 				buttonText: 'Ok, got it',
 				buttonLink: `${env.FRONTEND_URL}`,
@@ -215,7 +261,7 @@ export class AuthController {
 
 			const token = await encode(user.id, user.email);
 			const serializedUser = await serializeUser(user);
-			return serveData(c, { token, user: serializedUser });
+			return c.json({ token, user: serializedUser });
 		} catch (err) {
 			return serveInternalServerError(c, err);
 		}
@@ -234,7 +280,6 @@ export class AuthController {
 			if (!user) {
 				return c.json(
 					{
-						success: false,
 						message: 'Invalid email, please check',
 						code: 'AUTH_INVALID_CREDENTIALS',
 					},
@@ -246,17 +291,17 @@ export class AuthController {
 			const token = Math.floor(100000 + Math.random() * 900000).toString();
 			await this.userRepository.update(user.id, { email_token: token });
 
-			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
-				subject: 'Your code',
-				title: 'Thanks for signing up',
+			await sendTemplateEmail(user.email, user.first_name || 'Dear User', 'd-3f05d1f7f1604a06a2b9e072c42fec3a', {
+				subject: 'Your verification code',
+				title: 'Your verification code',
 				subtitle: `${token}`,
+				name: user.first_name || 'Dear User',
 				body: `Welcome to ${env.BRAND_NAME}. Your verification code code is ${token}`,
 				buttonText: 'Ok, got it',
 				buttonLink: `${env.FRONTEND_URL}`,
 			});
 
-			return serveData(c, {
-				success: true,
+			return c.json({
 				message: 'Email token sent successfully',
 			});
 		} catch (err) {
@@ -276,10 +321,22 @@ export class AuthController {
 			const body: VerifyEmailAndSetPasswordBody = await c.req.json();
 			const user = await this.service.find(body.id);
 			if (!user) {
-				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+				return c.json(
+					{
+						message: ERRORS.USER_NOT_FOUND,
+						code: 'USER_NOT_FOUND',
+					},
+					400,
+				);
 			}
 			if (user.email_token !== String(body.token)) {
-				return serveBadRequest(c, ERRORS.INVALID_TOKEN);
+				return c.json(
+					{
+						message: ERRORS.INVALID_TOKEN,
+						code: 'INVALID_TOKEN',
+					},
+					400,
+				);
 			}
 
 			//set password
@@ -289,7 +346,16 @@ export class AuthController {
 			//generate token and serialize user
 			const token = await encode(user.id, user.email);
 			const serializedUser = await serializeUser(user);
-			return serveData(c, { token, user: serializedUser });
+
+			//send template email to user
+			await sendTemplateEmail(user.email, user.first_name || 'Dear User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
+				subject: 'Your account has been verified',
+				title: 'Your account has been verified',
+				subtitle: `Your account has been verified`,
+				name: user.first_name || 'Dear User',
+				body: `Your account has been verified. You can now login to your account.`,
+			});
+			return c.json({ token, user: serializedUser });
 		} catch (err) {
 			logger.error(err);
 			return serveInternalServerError(c, err);
@@ -307,20 +373,26 @@ export class AuthController {
 			const body: RequestResetPasswordBody = await c.req.json();
 			const user = await this.service.findByEmail(body.email);
 			if (!user) {
-				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+				return c.json(
+					{
+						message: ERRORS.USER_NOT_FOUND,
+						code: 'USER_NOT_FOUND',
+					},
+					400,
+				);
 			}
 			const token = Math.floor(100000 + Math.random() * 900000).toString();
 			await this.userRepository.update(user.id, { reset_token: token });
-			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
-				subject: 'Reset password',
-				title: 'Reset password',
+			await sendTemplateEmail(user.email, `${user.first_name || 'Dear User'}`, 'd-fd5ab39952154cf6a94b41e57ff87c43', {
+				subject: 'Reset your password',
+				title: 'Reset your password',
 				subtitle: `${token}`,
+				name: user.first_name || 'Dear User',
 				body: `Please click this link to reset your password: ${env.FRONTEND_URL}/reset-password?token=${token}&email=${user.email}`,
-				buttonText: 'Reset password',
-				buttonLink: `${env.FRONTEND_URL}/reset-password?token=${token}&email=${user.email}`,
+				buttonText: 'Reset password now',
+				buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/reset-password?token=${token}&email=${user.email}`,
 			});
-			return serveData(c, {
-				success: true,
+			return c.json({
 				message: 'Reset password link sent successfully',
 			});
 		} catch (err) {
@@ -352,15 +424,27 @@ export class AuthController {
 			const body: ResetPasswordBody = await c.req.json();
 			const user = await this.service.findByEmail(body.email);
 			if (!user) {
-				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+				return c.json(
+					{
+						message: ERRORS.USER_NOT_FOUND,
+						code: 'USER_NOT_FOUND',
+					},
+					400,
+				);
 			}
 			if (user.reset_token !== String(body.token)) {
-				return serveBadRequest(c, ERRORS.INVALID_TOKEN);
+				return c.json(
+					{
+						message: ERRORS.INVALID_TOKEN,
+						code: 'INVALID_TOKEN',
+					},
+					400,
+				);
 			}
 			const hashedPassword = encrypt(body.password);
 			await this.service.update(user.id, { password: hashedPassword, reset_token: null });
 
-			await sendTransactionalEmail(user.email, `${user.first_name} ${user.last_name}`, 12, {
+			await sendTemplateEmail(user.email, user.first_name || 'Dear User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 				subject: 'Password reset',
 				title: 'Password reset',
 				subtitle: `Your password has been reset successfully`,
@@ -368,8 +452,7 @@ export class AuthController {
 				buttonText: 'Ok, got it',
 				buttonLink: `${env.FRONTEND_URL}`,
 			});
-			return serveData(c, {
-				success: true,
+			return c.json({
 				message: 'Password reset successfully',
 			});
 		} catch (err) {
@@ -388,11 +471,17 @@ export class AuthController {
 		const payload: JWTPayload = c.get('jwtPayload');
 		const user = await this.service.findByEmail(payload.email as string);
 		if (!user) {
-			return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
+			return c.json(
+				{
+					message: ERRORS.USER_NOT_FOUND,
+					code: 'USER_NOT_FOUND',
+				},
+				400,
+			);
 		}
 
 		const serializedUser = await serializeUser(user);
-		return serveData(c, { user: serializedUser });
+		return c.json({ user: serializedUser });
 	};
 
 	/**
@@ -405,7 +494,13 @@ export class AuthController {
 		try {
 			const user = await this.getUser(c);
 			if (!user) {
-				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+				return c.json(
+					{
+						message: ERRORS.USER_NOT_FOUND,
+						code: 'USER_NOT_FOUND',
+					},
+					400,
+				);
 			}
 
 			const body: UpdateUserDetailsBody = await c.req.json();
@@ -414,7 +509,13 @@ export class AuthController {
 			if (body.email && body.email !== user.email) {
 				const existingUser = await this.service.findByEmail(body.email);
 				if (existingUser) {
-					return serveBadRequest(c, ERRORS.USER_EXISTS);
+					return c.json(
+						{
+							message: ERRORS.USER_EXISTS,
+							code: 'USER_EXISTS',
+						},
+						400,
+					);
 				}
 			}
 
@@ -426,12 +527,17 @@ export class AuthController {
 			// Get updated user
 			const updatedUser = await this.service.find(user.id);
 			if (!updatedUser) {
-				return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
+				return c.json(
+					{
+						message: ERRORS.USER_NOT_FOUND,
+						code: 'USER_NOT_FOUND',
+					},
+					400,
+				);
 			}
 
 			const serializedUser = await serializeUser(updatedUser);
-			return serveData(c, {
-				success: true,
+			return c.json({
 				message: 'User details updated successfully',
 				user: serializedUser,
 			});
@@ -476,8 +582,8 @@ export class AuthController {
 
 			// Update user profile image with the asset URL
 			await this.service.updateProfileImage(user.id, asset.asset_url);
-			return serveData(c, {
-				success: true,
+			return c.json({
+				
 				message: 'Profile image updated successfully',
 				asset: asset,
 			});

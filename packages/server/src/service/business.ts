@@ -90,7 +90,7 @@ export class BusinessService {
 				logo: asset.asset_url,
 				teamDetails: {
 					...team,
-					user: { email: team?.user?.email, name: team?.user?.name },
+					user: { email: team?.user?.email, first_name: team?.user?.first_name, last_name: team?.user?.last_name },
 				},
 			};
 		} catch (error) {

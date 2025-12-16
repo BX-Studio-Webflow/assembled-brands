@@ -1,0 +1,29 @@
+{
+  "name": "@assembled-brands/frontend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development node ./bin/build.js",
+    "build": "cross-env NODE_ENV=production node ./bin/build.js",
+    "check": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui"
+  },
+  "dependencies": {
+    "axios": "^1.13.2",
+    "@finsweet/ts-utils": "^0.40.0"
+  },
+  "devDependencies": {
+    "@finsweet/eslint-config": "^3.0.3",
+    "@playwright/test": "^1.50.1",
+    "cross-env": "^7.0.3",
+    "esbuild": "^0.24.2",
+    "eslint": "^9.19.0",
+    "typescript": "^5.7.3"
+  }
+}
