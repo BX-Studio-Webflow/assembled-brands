@@ -1,24 +1,18 @@
 import type { AxiosError } from 'axios';
 
-//const unauthorizedCode = [401, 419, 440];
+import { deleteCookie } from '$utils/auth';
+import { navigateToPath } from '$utils/config';
+
+const UNAUTHORIZED_CODES = [401, 419, 440];
 
 const AxiosResponseIntrceptorErrorCallback = (error: AxiosError) => {
   console.warn(error);
-  //const { response } = error;
-  /*const { setToken } = useToken();
+  const { response } = error;
 
-  if (response && unauthorizedCode.includes(response.status)) {
-    setToken('');
-    useSessionUser.getState().setUser({
-      id: 0,
-      email: '',
-      name: '',
-      createdAt: '',
-      is_verified: false,
-      role: '',
-    });
-    useSessionUser.getState().setSessionSignedIn(false);
-  }*/
+  if (response && UNAUTHORIZED_CODES.includes(response.status)) {
+    deleteCookie('accessToken');
+    navigateToPath('/login?error=unauthorized', false);
+  }
 };
 
 export default AxiosResponseIntrceptorErrorCallback;

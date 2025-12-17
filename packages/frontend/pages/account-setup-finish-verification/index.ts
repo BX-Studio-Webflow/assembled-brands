@@ -1,8 +1,8 @@
 import type { AxiosError } from 'axios';
 import { apiVerifyRegistration } from 'shared/services/AuthService';
 
+import { setCookie } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
-import { setCookie } from '$utils/cookies';
 import { queryElement } from '$utils/selectors';
 
 const initLoginPage = () => {

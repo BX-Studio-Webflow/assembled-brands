@@ -1,3 +1,5 @@
+import { navigateToPath } from './config';
+
 // Set a cookie
 export const setCookie = (name: string, value: string, days: number): void => {
   const date = new Date();
@@ -19,4 +21,13 @@ export const getCookie = (name: string): string | null => {
 // 3. Delete a cookie
 export const deleteCookie = (name: string): void => {
   setCookie(name, '', -1); // set negative expiry to remove
+};
+
+//middleware check
+export const processMiddleware = (): string | null => {
+  const cookie = getCookie('accessToken');
+  if (!cookie) {
+    navigateToPath('/login?error=unauthorized', false);
+  }
+  return cookie;
 };
