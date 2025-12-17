@@ -1,7 +1,7 @@
 import type { AxiosError } from 'axios';
 import { apiSignIn } from 'shared/services/AuthService';
 
-import { setCookie } from '$utils/cookies';
+import { setCookie } from '$utils/auth';
 import { isValidEmail } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
