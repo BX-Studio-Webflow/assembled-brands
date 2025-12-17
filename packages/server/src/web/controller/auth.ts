@@ -249,7 +249,7 @@ export class AuthController {
 				);
 			}
 
-			await sendTemplateEmail(user.email, user.first_name || 'Dear User', 'd-3f05d1f7f1604a06a2b9e072c42fec3a', {
+			await sendTemplateEmail(user.email, user.first_name || 'Dear User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 				subject: 'Welcome to Assembled Brands',
 				title: 'Welcome to Assembled Brands',
 				subtitle: `Welcome to Assembled Brands`,
