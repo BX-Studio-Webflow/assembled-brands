@@ -47,11 +47,11 @@ export const userSchema = sqliteTable('user', {
 
 export const businessSchema = sqliteTable('businesses', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
-	name: text('name').notNull(),
-	address: text('address'),
-	phone: text('phone'),
-	dial_code: text('dial_code'),
-	email: text('email'),
+	legal_name: text('legal_name').notNull(),
+	headquarters: text('headquarters'),
+	year_formed: text('year_formed'),
+	accounting_software: text('accounting_software'),
+	other_accounting_software: text('other_accounting_software'),
 	description: text('description'),
 	logo_asset_id: integer('logo_asset_id').references(() => assetsSchema.id),
 	user_id: integer('user_id')
@@ -111,6 +111,9 @@ export const teamInvitationSchema = sqliteTable('team_invitations', {
 		.references(() => userSchema.id)
 		.notNull(),
 	invitee_email: text('invitee_email').notNull(),
+	invitee_name: text('invitee_name').notNull(),
+	user_defined_role: text('user_defined_role').notNull().default(''),
+	message: text('message').default(''),
 	status: text('status', { enum: ['pending', 'accepted', 'rejected'] }).default('pending'),
 	created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 	updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),

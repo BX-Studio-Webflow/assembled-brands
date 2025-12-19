@@ -14,7 +14,7 @@ import type {
   StartHlsConversionResponse,
 } from '../types/asset';
 import ApiService from './ApiService';
-export const apiCreateAsset = (data: CreateAssetBody) => {
+export const apiCreateAssetPresignedUrl = (data: CreateAssetBody) => {
   return ApiService.fetchDataWithAxios<CreateAssetResponse>({
     url: '/asset',
     method: 'post',

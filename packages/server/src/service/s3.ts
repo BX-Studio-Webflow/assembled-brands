@@ -1,4 +1,3 @@
-import { MediaConvert } from '@aws-sdk/client-mediaconvert';
 import {
 	AbortMultipartUploadCommand,
 	CompleteMultipartUploadCommand,
@@ -19,7 +18,7 @@ import type { Readable } from 'stream';
  */
 export class S3Service {
 	private client: S3Client;
-	private mediaConvertClient: MediaConvert;
+
 	private bucket: string;
 
 	/**
@@ -27,23 +26,20 @@ export class S3Service {
 	 * Initializes AWS S3 client with credentials from environment variables
 	 */
 	constructor() {
+		if (!env.R2_ACCOUNT_ID || !env.R2_SECRET_ACCESS_KEY_ID || !env.R2_SECRET_ACCESS_KEY) {
+			throw new Error('R2_ACCOUNT_ID, R2_SECRET_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY are required');
+		}
 		this.client = new S3Client({
-			region: env.AWS_REGION,
+			region: 'auto',
+			endpoint: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
 			credentials: {
-				accessKeyId: env.AWS_ACCESS_KEY,
-				secretAccessKey: env.AWS_SECRET_KEY,
+				accessKeyId: env.R2_SECRET_ACCESS_KEY_ID,
+				secretAccessKey: env.R2_SECRET_ACCESS_KEY,
 			},
+			forcePathStyle: true,
 		});
 
-		this.mediaConvertClient = new MediaConvert({
-			region: env.AWS_REGION,
-			credentials: {
-				accessKeyId: env.AWS_ACCESS_KEY,
-				secretAccessKey: env.AWS_SECRET_KEY,
-			},
-		});
-
-		this.bucket = env.S3_BUCKET_NAME;
+		this.bucket = env.R2_BUCKET_NAME;
 	}
 
 	/**
@@ -65,7 +61,7 @@ export class S3Service {
 
 		return {
 			presignedUrl,
-			url: `https://${this.bucket}.s3.${env.AWS_REGION}.amazonaws.com/${key}`,
+			url: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${this.bucket}/${key}`,
 		};
 	}
 
@@ -135,7 +131,7 @@ export class S3Service {
 		});
 
 		await this.client.send(command);
-		return `https://${this.bucket}.s3.${env.AWS_REGION}.amazonaws.com/${key}`;
+		return `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${this.bucket}/${key}`;
 	}
 
 	/**
@@ -154,7 +150,7 @@ export class S3Service {
 		const response = await this.client.send(command);
 		return {
 			uploadId: response.UploadId!,
-			url: `https://${this.bucket}.s3.${env.AWS_REGION}.amazonaws.com/${key}`,
+			url: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${this.bucket}/${key}`,
 		};
 	}
 
@@ -210,101 +206,5 @@ export class S3Service {
 		});
 
 		await this.client.send(command);
-	}
-
-	/**
-	 * Creates a MediaConvert job for HLS conversion
-	 * @param {string} s3Key - The S3 object key (file path) to convert
-	 * @param {string} [roleArn] - IAM role ARN for MediaConvert (optional, uses default if not provided)
-	 * @param {string} [jobTemplate] - Job template name (optional, uses default if not provided)
-	 * @returns {Promise<{jobId: string, status: string}>} MediaConvert job ID and status
-	 */
-	async createMediaConvertJob(s3Key: string, roleArn?: string, jobTemplate?: string): Promise<{ jobId: string; status: string }> {
-		const inputUrl = `s3://${this.bucket}/${s3Key}`;
-
-		const jobParams = {
-			Role: roleArn || 'arn:aws:iam::897729107116:role/HLSPreProcessor',
-			Settings: {
-				Inputs: [
-					{
-						FileInput: inputUrl,
-					},
-				],
-			},
-			JobTemplate: jobTemplate || 'HLS_MultiResolution_Template',
-		};
-
-		try {
-			const response = await this.mediaConvertClient.createJob(jobParams);
-
-			return {
-				jobId: response.Job?.Id || '',
-				status: response.Job?.Status || 'SUBMITTED',
-			};
-		} catch (error) {
-			throw new Error(`Failed to create MediaConvert job: ${error instanceof Error ? error.message : 'Unknown error'}`);
-		}
-	}
-
-	/**
-	 * Gets the status of a MediaConvert job
-	 * @param {string} jobId - The MediaConvert job ID
-	 * @returns {Promise<{status: string, progress?: number, currentPhase?: string}>} Job status and progress info
-	 */
-	async getMediaConvertJobStatus(jobId: string): Promise<{
-		status: string;
-		progress?: number;
-		currentPhase?: string;
-	}> {
-		try {
-			const response = await this.mediaConvertClient.getJob({ Id: jobId });
-
-			return {
-				status: response.Job?.Status || 'UNKNOWN',
-				progress: response.Job?.JobPercentComplete,
-				currentPhase: response.Job?.CurrentPhase,
-			};
-		} catch (error) {
-			throw new Error(`Failed to get MediaConvert job status: ${error instanceof Error ? error.message : 'Unknown error'}`);
-		}
-	}
-
-	/**
-	 * Cancels a MediaConvert job
-	 * @param {string} jobId - The MediaConvert job ID
-	 * @returns {Promise<void>}
-	 */
-	async cancelMediaConvertJob(jobId: string): Promise<void> {
-		try {
-			await this.mediaConvertClient.cancelJob({ Id: jobId });
-		} catch (error) {
-			throw new Error(`Failed to cancel MediaConvert job: ${error instanceof Error ? error.message : 'Unknown error'}`);
-		}
-	}
-
-	/**
-	 * Lists MediaConvert jobs with optional filtering
-	 * @param {string} [status] - Filter by job status (optional)
-	 * @param {number} [maxResults] - Maximum number of jobs to return (optional, default 50)
-	 * @returns {Promise<Array<{jobId: string, status: string, createdAt: Date}>>} List of MediaConvert jobs
-	 */
-	async listMediaConvertJobs(status?: string, maxResults: number = 50): Promise<Array<{ jobId: string; status: string; createdAt: Date }>> {
-		try {
-			/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-			const params: any = { MaxResults: maxResults };
-			if (status) {
-				params.Status = status;
-			}
-
-			const response = await this.mediaConvertClient.listJobs(params);
-
-			return (response.Jobs || []).map((job) => ({
-				jobId: job.Id || '',
-				status: job.Status || 'UNKNOWN',
-				createdAt: job.CreatedAt || new Date(),
-			}));
-		} catch (error) {
-			throw new Error(`Failed to list MediaConvert jobs: ${error instanceof Error ? error.message : 'Unknown error'}`);
-		}
 	}
 }

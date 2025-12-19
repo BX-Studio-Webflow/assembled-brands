@@ -131,13 +131,23 @@ export class TeamRepository {
 		return members[0].id;
 	}
 
-	public async createInvitation(teamId: number, inviterId: number, inviteeEmail: string) {
+	public async createInvitation(
+		teamId: number,
+		inviterId: number,
+		inviteeEmail: string,
+		inviteeName: string,
+		userDefinedRole: string,
+		message: string,
+	) {
 		const invitations = await this.db
 			.insert(teamInvitationSchema)
 			.values({
 				team_id: teamId,
 				inviter_id: inviterId,
 				invitee_email: inviteeEmail,
+				invitee_name: inviteeName,
+				user_defined_role: userDefinedRole,
+				message: message,
 				status: 'pending',
 				created_at: new Date(),
 				updated_at: new Date(),
@@ -150,6 +160,22 @@ export class TeamRepository {
 	public async getInvitation(id: number) {
 		return await this.db.query.teamInvitationSchema.findFirst({
 			where: (invitation, { eq }) => eq(invitation.id, id),
+			with: {
+				team: {
+					columns: {
+						id: true,
+						name: true,
+					},
+				},
+				inviter: {
+					columns: {
+						id: true,
+						first_name: true,
+						last_name: true,
+						email: true,
+					},
+				},
+			},
 		});
 	}
 

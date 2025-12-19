@@ -57,7 +57,9 @@ export class AssetController {
 			const { fileName, contentType, assetType, fileSize, duration } = body;
 
 			const result = await this.service.createAsset(user.id, fileName.replace(/[^\w.-]/g, ''), contentType, assetType, fileSize, duration);
-			return c.json(result, 201);
+			//get the asset from the database
+			const asset = await this.service.getAsset(result.asset);
+			return c.json({ ...result, asset }, 201);
 		} catch (error) {
 			logger.error(error);
 			return serveInternalServerError(c, error);
@@ -472,88 +474,8 @@ export class AssetController {
 
 			// Get the asset to check if it's a video that needs HLS conversion
 			const asset = await this.service.getAsset(assetId);
-			if (asset && asset.asset_type === 'video') {
-				try {
-					// Start HLS conversion automatically
-					const conversionResult = await this.service.startHlsConversion(assetId);
 
-					logger.info({
-						assetId: assetId,
-						jobId: conversionResult.jobId,
-						status: conversionResult.status,
-					});
-
-					//create a notification for the host
-					const [notification] = await Promise.all([
-						this.notificationService.create({
-							user_id: asset.user_id,
-							notification_type: 'system',
-							link: `/concept/file-manager`,
-							metadata: {
-								asset_id: asset.id,
-								asset_name: asset.asset_name,
-							},
-							title: `Video processing started`,
-							message: `We will notify you as soon as it's ready for streaming.`,
-						}),
-					]);
-
-					return c.json({
-						success: true,
-						message: 'Upload completed and HLS conversion started',
-						notification,
-						hlsConversion: {
-							jobId: conversionResult.jobId,
-							status: conversionResult.status,
-						},
-					});
-				} catch (conversionError) {
-					logger.error(conversionError);
-					// Don't fail the upload completion, just log the error
-					return c.json({
-						success: true,
-						message: 'Upload completed but HLS conversion failed',
-						error: 'HLS conversion could not be started',
-					});
-				}
-			}
-
-			return c.json({ success: true });
-		} catch (error) {
-			logger.error(error);
-			return serveInternalServerError(c, error);
-		}
-	};
-
-	/**
-	 * Starts HLS conversion for a video asset
-	 * @param {Context} c - The Hono context containing asset ID
-	 * @returns {Promise<Response>} Response containing MediaConvert job information
-	 * @throws {Error} When HLS conversion fails
-	 */
-	public startHlsConversion = async (c: Context) => {
-		try {
-			const user = await this.getUser(c);
-			if (!user) {
-				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
-			}
-
-			const assetId = Number(c.req.param('id'));
-			if (!assetId) {
-				return serveBadRequest(c, ERRORS.ASSET_ID_NOT_FOUND);
-			}
-
-			// Get optional parameters from query string
-			const { roleArn, jobTemplate } = c.req.query();
-
-			const result = await this.service.startHlsConversion(assetId, roleArn || undefined, jobTemplate || undefined);
-
-			return c.json({
-				message: 'HLS conversion started successfully',
-				jobId: result.jobId,
-				status: result.status,
-				assetId: assetId,
-			});
+			return c.json({ success: true, asset });
 		} catch (error) {
 			logger.error(error);
 			return serveInternalServerError(c, error);

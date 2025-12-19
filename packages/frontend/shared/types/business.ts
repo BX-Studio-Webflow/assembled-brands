@@ -20,11 +20,12 @@ export interface GetBusinessResponse {
 }
 
 export interface UpdateBusinessRequest extends Record<string, unknown> {
-  name: string;
-  address: string;
-  email: string;
-  dial_code: string;
-  phone: string;
+  legal_name: string;
+  headquarters: string;
+  description: string;
+  year_formed: string;
+  accounting_software: string;
+  other_accounting_software: string;
 }
 
 export interface UploadBusinessLogoRequest {

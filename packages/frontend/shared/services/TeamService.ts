@@ -2,6 +2,7 @@ import type {
   AcceptInvitationResponse,
   CreateTeamBody,
   CreateTeamResponse,
+  GetInvitationResponse,
   GetMyInvitationsResponse,
   GetMyTeamMembersResponse,
   GetMyTeamsResponse,
@@ -58,6 +59,13 @@ export const apiGetMyTeams = () => {
   });
 };
 
+export const apiGetInvitation = (invitationId: number) => {
+  return ApiService.fetchDataWithAxios<GetInvitationResponse>({
+    url: `/team/invitations/${invitationId}`,
+    method: 'get',
+  });
+};
+
 export async function apiAcceptTeamInvitation(invitationId: number) {
   return ApiService.fetchDataWithAxios<AcceptInvitationResponse>({
     url: `/team/invitations/${invitationId}/accept`,
@@ -90,13 +98,22 @@ export const apiDeleteTeamInvitation = (invitationId: number) => {
   });
 };
 
-export const apiInviteTeamMember = (email: string, teamId: number) => {
+export const apiInviteTeamMember = (
+  name: string,
+  user_defined_role: string,
+  email: string,
+  teamId: number,
+  message: string
+) => {
   return ApiService.fetchDataWithAxios<void>({
     url: '/team/invite',
     method: 'post',
     data: {
+      invitee_name: name,
       invitee_email: email,
       team_id: teamId,
+      user_defined_role: user_defined_role,
+      message: message,
     },
   });
 };

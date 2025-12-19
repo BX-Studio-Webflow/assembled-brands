@@ -177,7 +177,6 @@ export class Server {
 		asset.get('/', assetQueryValidator, assetCtrl.getAssets);
 		asset.post('/multipart', createMultipartAssetValidator, assetCtrl.createMultipartAsset);
 		asset.post('/:id/complete', completeMultipartUploadValidator, assetCtrl.completeMultipartUpload);
-		asset.post('/:id/start-hls-conversion', assetCtrl.startHlsConversion);
 		asset.put('/:id/rename', assetCtrl.renameAsset);
 		asset.delete('/:id', assetCtrl.deleteAsset);
 
@@ -206,6 +205,7 @@ export class Server {
 		team.post('/create', authCheck, createTeamValidator, teamCtrl.createTeam);
 		team.post('/invite', authCheck, inviteMemberValidator, teamCtrl.inviteMember);
 		team.get('/invitations', authCheck, teamQueryValidator, teamCtrl.getTeamInvitations);
+		team.get('/invitations/:id', teamCtrl.getInvitation);
 		team.get('/my-invitations', authCheck, teamQueryValidator, teamCtrl.getMyInvitations);
 		team.delete('/invitations/:id', authCheck, teamCtrl.deleteInvitation);
 		team.post('/invitations/:id/accept', teamCtrl.acceptInvitation);

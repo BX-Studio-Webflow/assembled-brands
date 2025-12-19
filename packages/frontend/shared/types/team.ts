@@ -26,6 +26,8 @@ export interface TeamInvitation {
   team_id: number;
   inviter_id: number;
   invitee_email: string;
+  invitee_name: string;
+  user_defined_role: string;
   status: string;
   created_at: string;
   updated_at: string;
@@ -117,4 +119,27 @@ export type RejectInvitationResponse = {
     created_at: string;
     updated_at: string;
   };
+};
+
+export type GetInvitationResponse = {
+  id: number;
+  team_id: number;
+  inviter_id: number;
+  invitee_email: string;
+  message: string;
+  invitee_name: string;
+  user_defined_role: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string | number;
+  updated_at: string | number;
+  team: {
+    id: number;
+    name: string;
+  } | null;
+  inviter: {
+    id: number;
+    first_name: string | null;
+    last_name: string | null;
+    email: string;
+  } | null;
 };

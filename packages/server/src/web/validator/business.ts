@@ -13,11 +13,11 @@ function validateBase64Size(base64String: string): boolean {
 }
 
 const businessSchema = z.object({
-	name: z.string().min(1),
-	address: z.string().optional(),
-	phone: z.string(),
-	dial_code: z.string(),
-	email: z.string().email().optional(),
+	legal_name: z.string().min(1),
+	headquarters: z.string().optional(),
+	year_formed: z.string().optional(),
+	accounting_software: z.enum(['quickbooks', 'quickbooks-online', 'netsuite', 'other', 'accumatica']),
+	other_accounting_software: z.string().optional(),
 	description: z.string().optional(),
 	logo: z
 		.string()

@@ -70,7 +70,7 @@ export class TeamController {
 			}
 
 			const body: InviteMemberBody = await c.req.json();
-			const { invitee_email, team_id } = body;
+			const { invitee_email, team_id, invitee_name, user_defined_role, message } = body;
 
 			// Check if inviter is the host of the team
 			const isHost = await this.service.isTeamHost(team_id, user.id);
@@ -106,7 +106,10 @@ export class TeamController {
 				invitee_email,
 				team.name,
 				user.first_name + ' ' + user.last_name,
+				invitee_name,
 				new Date().getTime(),
+				user_defined_role,
+				message || '',
 			);
 
 			return c.json({
@@ -140,6 +143,30 @@ export class TeamController {
 			const invitations = await this.service.getTeamInvitations(team.id);
 
 			return c.json(invitations);
+		} catch (error) {
+			logger.error(error);
+			return serveInternalServerError(c, error);
+		}
+	};
+
+	/**
+	 * Get a single invitation by ID (public endpoint, no auth required)
+	 * @param c
+	 * @returns The invitation details
+	 */
+	public getInvitation = async (c: Context) => {
+		try {
+			const invitationId = Number(c.req.param('id'));
+			if (!invitationId || isNaN(invitationId)) {
+				return serveBadRequest(c, 'Invalid invitation ID');
+			}
+
+			const invitation = await this.service.getInvitation(invitationId);
+			if (!invitation) {
+				return serveBadRequest(c, 'Invitation not found');
+			}
+
+			return c.json(invitation);
 		} catch (error) {
 			logger.error(error);
 			return serveInternalServerError(c, error);

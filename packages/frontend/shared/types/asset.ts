@@ -57,7 +57,7 @@ export type Asset = {
 
 export type CreateAssetResponse = {
   asset: Asset;
-  uploadUrl: string;
+  presignedUrl: string;
   message?: string;
 };
 

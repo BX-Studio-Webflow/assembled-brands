@@ -32,7 +32,7 @@ export class BusinessRepository {
 
 		const whereConditions = [];
 		if (search) {
-			whereConditions.push(like(businessSchema.name, `%${search}%`));
+			whereConditions.push(like(businessSchema.legal_name, `%${search}%`));
 		}
 
 		const businesses = await this.db
