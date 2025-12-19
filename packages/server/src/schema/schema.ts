@@ -47,11 +47,11 @@ export const userSchema = sqliteTable('user', {
 
 export const businessSchema = sqliteTable('businesses', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
-	name: text('name').notNull(),
-	address: text('address'),
-	phone: text('phone'),
-	dial_code: text('dial_code'),
-	email: text('email'),
+	legal_name: text('legal_name').notNull(),
+	headquarters: text('headquarters'),
+	year_formed: text('year_formed'),
+	accounting_software: text('accounting_software'),
+	other_accounting_software: text('other_accounting_software'),
 	description: text('description'),
 	logo_asset_id: integer('logo_asset_id').references(() => assetsSchema.id),
 	user_id: integer('user_id')

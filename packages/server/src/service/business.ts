@@ -151,7 +151,7 @@ export class BusinessService {
 				await this.repository.update(existingBusiness.id, businessData);
 			} else {
 				// Create business and team in parallel
-				await Promise.all([this.repository.create(businessData), this.teamService.createTeam(business.name, userId)]);
+				await Promise.all([this.repository.create(businessData), this.teamService.createTeam(business.legal_name, userId)]);
 			}
 
 			// Return business with resolved asset URLs

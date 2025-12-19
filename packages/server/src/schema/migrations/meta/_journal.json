@@ -43,6 +43,13 @@
 			"when": 1765289331626,
 			"tag": "0005_wandering_iron_monger",
 			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "6",
+			"when": 1766146605904,
+			"tag": "0006_melted_human_cannonball",
+			"breakpoints": true
 		}
 	]
 }
