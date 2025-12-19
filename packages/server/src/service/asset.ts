@@ -366,40 +366,6 @@ export class AssetService {
 	}
 
 	/**
-	 * Starts HLS conversion for a video asset
-	 * @param {number} assetId - ID of the asset to convert
-	 * @param {string} [roleArn] - IAM role ARN for MediaConvert (optional)
-	 * @param {string} [jobTemplate] - Job template name (optional)
-	 * @returns {Promise<{jobId: string, status: string}>} MediaConvert job ID and status
-	 */
-	async startHlsConversion(assetId: number, roleArn?: string, jobTemplate?: string): Promise<{ jobId: string; status: string }> {
-		// Get the asset
-		const asset = await this.repository.find(assetId);
-		if (!asset) {
-			throw new Error('Asset not found');
-		}
-
-		if (asset.asset_type !== 'video') {
-			throw new Error('Only video assets can be converted to HLS');
-		}
-
-		if (!asset.asset_url) {
-			throw new Error('Asset has no URL to convert');
-		}
-
-		// Extract the S3 key from the asset URL
-		const key = getKeyFromUrl(asset.asset_url);
-
-		// Create MediaConvert job
-		const { jobId, status } = await this.s3Service.createMediaConvertJob(key, roleArn, jobTemplate);
-
-		// Associate the job with the asset
-		await this.associateMediaConvertJob(assetId, jobId);
-
-		return { jobId, status };
-	}
-
-	/**
 	 * Exchanges a JWT for a Google OAuth access token
 	 * @returns {Promise<string>} The access token
 	 */

@@ -243,7 +243,8 @@ const initFinanceReportsPage = () => {
           reject(new Error('Failed to upload file to S3'));
         }
       });
-      xhr.addEventListener('error', () => {
+      xhr.addEventListener('error', (error) => {
+        console.error(error);
         reject(new Error('Network error during upload'));
       });
       xhr.open('PUT', presignedUrl);
