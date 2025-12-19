@@ -16,7 +16,7 @@ const businessSchema = z.object({
 	legal_name: z.string().min(1),
 	headquarters: z.string().optional(),
 	year_formed: z.string().optional(),
-	accounting_software: z.string().optional(),
+	accounting_software: z.enum(['quickbooks', 'quickbooks-online', 'netsuite', 'other', 'accumatica']),
 	other_accounting_software: z.string().optional(),
 	description: z.string().optional(),
 	logo: z
