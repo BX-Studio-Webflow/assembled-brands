@@ -8,7 +8,7 @@ import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
 import { queryElement } from '$utils/selectors';
 
-const initFinanceReportsPage = () => {
+const initAccountsInventoryPage = () => {
   processMiddleware();
 
   //ONLY SHEET AND XLSX ALLOWED
@@ -25,62 +25,62 @@ const initFinanceReportsPage = () => {
   }
 
   // Get the three upload boxes and file inputs
-  const balanceSheetBox = queryElement<HTMLElement>(
-    '[dev-target="balance-sheet-upload-box"]',
+  const monthlyInventoryBox = queryElement<HTMLElement>(
+    '[dev-target="monthly-inventory-upload-box"]',
     form
   );
-  const balanceSheetInput = queryElement<HTMLInputElement>(
-    '[dev-target="balance-sheet-input"]',
+  const monthlyInventoryInput = queryElement<HTMLInputElement>(
+    '[dev-target="monthly-inventory-input"]',
     form
   );
-  const balaceSheetHelpText = queryElement<HTMLElement>(
+  const monthlyInventoryHelpText = queryElement<HTMLElement>(
     '[dev-target="balance-sheet-helper"]',
     form
   );
 
-  const incomeStatementBox = queryElement<HTMLElement>(
-    '[dev-target="income-statement-upload-box"]',
+  const accountsReceivableBox = queryElement<HTMLElement>(
+    '[dev-target="accounts-receivable-upload-box"]',
     form
   );
-  const incomeStatementInput = queryElement<HTMLInputElement>(
-    '[dev-target="income-statement-input"]',
+  const accountsReceivableInput = queryElement<HTMLInputElement>(
+    '[dev-target="accounts-receivable-input"]',
     form
   );
-  const incomeStatementHelpText = queryElement<HTMLElement>(
+  const accountsReceivableHelpText = queryElement<HTMLElement>(
     '[dev-target="income-statement-helper"]',
     form
   );
 
-  const incomeForecastBox = queryElement<HTMLElement>(
-    '[dev-target="income-forecast-upload-box"]',
+  const accountsPayableBox = queryElement<HTMLElement>(
+    '[dev-target="accounts-payable-upload-box"]',
     form
   );
-  const incomeForecastInput = queryElement<HTMLInputElement>(
-    '[dev-target="income-forecast-input"]',
+  const accountsPayableInput = queryElement<HTMLInputElement>(
+    '[dev-target="accounts-payable-input"]',
     form
   );
-  const incomeForecastHelpText = queryElement<HTMLElement>(
+  const accountsPayableHelpText = queryElement<HTMLElement>(
     '[dev-target="income-forecast-helper"]',
     form
   );
 
   const submitButton = queryElement<HTMLButtonElement>('[dev-target="submit-button"]', form);
 
-  if (!balanceSheetBox || !balanceSheetInput || !balaceSheetHelpText) {
+  if (!monthlyInventoryBox || !monthlyInventoryInput || !monthlyInventoryHelpText) {
     console.error(
-      'Ensure [dev-target="balance-sheet-upload-box"] and [dev-target="balance-sheet-input"] and [dev-target="balance-sheet-helper"] are present.'
+      'Ensure [dev-target="monthly-inventory-upload-box"] and [dev-target="monthly-inventory-input"] and [dev-target="balance-sheet-helper"] are present.'
     );
     return;
   }
-  if (!incomeStatementBox || !incomeStatementInput || !incomeStatementHelpText) {
+  if (!accountsReceivableBox || !accountsReceivableInput || !accountsReceivableHelpText) {
     console.error(
-      'Ensure [dev-target="income-statement-upload-box"] and [dev-target="income-statement-input"] and [dev-target="income-statement-helper"] are present.'
+      'Ensure [dev-target="accounts-receivable-upload-box"] and [dev-target="accounts-receivable-input"] and [dev-target="income-statement-helper"] are present.'
     );
     return;
   }
-  if (!incomeForecastBox || !incomeForecastInput || !incomeForecastHelpText) {
+  if (!accountsPayableBox || !accountsPayableInput || !accountsPayableHelpText) {
     console.error(
-      'Ensure [dev-target="income-forecast-upload-box"] and [dev-target="income-forecast-input"] and [dev-target="income-forecast-helper"] are present.'
+      'Ensure [dev-target="accounts-payable-upload-box"] and [dev-target="accounts-payable-input"] and [dev-target="income-forecast-helper"] are present.'
     );
     return;
   }
@@ -89,124 +89,123 @@ const initFinanceReportsPage = () => {
     return;
   }
 
-  // Helper function to update helper text with file name
+  // Helper function to update helper text with file name and validate file type
   const updateHelperText = (input: HTMLInputElement, helperText: HTMLElement) => {
     if (input.files && input.files.length > 0) {
-      helperText.textContent = input.files[0].name;
-      //check if the file is allowed
-      if (!ALLOWED_FILE_TYPES.includes(input.files[0].type)) {
+      const file = input.files[0];
+
+      // Validate file type - fail first
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+        // Invalid file - clear input and show error
+        input.value = '';
         helperText.textContent =
           'Invalid file type. Please upload Excel (.xls or .xlsx) files only';
         helperText.classList.add('is-error');
-      } else {
-        helperText.textContent = input.files[0].name;
-        helperText.classList.remove('is-error');
+        return;
       }
+
+      // Valid file - show file name
+      helperText.textContent = file.name;
+      helperText.classList.remove('is-error');
+    } else {
+      helperText.textContent = '';
+      helperText.classList.remove('is-error');
     }
   };
 
-  // Setup drag-and-drop for Balance Sheet
-  if (balanceSheetBox && balanceSheetInput && balaceSheetHelpText) {
-    balanceSheetBox.addEventListener('click', () => balanceSheetInput.click());
+  // Setup drag-and-drop for Monthly Inventory
+  if (monthlyInventoryBox && monthlyInventoryInput && monthlyInventoryHelpText) {
+    monthlyInventoryBox.addEventListener('click', () => monthlyInventoryInput.click());
 
-    balanceSheetBox.addEventListener('dragover', (e) => {
+    monthlyInventoryBox.addEventListener('dragover', (e) => {
       e.preventDefault();
-      balanceSheetBox.classList.add('drag');
+      monthlyInventoryBox.classList.add('drag');
     });
 
-    balanceSheetBox.addEventListener('dragleave', () => {
-      balanceSheetBox.classList.remove('drag');
+    monthlyInventoryBox.addEventListener('dragleave', () => {
+      monthlyInventoryBox.classList.remove('drag');
     });
 
-    balanceSheetBox.addEventListener('drop', (e) => {
+    monthlyInventoryBox.addEventListener('drop', (e) => {
       e.preventDefault();
-      balanceSheetBox.classList.remove('drag');
+      monthlyInventoryBox.classList.remove('drag');
       if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-        balanceSheetInput.files = e.dataTransfer.files;
-        updateHelperText(balanceSheetInput, balaceSheetHelpText);
-        balanceSheetInput.dispatchEvent(new Event('change', { bubbles: true }));
+        monthlyInventoryInput.files = e.dataTransfer.files;
+        updateHelperText(monthlyInventoryInput, monthlyInventoryHelpText);
+        monthlyInventoryInput.dispatchEvent(new Event('change', { bubbles: true }));
       }
     });
 
     // Update helper text when file is selected via file picker
-    balanceSheetInput.addEventListener('change', () => {
-      updateHelperText(balanceSheetInput, balaceSheetHelpText);
+    monthlyInventoryInput.addEventListener('change', () => {
+      updateHelperText(monthlyInventoryInput, monthlyInventoryHelpText);
     });
   }
 
-  // Setup drag-and-drop for Income Statement
-  if (incomeStatementBox && incomeStatementInput && incomeStatementHelpText) {
-    incomeStatementBox.addEventListener('click', () => incomeStatementInput.click());
+  // Setup drag-and-drop for Accounts Receivable
+  if (accountsReceivableBox && accountsReceivableInput && accountsReceivableHelpText) {
+    accountsReceivableBox.addEventListener('click', () => accountsReceivableInput.click());
 
-    incomeStatementBox.addEventListener('dragover', (e) => {
+    accountsReceivableBox.addEventListener('dragover', (e) => {
       e.preventDefault();
-      incomeStatementBox.classList.add('drag');
+      accountsReceivableBox.classList.add('drag');
     });
 
-    incomeStatementBox.addEventListener('dragleave', () => {
-      incomeStatementBox.classList.remove('drag');
+    accountsReceivableBox.addEventListener('dragleave', () => {
+      accountsReceivableBox.classList.remove('drag');
     });
 
-    incomeStatementBox.addEventListener('drop', (e) => {
+    accountsReceivableBox.addEventListener('drop', (e) => {
       e.preventDefault();
-      incomeStatementBox.classList.remove('drag');
+      accountsReceivableBox.classList.remove('drag');
       if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-        incomeStatementInput.files = e.dataTransfer.files;
-        updateHelperText(incomeStatementInput, incomeStatementHelpText);
-        incomeStatementInput.dispatchEvent(new Event('change', { bubbles: true }));
+        accountsReceivableInput.files = e.dataTransfer.files;
+        updateHelperText(accountsReceivableInput, accountsReceivableHelpText);
+        accountsReceivableInput.dispatchEvent(new Event('change', { bubbles: true }));
       }
     });
 
     // Update helper text when file is selected via file picker
-    incomeStatementInput.addEventListener('change', () => {
-      updateHelperText(incomeStatementInput, incomeStatementHelpText);
+    accountsReceivableInput.addEventListener('change', () => {
+      updateHelperText(accountsReceivableInput, accountsReceivableHelpText);
     });
   }
 
-  // Setup drag-and-drop for Income Forecast
-  if (incomeForecastBox && incomeForecastInput && incomeForecastHelpText) {
-    incomeForecastBox.addEventListener('click', () => incomeForecastInput.click());
+  // Setup drag-and-drop for Accounts Payable
+  if (accountsPayableBox && accountsPayableInput && accountsPayableHelpText) {
+    accountsPayableBox.addEventListener('click', () => accountsPayableInput.click());
 
-    incomeForecastBox.addEventListener('dragover', (e) => {
+    accountsPayableBox.addEventListener('dragover', (e) => {
       e.preventDefault();
-      incomeForecastBox.classList.add('drag');
+      accountsPayableBox.classList.add('drag');
     });
 
-    incomeForecastBox.addEventListener('dragleave', () => {
-      incomeForecastBox.classList.remove('drag');
+    accountsPayableBox.addEventListener('dragleave', () => {
+      accountsPayableBox.classList.remove('drag');
     });
 
-    incomeForecastBox.addEventListener('drop', (e) => {
+    accountsPayableBox.addEventListener('drop', (e) => {
       e.preventDefault();
-      incomeForecastBox.classList.remove('drag');
+      accountsPayableBox.classList.remove('drag');
       if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-        incomeForecastInput.files = e.dataTransfer.files;
-        updateHelperText(incomeForecastInput, incomeForecastHelpText);
-        incomeForecastInput.dispatchEvent(new Event('change', { bubbles: true }));
+        accountsPayableInput.files = e.dataTransfer.files;
+        updateHelperText(accountsPayableInput, accountsPayableHelpText);
+        accountsPayableInput.dispatchEvent(new Event('change', { bubbles: true }));
       }
     });
 
     // Update helper text when file is selected via file picker
-    incomeForecastInput.addEventListener('change', () => {
-      updateHelperText(incomeForecastInput, incomeForecastHelpText);
+    accountsPayableInput.addEventListener('change', () => {
+      updateHelperText(accountsPayableInput, accountsPayableHelpText);
     });
   }
-
-  const allowedTypes = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/csv',
-  ];
 
   const uploadFile = async (
     file: File,
     documentType: FinancialDocumentBody['document_type']
   ): Promise<void> => {
-    if (!allowedTypes.includes(file.type)) {
-      throw new Error('Invalid file type. Please upload PDF, Word, Excel, or CSV files');
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      throw new Error('Invalid file type. Please upload Excel (.xls or .xlsx) files only');
     }
 
     // Step 1: Create asset
@@ -227,7 +226,7 @@ const initFinanceReportsPage = () => {
 
     // Step 3: Create financial document record
     const documentPayload: FinancialDocumentBody = {
-      step: 2,
+      step: 3,
       document_type: documentType,
       asset_id: assetId,
     };
@@ -240,43 +239,79 @@ const initFinanceReportsPage = () => {
     event.stopPropagation();
 
     const resetErrors = () => {
-      balanceSheetBox?.classList.remove('is-error');
-      incomeStatementBox?.classList.remove('is-error');
-      incomeForecastBox?.classList.remove('is-error');
+      monthlyInventoryBox?.classList.remove('is-error');
+      accountsReceivableBox?.classList.remove('is-error');
+      accountsPayableBox?.classList.remove('is-error');
+      monthlyInventoryHelpText?.classList.remove('is-error');
+      accountsReceivableHelpText?.classList.remove('is-error');
+      accountsPayableHelpText?.classList.remove('is-error');
       submitButton.classList.remove('is-error');
       submitButton.value = 'UPLOAD DOCUMENTS';
     };
 
     // Reset errors on file change
-    balanceSheetInput?.addEventListener('change', resetErrors, { once: true });
-    incomeStatementInput?.addEventListener('change', resetErrors, { once: true });
-    incomeForecastInput?.addEventListener('change', resetErrors, { once: true });
+    monthlyInventoryInput?.addEventListener('change', resetErrors, { once: true });
+    accountsReceivableInput?.addEventListener('change', resetErrors, { once: true });
+    accountsPayableInput?.addEventListener('change', resetErrors, { once: true });
 
     const filesToUpload: Array<{
       file: File;
       documentType: FinancialDocumentBody['document_type'];
     }> = [];
 
-    // Collect all files
-    if (balanceSheetInput?.files && balanceSheetInput.files[0]) {
-      filesToUpload.push({
-        file: balanceSheetInput.files[0],
-        documentType: 'monthly_balance_sheet',
-      });
+    // Collect all files (only valid file types)
+    if (monthlyInventoryInput?.files && monthlyInventoryInput.files[0]) {
+      const file = monthlyInventoryInput.files[0];
+      if (ALLOWED_FILE_TYPES.includes(file.type)) {
+        filesToUpload.push({
+          file: file,
+          documentType: 'monthly_inventory_report',
+        });
+      } else {
+        monthlyInventoryHelpText?.classList.add('is-error');
+      }
     }
 
-    if (incomeStatementInput?.files && incomeStatementInput.files[0]) {
-      filesToUpload.push({
-        file: incomeStatementInput.files[0],
-        documentType: 'monthly_income_statement',
-      });
+    if (accountsReceivableInput?.files && accountsReceivableInput.files[0]) {
+      const file = accountsReceivableInput.files[0];
+      if (ALLOWED_FILE_TYPES.includes(file.type)) {
+        filesToUpload.push({
+          file: file,
+          documentType: 'accounts_receivable_aging',
+        });
+      } else {
+        accountsReceivableHelpText?.classList.add('is-error');
+      }
     }
 
-    if (incomeForecastInput?.files && incomeForecastInput.files[0]) {
-      filesToUpload.push({
-        file: incomeForecastInput.files[0],
-        documentType: 'monthly_income_forecast',
-      });
+    if (accountsPayableInput?.files && accountsPayableInput.files[0]) {
+      const file = accountsPayableInput.files[0];
+      if (ALLOWED_FILE_TYPES.includes(file.type)) {
+        filesToUpload.push({
+          file: file,
+          documentType: 'accounts_payable_aging',
+        });
+      } else {
+        accountsPayableHelpText?.classList.add('is-error');
+      }
+    }
+
+    // Check if there are any invalid files
+    const hasInvalidFiles =
+      (monthlyInventoryInput?.files &&
+        monthlyInventoryInput.files[0] &&
+        !ALLOWED_FILE_TYPES.includes(monthlyInventoryInput.files[0].type)) ||
+      (accountsReceivableInput?.files &&
+        accountsReceivableInput.files[0] &&
+        !ALLOWED_FILE_TYPES.includes(accountsReceivableInput.files[0].type)) ||
+      (accountsPayableInput?.files &&
+        accountsPayableInput.files[0] &&
+        !ALLOWED_FILE_TYPES.includes(accountsPayableInput.files[0].type));
+
+    if (hasInvalidFiles) {
+      submitButton.classList.add('is-error');
+      submitButton.value = 'Please upload only Excel (.xls or .xlsx) files';
+      return;
     }
 
     if (filesToUpload.length === 0) {
@@ -298,14 +333,23 @@ const initFinanceReportsPage = () => {
       submitButton.value = 'Documents uploaded successfully!';
 
       // Reset form
-      if (balanceSheetInput) balanceSheetInput.value = '';
-      if (incomeStatementInput) incomeStatementInput.value = '';
-      if (incomeForecastInput) incomeForecastInput.value = '';
+      if (monthlyInventoryInput) monthlyInventoryInput.value = '';
+      if (accountsReceivableInput) accountsReceivableInput.value = '';
+      if (accountsPayableInput) accountsPayableInput.value = '';
 
       // Reset helper text
-      if (balaceSheetHelpText) balaceSheetHelpText.textContent = '';
-      if (incomeStatementHelpText) incomeStatementHelpText.textContent = '';
-      if (incomeForecastHelpText) incomeForecastHelpText.textContent = '';
+      if (monthlyInventoryHelpText) {
+        monthlyInventoryHelpText.textContent = '';
+        monthlyInventoryHelpText.classList.remove('is-error');
+      }
+      if (accountsReceivableHelpText) {
+        accountsReceivableHelpText.textContent = '';
+        accountsReceivableHelpText.classList.remove('is-error');
+      }
+      if (accountsPayableHelpText) {
+        accountsPayableHelpText.textContent = '';
+        accountsPayableHelpText.classList.remove('is-error');
+      }
 
       setTimeout(() => {
         submitButton.classList.remove('is-success');
@@ -323,4 +367,4 @@ const initFinanceReportsPage = () => {
   });
 };
 
-initFinanceReportsPage();
+initAccountsInventoryPage();
