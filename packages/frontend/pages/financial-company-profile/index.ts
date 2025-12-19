@@ -6,7 +6,7 @@ import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
 import { queryElement } from '$utils/selectors';
 
-const initFinancialWizardStep1Page = () => {
+const initTeamInvitePage = () => {
   processMiddleware();
 
   const form = document.querySelector('[dev-target="finance-company-profile"]');
@@ -145,4 +145,4 @@ const initFinancialWizardStep1Page = () => {
   });
 };
 
-initFinancialWizardStep1Page();
+initTeamInvitePage();

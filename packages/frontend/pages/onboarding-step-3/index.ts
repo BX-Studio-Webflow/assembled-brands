@@ -132,7 +132,7 @@ const initOnboardingStep3Page = () => {
       submitButton.value = 'Saved. Finishing up...';
 
       setTimeout(() => {
-        navigateToPath('/dashboard');
+        navigateToPath('/finance-company-profile');
       }, 500);
     } catch (error) {
       const { message } = error as AxiosError;
