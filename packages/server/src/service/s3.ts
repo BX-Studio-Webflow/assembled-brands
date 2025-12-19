@@ -61,7 +61,7 @@ export class S3Service {
 
 		return {
 			presignedUrl,
-			url: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${key}`,
+			url: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${this.bucket}/${key}`,
 		};
 	}
 

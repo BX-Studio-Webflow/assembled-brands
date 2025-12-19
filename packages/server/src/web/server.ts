@@ -177,7 +177,6 @@ export class Server {
 		asset.get('/', assetQueryValidator, assetCtrl.getAssets);
 		asset.post('/multipart', createMultipartAssetValidator, assetCtrl.createMultipartAsset);
 		asset.post('/:id/complete', completeMultipartUploadValidator, assetCtrl.completeMultipartUpload);
-		asset.post('/:id/start-hls-conversion', assetCtrl.startHlsConversion);
 		asset.put('/:id/rename', assetCtrl.renameAsset);
 		asset.delete('/:id', assetCtrl.deleteAsset);
 
