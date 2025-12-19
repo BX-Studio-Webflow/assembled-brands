@@ -55,7 +55,7 @@ const initFinancialWizardStep3Page = () => {
   }
 
   backButton.addEventListener('click', () => {
-    navigateToPath('/financial-wizard-step-2');
+    navigateToPath('/finance-docs-financial-reports');
   });
 
   continueButton.addEventListener('click', () => {

@@ -134,7 +134,7 @@ const initFinancialWizardStep1Page = () => {
       submitButton.value = 'Saved. Continuing...';
 
       setTimeout(() => {
-        navigateToPath('/financial-wizard-step-2');
+        navigateToPath('/finance-docs-financial-reports');
       }, 500);
     } catch (error) {
       const { message } = error as AxiosError;
