@@ -57,7 +57,9 @@ export class AssetController {
 			const { fileName, contentType, assetType, fileSize, duration } = body;
 
 			const result = await this.service.createAsset(user.id, fileName.replace(/[^\w.-]/g, ''), contentType, assetType, fileSize, duration);
-			return c.json(result, 201);
+			//get the asset from the database
+			const asset = await this.service.getAsset(result.asset);
+			return c.json({ ...result, asset }, 201);
 		} catch (error) {
 			logger.error(error);
 			return serveInternalServerError(c, error);
