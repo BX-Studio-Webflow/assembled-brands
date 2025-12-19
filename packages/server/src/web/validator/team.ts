@@ -8,6 +8,7 @@ const inviteMemberSchema = z.object({
 	invitee_name: z.string().min(1).max(255),
 	team_id: z.number().int().positive(),
 	user_defined_role: z.string().min(1).max(255),
+	message: z.string().optional(),
 });
 
 const inviteMemberValidator = validator('json', (value, c) => {

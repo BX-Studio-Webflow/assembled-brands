@@ -1,8 +1,8 @@
 {
 	"version": "6",
 	"dialect": "sqlite",
-	"id": "c79acd72-0ec3-4533-824f-653454dc1941",
-	"prevId": "8438d4cc-5760-4473-8953-3727d4cff007",
+	"id": "c587dbd6-ecba-46f1-807c-9ba087c8956e",
+	"prevId": "c79acd72-0ec3-4533-824f-653454dc1941",
 	"tables": {
 		"assets": {
 			"name": "assets",
@@ -1040,6 +1040,14 @@
 					"type": "text",
 					"primaryKey": false,
 					"notNull": true,
+					"autoincrement": false,
+					"default": "''"
+				},
+				"message": {
+					"name": "message",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false,
 					"autoincrement": false
 				},
 				"status": {

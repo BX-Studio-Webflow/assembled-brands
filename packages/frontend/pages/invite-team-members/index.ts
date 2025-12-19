@@ -165,7 +165,13 @@ const initInviteTeamMembersPage = async () => {
 
     try {
       const invitePromises = emails.map((email) =>
-        apiInviteTeamMember(nameInput.value.trim(), roleInput.value.trim(), email, teamId!)
+        apiInviteTeamMember(
+          nameInput.value.trim(),
+          roleInput.value.trim(),
+          email,
+          teamId!,
+          inviteMessageInput.value.trim()
+        )
       );
       await Promise.all(invitePromises);
 

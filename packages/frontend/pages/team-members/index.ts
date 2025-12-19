@@ -27,7 +27,7 @@ const TeamMembersPage = async () => {
     return;
   }
 
-  addAnotherMemberLink.addEventListener('click', (e) => {
+  addAnotherMemberLink.addEventListener('click', () => {
     navigateToPath('/invite-team-members');
   });
 
@@ -51,8 +51,8 @@ const TeamMembersPage = async () => {
     if (usernameCell && emailCell && roleCell && statusCell) {
       usernameCell.textContent = invites[0].invitee_name || 'Unknown';
       emailCell.textContent = invites[0].invitee_email || 'Unknown';
-      roleCell.textContent = invites[0].status || 'Unknown';
-      statusCell.textContent = 'Active';
+      roleCell.textContent = invites[0].user_defined_role || 'Unknown';
+      statusCell.textContent = invites[0].status.trim() || 'Unknown';
     }
 
     // Clone template row for remaining members
@@ -72,8 +72,8 @@ const TeamMembersPage = async () => {
       if (clonedUsernameCell && clonedEmailCell && clonedRoleCell && clonedStatusCell) {
         clonedUsernameCell.textContent = invites[i].invitee_name.trim() || 'Unknown';
         clonedEmailCell.textContent = invites[i].invitee_email.trim() || 'Unknown';
-        clonedRoleCell.textContent = invites[i].status.trim() || 'Unknown';
-        clonedStatusCell.textContent = 'Active';
+        clonedRoleCell.textContent = invites[i].user_defined_role.trim() || 'Unknown';
+        clonedStatusCell.textContent = invites[i].status.trim() || 'Unknown';
       }
 
       tableBody.appendChild(clonedRow);

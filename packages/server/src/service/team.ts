@@ -62,12 +62,13 @@ export class TeamService {
 		inviteeName: string,
 		timestamp: number,
 		userDefinedRole: string,
+		message: string,
 	) {
 		try {
 			// Create invitation
-			const invitationId = await this.repo.createInvitation(teamId, inviterId, inviteeEmail, inviteeName, userDefinedRole);
+			const invitationId = await this.repo.createInvitation(teamId, inviterId, inviteeEmail, inviteeName, userDefinedRole, message);
 
-			const acceptUrl = `${env.FRONTEND_URL}/accept-team-invitation?invitation_id=${invitationId}&team_id=${teamId}&team_name=${teamName}&inviter_name=${inviterName}&timestamp=${timestamp}`;
+			const acceptUrl = `${env.FRONTEND_URL}${env.NODE_ENV === 'production' ? '' : '/dev'}/accept-team-invitation?invitation_id=${invitationId}&team_id=${teamId}&team_name=${encodeURIComponent(teamName)}&inviter_name=${encodeURIComponent(inviterName)}&timestamp=${timestamp}`;
 
 			// Send invitation email
 			await sendTemplateEmail(inviteeEmail, 'Team Invitation', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
