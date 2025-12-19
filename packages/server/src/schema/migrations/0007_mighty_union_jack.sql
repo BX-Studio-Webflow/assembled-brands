@@ -1,0 +1,2 @@
+ALTER TABLE `team_invitations` ADD `invitee_name` text NOT NULL DEFAULT '';--> statement-breakpoint
+ALTER TABLE `team_invitations` ADD `user_defined_role` text NOT NULL DEFAULT '';--> statement-breakpoint
