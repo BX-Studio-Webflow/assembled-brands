@@ -284,7 +284,7 @@ const initEcommercePerformancePage = () => {
         submitButton.classList.remove('is-success');
         submitButton.value = 'UPLOAD DOCUMENTS';
         submitButton.disabled = false;
-        navigateToPath('/financial-wizard-step-5');
+        navigateToPath('/finance-docs-team-and-ownership');
       }, 900);
     } catch (error) {
       const { message } = error as AxiosError;

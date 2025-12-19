@@ -311,7 +311,7 @@ const initFinanceReportsPage = () => {
         submitButton.classList.remove('is-success');
         submitButton.value = 'UPLOAD DOCUMENTS';
         submitButton.disabled = false;
-        navigateToPath('/financial-wizard-step-4');
+        navigateToPath('/finance-docs-accounts-and-inventory');
       }, 900);
     } catch (error) {
       const { message } = error as AxiosError;
