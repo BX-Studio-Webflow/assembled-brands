@@ -27,19 +27,24 @@ export class S3Service {
 	 * Initializes AWS S3 client with credentials from environment variables
 	 */
 	constructor() {
+		if (!env.R2_ACCOUNT_ID || !env.R2_SECRET_ACCESS_KEY_ID || !env.R2_SECRET_ACCESS_KEY) {
+			throw new Error('R2_ACCOUNT_ID, R2_SECRET_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY are required');
+		}
 		this.client = new S3Client({
-			region: env.AWS_REGION,
+			region: 'auto',
+			endpoint: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
 			credentials: {
-				accessKeyId: env.AWS_ACCESS_KEY,
-				secretAccessKey: env.AWS_SECRET_KEY,
+				accessKeyId: env.R2_SECRET_ACCESS_KEY_ID,
+				secretAccessKey: env.R2_SECRET_ACCESS_KEY,
 			},
+			forcePathStyle: true,
 		});
 
 		this.mediaConvertClient = new MediaConvert({
 			region: env.AWS_REGION,
 			credentials: {
-				accessKeyId: env.AWS_ACCESS_KEY,
-				secretAccessKey: env.AWS_SECRET_KEY,
+				accessKeyId: env.R2_SECRET_ACCESS_KEY_ID,
+				secretAccessKey: env.R2_SECRET_ACCESS_KEY,
 			},
 		});
 
@@ -65,7 +70,7 @@ export class S3Service {
 
 		return {
 			presignedUrl,
-			url: `https://${this.bucket}.s3.${env.AWS_REGION}.amazonaws.com/${key}`,
+			url: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${this.bucket}/${key}`,
 		};
 	}
 
@@ -135,7 +140,7 @@ export class S3Service {
 		});
 
 		await this.client.send(command);
-		return `https://${this.bucket}.s3.${env.AWS_REGION}.amazonaws.com/${key}`;
+		return `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${this.bucket}/${key}`;
 	}
 
 	/**
@@ -154,7 +159,7 @@ export class S3Service {
 		const response = await this.client.send(command);
 		return {
 			uploadId: response.UploadId!,
-			url: `https://${this.bucket}.s3.${env.AWS_REGION}.amazonaws.com/${key}`,
+			url: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${this.bucket}/${key}`,
 		};
 	}
 

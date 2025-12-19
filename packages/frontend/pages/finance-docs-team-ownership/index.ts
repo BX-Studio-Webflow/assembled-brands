@@ -1,5 +1,5 @@
 import type { AxiosError } from 'axios';
-import { apiCreateAsset } from 'shared/services/AssetService';
+import { apiCreateAssetPresignedUrl } from 'shared/services/AssetService';
 import { apiUploadFinancialDocument } from 'shared/services/FinancialWizardService';
 import type { CreateAssetBody } from 'shared/types/asset';
 import type { FinancialDocumentBody } from 'shared/types/financial-wizard';
@@ -217,7 +217,7 @@ const initTeamOwnershipPage = () => {
       duration: 0,
     };
 
-    const assetResponse = await apiCreateAsset(assetPayload);
+    const assetResponse = await apiCreateAssetPresignedUrl(assetPayload);
     const assetId = assetResponse.asset.id;
 
     // Step 2: Upload file to asset (you'll need to implement multipart upload here)

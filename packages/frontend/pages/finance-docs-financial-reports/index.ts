@@ -1,5 +1,5 @@
 import type { AxiosError } from 'axios';
-import { apiCreateAsset } from 'shared/services/AssetService';
+import { apiCreateAssetPresignedUrl } from 'shared/services/AssetService';
 import { apiUploadFinancialDocument } from 'shared/services/FinancialWizardService';
 import type { CreateAssetBody } from 'shared/types/asset';
 import type { FinancialDocumentBody } from 'shared/types/financial-wizard';
@@ -218,12 +218,38 @@ const initFinanceReportsPage = () => {
       duration: 0,
     };
 
-    const assetResponse = await apiCreateAsset(assetPayload);
+    const assetResponse = await apiCreateAssetPresignedUrl(assetPayload);
     const assetId = assetResponse.asset.id;
 
-    // Step 2: Upload file to asset (you'll need to implement multipart upload here)
-    // For now, this is a placeholder - you'll need to handle the actual file upload
-    // using multipart upload or direct upload based on your backend implementation
+    const { presignedUrl } = assetResponse;
+
+    if (!presignedUrl) {
+      throw new Error('Presigned URL not received from server');
+    }
+
+    //upload the file to the presigned url
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          console.log(`Upload progress: ${percent}%`);
+        }
+      });
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          reject(new Error('Failed to upload file to S3'));
+        }
+      });
+      xhr.addEventListener('error', () => {
+        reject(new Error('Network error during upload'));
+      });
+      xhr.open('PUT', presignedUrl);
+      xhr.setRequestHeader('Content-Type', file.type);
+      xhr.send(file);
+    });
 
     // Step 3: Create financial document record
     const documentPayload: FinancialDocumentBody = {
