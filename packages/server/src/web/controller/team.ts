@@ -70,7 +70,7 @@ export class TeamController {
 			}
 
 			const body: InviteMemberBody = await c.req.json();
-			const { invitee_email, team_id } = body;
+			const { invitee_email, team_id, invitee_name, user_defined_role } = body;
 
 			// Check if inviter is the host of the team
 			const isHost = await this.service.isTeamHost(team_id, user.id);
@@ -106,7 +106,9 @@ export class TeamController {
 				invitee_email,
 				team.name,
 				user.first_name + ' ' + user.last_name,
+				invitee_name,
 				new Date().getTime(),
+				user_defined_role,
 			);
 
 			return c.json({

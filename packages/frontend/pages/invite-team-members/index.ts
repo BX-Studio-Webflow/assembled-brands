@@ -164,7 +164,9 @@ const initInviteTeamMembersPage = async () => {
     submitButton.value = 'Sending invites...';
 
     try {
-      const invitePromises = emails.map((email) => apiInviteTeamMember(email, teamId!));
+      const invitePromises = emails.map((email) =>
+        apiInviteTeamMember(nameInput.value.trim(), roleInput.value.trim(), email, teamId!)
+      );
       await Promise.all(invitePromises);
 
       submitButton.classList.add('is-success');

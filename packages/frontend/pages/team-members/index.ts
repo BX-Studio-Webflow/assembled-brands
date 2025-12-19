@@ -1,6 +1,7 @@
-import { apiGetMyTeamMembers } from 'shared/services/TeamService';
+import { apiGetTeamInvitations } from 'shared/services/TeamService';
 
 import { processMiddleware } from '$utils/auth';
+import { navigateToPath } from '$utils/config';
 import { queryElement } from '$utils/selectors';
 
 const TeamMembersPage = async () => {
@@ -25,16 +26,17 @@ const TeamMembersPage = async () => {
     console.error('Template row not found');
     return;
   }
-  try {
-    const teamMembersData = await apiGetMyTeamMembers();
-    const members = teamMembersData.members || [];
 
-    // Remove all existing data rows (keep header and template)
-    const existingRows = tableBody.querySelectorAll('[dev-target="table-row"]:not(:first-of-type)');
-    existingRows.forEach((row) => row.remove());
+  addAnotherMemberLink.addEventListener('click', (e) => {
+    navigateToPath('/invite-team-members');
+  });
+
+  try {
+    //const teamMembersData = await apiGetMyTeamMembers();
+    const invites = await apiGetTeamInvitations();
 
     // If no members, hide template row
-    if (members.length === 0) {
+    if (invites?.length === 0) {
       templateRow.style.display = 'none';
       return;
     }
@@ -47,14 +49,14 @@ const TeamMembersPage = async () => {
     const statusCell = queryElement<HTMLTableCellElement>('[dev-target="status"]', templateRow);
 
     if (usernameCell && emailCell && roleCell && statusCell) {
-      usernameCell.textContent = members[0].name || '';
-      emailCell.textContent = members[0].email || '';
-      roleCell.textContent = members[0].role || '';
+      usernameCell.textContent = invites[0].invitee_name || 'Unknown';
+      emailCell.textContent = invites[0].invitee_email || 'Unknown';
+      roleCell.textContent = invites[0].status || 'Unknown';
       statusCell.textContent = 'Active';
     }
 
     // Clone template row for remaining members
-    for (let i = 1; i < members.length; i++) {
+    for (let i = 1; i < invites.length; i++) {
       const clonedRow = templateRow.cloneNode(true) as HTMLTableRowElement;
       const clonedUsernameCell = queryElement<HTMLTableCellElement>(
         '[dev-target="username"]',
@@ -68,9 +70,9 @@ const TeamMembersPage = async () => {
       );
 
       if (clonedUsernameCell && clonedEmailCell && clonedRoleCell && clonedStatusCell) {
-        clonedUsernameCell.textContent = members[i].name || '';
-        clonedEmailCell.textContent = members[i].email || '';
-        clonedRoleCell.textContent = members[i].role || '';
+        clonedUsernameCell.textContent = invites[i].invitee_name.trim() || 'Unknown';
+        clonedEmailCell.textContent = invites[i].invitee_email.trim() || 'Unknown';
+        clonedRoleCell.textContent = invites[i].status.trim() || 'Unknown';
         clonedStatusCell.textContent = 'Active';
       }
 

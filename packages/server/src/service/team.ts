@@ -48,6 +48,8 @@ export class TeamService {
 	 * @param {number} inviterId - ID of the user sending the invitation
 	 * @param {string} inviteeEmail - Email of the invited user
 	 * @param {string} teamName - Name of the team
+	 * @param {string} inviteeName - Name of the invited user
+	 * @param {string} userDefinedRole - User defined role for the invited user
 	 * @returns {Promise<number>} ID of the created invitation
 	 * @throws {Error} When invitation creation or email sending fails
 	 */
@@ -57,11 +59,13 @@ export class TeamService {
 		inviteeEmail: string,
 		teamName: string,
 		inviterName: string,
+		inviteeName: string,
 		timestamp: number,
+		userDefinedRole: string,
 	) {
 		try {
 			// Create invitation
-			const invitationId = await this.repo.createInvitation(teamId, inviterId, inviteeEmail);
+			const invitationId = await this.repo.createInvitation(teamId, inviterId, inviteeEmail, inviteeName, userDefinedRole);
 
 			const acceptUrl = `${env.FRONTEND_URL}/accept-team-invitation?invitation_id=${invitationId}&team_id=${teamId}&team_name=${teamName}&inviter_name=${inviterName}&timestamp=${timestamp}`;
 

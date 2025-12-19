@@ -131,13 +131,15 @@ export class TeamRepository {
 		return members[0].id;
 	}
 
-	public async createInvitation(teamId: number, inviterId: number, inviteeEmail: string) {
+	public async createInvitation(teamId: number, inviterId: number, inviteeEmail: string, inviteeName: string, userDefinedRole: string) {
 		const invitations = await this.db
 			.insert(teamInvitationSchema)
 			.values({
 				team_id: teamId,
 				inviter_id: inviterId,
 				invitee_email: inviteeEmail,
+				invitee_name: inviteeName,
+				user_defined_role: userDefinedRole,
 				status: 'pending',
 				created_at: new Date(),
 				updated_at: new Date(),

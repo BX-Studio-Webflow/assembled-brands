@@ -111,6 +111,8 @@ export const teamInvitationSchema = sqliteTable('team_invitations', {
 		.references(() => userSchema.id)
 		.notNull(),
 	invitee_email: text('invitee_email').notNull(),
+	invitee_name: text('invitee_name').notNull(),
+	user_defined_role: text('user_defined_role').notNull(),
 	status: text('status', { enum: ['pending', 'accepted', 'rejected'] }).default('pending'),
 	created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 	updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),

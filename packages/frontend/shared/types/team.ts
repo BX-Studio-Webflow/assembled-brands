@@ -26,6 +26,7 @@ export interface TeamInvitation {
   team_id: number;
   inviter_id: number;
   invitee_email: string;
+  invitee_name: string;
   status: string;
   created_at: string;
   updated_at: string;

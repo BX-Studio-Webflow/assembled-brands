@@ -90,13 +90,20 @@ export const apiDeleteTeamInvitation = (invitationId: number) => {
   });
 };
 
-export const apiInviteTeamMember = (email: string, teamId: number) => {
+export const apiInviteTeamMember = (
+  name: string,
+  user_defined_role: string,
+  email: string,
+  teamId: number
+) => {
   return ApiService.fetchDataWithAxios<void>({
     url: '/team/invite',
     method: 'post',
     data: {
+      invitee_name: name,
       invitee_email: email,
       team_id: teamId,
+      user_defined_role: user_defined_role,
     },
   });
 };
