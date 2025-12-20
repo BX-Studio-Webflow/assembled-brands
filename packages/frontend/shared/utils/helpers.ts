@@ -52,36 +52,78 @@ export const constructNavBarClasses = () => {
   const currentPath = window.location.pathname;
 
   // Map routes to dev-target attributes
-  const routeMap: Record<string, string> = {
-    '/dev/finance-company-profile': 'nav-company-profile-link',
-    '/finance-company-profile': 'nav-company-profile-link',
-    '/dev/finance-financial-overview': 'nav-financial-overview-link',
-    '/finance-financial-overview': 'nav-financial-overview-link',
-    '/dev/finance-docs-financial-reports': 'nav-financial-reports-link',
-    '/finance-docs-financial-reports': 'nav-financial-reports-link',
-    '/dev/finance-docs-accounts-and-inventory': 'nav-accounts-inventory-link',
-    '/finance-docs-accounts-and-inventory': 'nav-accounts-inventory-link',
-    '/dev/finance-docs-ecommerce-performance': 'nav-eccomerce-performance-link',
-    '/finance-docs-ecommerce-performance': 'nav-eccomerce-performance-link',
-    '/dev/finance-docs-team-and-ownership': 'nav-team-ownership-link',
-    '/finance-docs-team-and-ownership': 'nav-team-ownership-link',
+  type RouteMap = {
+    [key: string]: {
+      nav_attr: string;
+      nav_class: string;
+    };
+  };
+  const routeMap: RouteMap = {
+    '/dev/finance-company-profile': {
+      nav_attr: 'nav-company-profile-link',
+      nav_class: 'is-active',
+    },
+    '/finance-company-profile': {
+      nav_attr: 'nav-company-profile-link',
+      nav_class: 'is-active',
+    },
+    '/dev/finance-financial-overview': {
+      nav_attr: 'nav-financial-overview-link',
+      nav_class: 'is-active',
+    },
+    '/finance-financial-overview': {
+      nav_attr: 'nav-financial-overview-link',
+      nav_class: 'is-active',
+    },
+    '/dev/finance-docs-financial-reports': {
+      nav_attr: 'nav-financial-reports-link',
+      nav_class: 'is-active-financial',
+    },
+    '/finance-docs-financial-reports': {
+      nav_attr: 'nav-financial-reports-link',
+      nav_class: 'is-active-financial',
+    },
+    '/dev/finance-docs-accounts-and-inventory': {
+      nav_attr: 'nav-accounts-inventory-link',
+      nav_class: 'is-active-financial',
+    },
+    '/finance-docs-accounts-and-inventory': {
+      nav_attr: 'nav-accounts-inventory-link',
+      nav_class: 'is-active-financial',
+    },
+    '/dev/finance-docs-ecommerce-performance': {
+      nav_attr: 'nav-eccomerce-performance-link',
+      nav_class: 'is-active-financial',
+    },
+    '/finance-docs-ecommerce-performance': {
+      nav_attr: 'nav-eccomerce-performance-link',
+      nav_class: 'is-active-financial',
+    },
+    '/dev/finance-docs-team-and-ownership': {
+      nav_attr: 'nav-team-ownership-link',
+      nav_class: 'is-active-financial',
+    },
+    '/finance-docs-team-and-ownership': {
+      nav_attr: 'nav-team-ownership-link',
+      nav_class: 'is-active-financial',
+    },
   };
 
   // Find the matching dev-target for current route
   const activeTarget = routeMap[currentPath];
-  console.log('activeTarget', activeTarget);
 
   if (activeTarget) {
     // Remove is-active class from all nav links
     const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
     allNavLinks.forEach((link) => {
       link.classList.remove('is-active');
+      link.classList.remove('is-active-financial');
     });
 
     // Add is-active class to the current route's link
-    const activeLink = queryElement<HTMLElement>(`[dev-target="${activeTarget}"]`);
+    const activeLink = queryElement<HTMLElement>(`[dev-target="${activeTarget.nav_attr}"]`);
     if (activeLink) {
-      activeLink.classList.add('is-active');
+      activeLink.classList.add(activeTarget.nav_class);
     }
   }
 };
