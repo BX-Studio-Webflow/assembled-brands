@@ -11,7 +11,7 @@ import { queryElement } from '$utils/selectors';
 
 const initEcommercePerformancePage = async () => {
   processMiddleware();
-  await progressFinancialWizardPercentage();
+  const result = await progressFinancialWizardPercentage();
 
   //ONLY SHEET AND XLSX ALLOWED
   const ALLOWED_FILE_TYPES = [
@@ -323,6 +323,22 @@ const initEcommercePerformancePage = async () => {
       submitButton.disabled = false;
     }
   });
+
+  // Prefill helper text if documents are already uploaded
+  if (result?.ecommerce_performance) {
+    const shopifyRepeat = result.ecommerce_performance.find(
+      (document) => document.document_type === 'shopify_repeat_customers'
+    );
+    if (shopifyRepeat) {
+      shopifyRepeatHelpText.textContent = shopifyRepeat.asset_name || '';
+    }
+    const shopifyMonthly = result.ecommerce_performance.find(
+      (document) => document.document_type === 'shopify_monthly_sales'
+    );
+    if (shopifyMonthly) {
+      shopifyMonthlyHelpText.textContent = shopifyMonthly.asset_name || '';
+    }
+  }
 };
 
 initEcommercePerformancePage();

@@ -11,8 +11,7 @@ import { queryElement } from '$utils/selectors';
 
 const initFinanceReportsPage = async () => {
   processMiddleware();
-  await progressFinancialWizardPercentage();
-
+  const result = await progressFinancialWizardPercentage();
   //ONLY SHEET AND XLSX ALLOWED
   const ALLOWED_FILE_TYPES = [
     'application/vnd.ms-excel',
@@ -350,6 +349,28 @@ const initFinanceReportsPage = async () => {
       submitButton.disabled = false;
     }
   });
+
+  //prefill helper text if documents are already uploaded
+  if (result?.financial_reports) {
+    const balanceSheet = result.financial_reports.find(
+      (document) => document.document_type === 'monthly_balance_sheet'
+    );
+    if (balanceSheet) {
+      balaceSheetHelpText.textContent = balanceSheet.asset_name || '';
+    }
+    const incomeStatement = result.financial_reports.find(
+      (document) => document.document_type === 'monthly_income_statement'
+    );
+    if (incomeStatement) {
+      incomeStatementHelpText.textContent = incomeStatement.asset_name || '';
+    }
+    const incomeForecast = result.financial_reports.find(
+      (document) => document.document_type === 'monthly_income_forecast'
+    );
+    if (incomeForecast) {
+      incomeForecastHelpText.textContent = incomeForecast.asset_name || '';
+    }
+  }
 };
 
 initFinanceReportsPage();

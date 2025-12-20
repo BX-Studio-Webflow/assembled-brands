@@ -49,8 +49,8 @@ export type FinancialDocument = {
   id: number;
   application_id: number;
   asset_id: number;
-  page: string;
-  document_type: string;
+  page: FinancialDocumentBody['page'];
+  document_type: FinancialDocumentBody['document_type'];
   is_current: boolean;
   version: number;
   notes: string | null;
