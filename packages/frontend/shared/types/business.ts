@@ -2,11 +2,14 @@ import type { User } from './auth';
 
 export interface Business {
   id: number;
-  name: string;
+  legal_name: string;
   email: string;
   phone: string;
   dial_code: string;
-  address: string;
+  year_formed: string;
+  accounting_software: string;
+  other_accounting_software: string;
+  headquarters: string;
   logo: string;
   logo_asset_id: number;
   created_at: string;

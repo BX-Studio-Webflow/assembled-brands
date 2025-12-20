@@ -6,12 +6,13 @@ import type { FinancialDocumentBody } from 'shared/types/financial-wizard';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
-import { progressFinancialWizardPercentage } from '$utils/helpers';
+import { constructNavBarClasses, progressFinancialWizardPercentage } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const initAccountsInventoryPage = async () => {
+  constructNavBarClasses();
   processMiddleware();
-  await progressFinancialWizardPercentage();
+  const result = await progressFinancialWizardPercentage();
 
   //ONLY SHEET AND XLSX ALLOWED
   const ALLOWED_FILE_TYPES = [
@@ -394,6 +395,28 @@ const initAccountsInventoryPage = async () => {
       submitButton.disabled = false;
     }
   });
+
+  // Prefill helper text if documents are already uploaded
+  if (result?.accounts_inventory) {
+    const monthlyInventory = result.accounts_inventory.find(
+      (document) => document.document_type === 'monthly_inventory_report'
+    );
+    if (monthlyInventory) {
+      monthlyInventoryHelpText.textContent = monthlyInventory.asset_name || '';
+    }
+    const accountsReceivable = result.accounts_inventory.find(
+      (document) => document.document_type === 'accounts_receivable_aging'
+    );
+    if (accountsReceivable) {
+      accountsReceivableHelpText.textContent = accountsReceivable.asset_name || '';
+    }
+    const accountsPayable = result.accounts_inventory.find(
+      (document) => document.document_type === 'accounts_payable_aging'
+    );
+    if (accountsPayable) {
+      accountsPayableHelpText.textContent = accountsPayable.asset_name || '';
+    }
+  }
 };
 
 initAccountsInventoryPage();

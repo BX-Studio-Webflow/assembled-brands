@@ -3,7 +3,8 @@ import type { Context } from 'hono';
 
 import { logger } from '../../lib/logger.js';
 import type { AssetService } from '../../service/asset.js';
-import { FinancialWizardService } from '../../service/financial-wizard.js';
+import { BusinessService } from '../../service/business.js';
+import { FinancialWizardPage, FinancialWizardService } from '../../service/financial-wizard.js';
 import type { UserService } from '../../service/user.js';
 import type { FinancialDocumentBody, FinancialOverviewBody, UpdatePageBody } from '../validator/financial-wizard.js';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
@@ -13,11 +14,12 @@ export class FinancialWizardController {
 	private service: FinancialWizardService;
 	private userService: UserService;
 	private assetService: AssetService;
-
-	constructor(service: FinancialWizardService, userService: UserService, assetService: AssetService) {
+	private businessService: BusinessService;
+	constructor(service: FinancialWizardService, userService: UserService, assetService: AssetService, businessService: BusinessService) {
 		this.service = service;
 		this.userService = userService;
 		this.assetService = assetService;
+		this.businessService = businessService;
 	}
 
 	/**
@@ -33,12 +35,12 @@ export class FinancialWizardController {
 	}
 
 	/**
-	 * Saves Step 1: Financial Overview
+	 * Saves Financial Overview
 	 * @param {Context} c - The Hono context containing financial overview data
 	 * @returns {Promise<Response>} Response containing saved overview data
 	 * @throws {Error} When saving financial overview fails
 	 */
-	public saveStep1 = async (c: Context) => {
+	public saveFinancialOverview = async (c: Context) => {
 		try {
 			const user = await this.getUser(c);
 			if (!user) {
@@ -96,7 +98,6 @@ export class FinancialWizardController {
 			if (!user) {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
-
 			const progress = await this.service.getProgress(user.id);
 			if (!progress) {
 				return serveData(c, {
@@ -104,7 +105,6 @@ export class FinancialWizardController {
 					progress: null,
 				});
 			}
-
 			return serveData(c, {
 				...progress,
 			});
@@ -127,7 +127,7 @@ export class FinancialWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const page = c.req.param('page');
+			const page = c.req.param('page') as FinancialWizardPage;
 			const validPages = [
 				'company-profile',
 				'financial-overview',

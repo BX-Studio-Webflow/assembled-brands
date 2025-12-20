@@ -2,7 +2,8 @@ import { and, desc, eq, max } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import type { NewFinancialDocument, NewFinancialOverview, NewFinancialWizardApplication, schema } from '../schema/schema.js';
-import { financialDocumentSchema, financialOverviewSchema, financialWizardApplicationSchema } from '../schema/schema.js';
+import { businessSchema, financialDocumentSchema, financialOverviewSchema, financialWizardApplicationSchema } from '../schema/schema.js';
+import { FinancialWizardPage } from '../service/financial-wizard.js';
 
 export class FinancialWizardRepository {
 	private db: DrizzleD1Database<typeof schema>;
@@ -88,6 +89,7 @@ export class FinancialWizardRepository {
 			.insert(financialDocumentSchema)
 			.values({
 				...document,
+				notes: document.notes ?? 'New upload at ' + new Date().toISOString(),
 				version: nextVersion,
 				is_current: true,
 			})
@@ -124,7 +126,7 @@ export class FinancialWizardRepository {
 		});
 	}
 
-	public async findDocumentsByPage(applicationId: number, page: string) {
+	public async findDocumentsByPage(applicationId: number, page: FinancialWizardPage) {
 		return this.db.query.financialDocumentSchema.findMany({
 			where: and(
 				eq(financialDocumentSchema.application_id, applicationId),
@@ -137,5 +139,15 @@ export class FinancialWizardRepository {
 
 	public async deleteDocument(id: number) {
 		await this.db.update(financialDocumentSchema).set({ is_current: false }).where(eq(financialDocumentSchema.id, id));
+	}
+
+	/**
+	 * Finds business by user ID (copied from BusinessRepository)
+	 * @param {number} userId - ID of the user
+	 * @returns {Promise<Business | undefined>} The business if found
+	 */
+	public async findBusinessByUserId(userId: number) {
+		const result = await this.db.select().from(businessSchema).where(eq(businessSchema.user_id, userId)).limit(1);
+		return result[0];
 	}
 }

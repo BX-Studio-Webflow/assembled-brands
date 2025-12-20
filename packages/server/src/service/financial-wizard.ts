@@ -16,7 +16,7 @@ const PAGE_ORDER = [
 	'team-ownership',
 ] as const;
 
-type FinancialWizardPage = (typeof PAGE_ORDER)[number];
+export type FinancialWizardPage = (typeof PAGE_ORDER)[number];
 
 /**
  * Service class for managing financial wizard operations
@@ -24,7 +24,6 @@ type FinancialWizardPage = (typeof PAGE_ORDER)[number];
 export class FinancialWizardService {
 	private repo: FinancialWizardRepository;
 	private assetService: AssetService;
-
 	constructor(repo: FinancialWizardRepository, assetService: AssetService) {
 		this.repo = repo;
 		this.assetService = assetService;
@@ -151,6 +150,48 @@ export class FinancialWizardService {
 	}
 
 	/**
+	 * Calculates the percentage progress based on completion status
+	 * @param {boolean} isComplete - Whether the application is marked as complete
+	 * @param {Object | null} business - Business/company profile data (required for calculation)
+	 * @param {Object | null} financialOverview - Financial overview data
+	 * @param {Record<string, Array>} documentsByPage - Documents grouped by page
+	 * @returns {number} Percentage completion (0-100)
+	 */
+	private calculatePercentage(
+		isComplete: boolean,
+		business: { id: number } | null,
+		financialOverview: { revenue_last_12_months: string | null } | null,
+		documentsByPage: Record<string, Array<unknown>>,
+	): number {
+		if (isComplete) {
+			return 100;
+		}
+
+		const totalPages = PAGE_ORDER.length;
+		let completedPages = 0;
+
+		// Check company-profile completion
+		if (business) {
+			completedPages += 1;
+		}
+
+		// Check financial-overview completion
+		if (financialOverview) {
+			completedPages += 1;
+		}
+
+		// Check document pages completion
+		const documentPages = ['financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership'];
+		for (const page of documentPages) {
+			if (documentsByPage[page] && documentsByPage[page].length > 0) {
+				completedPages += 1;
+			}
+		}
+
+		return Math.round((completedPages / totalPages) * 100);
+	}
+
+	/**
 	 * Gets current progress for a user
 	 * @param {number} userId - ID of the user
 	 * @returns {Promise<FinancialWizardProgressResponse | null>} The progress data or null if not found
@@ -163,9 +204,25 @@ export class FinancialWizardService {
 				return null;
 			}
 
-			const overview = await this.repo.findFinancialOverviewByApplicationId(application.id);
-			const documents = await this.repo.findDocumentsByApplicationId(application.id, false);
+			const [business, overview, documents] = await Promise.all([
+				this.repo.findBusinessByUserId(userId),
+				this.repo.findFinancialOverviewByApplicationId(application.id),
+				this.repo.findDocumentsByApplicationId(application.id, false),
+			]);
 
+			// Collect all unique asset IDs and fetch them in parallel
+			const uniqueAssetIds = [...new Set(documents.map((doc) => doc.asset_id))];
+			const assets = await Promise.all(uniqueAssetIds.map((assetId) => this.assetService.getAsset(assetId)));
+
+			// Create a map of asset_id -> asset for quick lookup
+			const assetMap = new Map<number, (typeof assets)[0]>();
+			assets.forEach((asset, index) => {
+				if (asset) {
+					assetMap.set(uniqueAssetIds[index], asset);
+				}
+			});
+
+			// Group documents by page and enrich with asset data
 			const documentsByPage: Record<string, typeof documents> = {};
 			for (const doc of documents) {
 				const page = doc.page || 'financial-reports';
@@ -193,40 +250,45 @@ export class FinancialWizardService {
 				}>
 			> = {};
 			for (const [page, docs] of Object.entries(documentsByPage)) {
-				enrichedDocumentsByPage[page] = await Promise.all(
-					docs.map(async (doc) => {
-						const asset = await this.assetService.getAsset(doc.asset_id);
-						return {
-							...doc,
-							is_current: doc.is_current ?? false,
-							version: doc.version ?? 1,
-							asset_url: asset?.asset_url || null,
-							asset_name: asset?.asset_name || null,
-						};
-					}),
-				);
+				enrichedDocumentsByPage[page] = docs.map((doc) => {
+					const asset = assetMap.get(doc.asset_id);
+					return {
+						...doc,
+						is_current: doc.is_current ?? false,
+						version: doc.version ?? 1,
+						asset_url: asset?.asset_url || null,
+						asset_name: asset?.asset_name || null,
+					};
+				});
 			}
 
 			const currentPage = (application.current_page || 'company-profile') as FinancialWizardPage;
-			const currentPageIndex = PAGE_ORDER.indexOf(currentPage);
-			const totalPages = PAGE_ORDER.length;
-			const percentage = application.is_complete ? 100 : Math.round(((currentPageIndex + 1) / totalPages) * 100);
+			const financialOverviewData = overview
+				? {
+						revenue_last_12_months: overview.revenue_last_12_months || null,
+						net_income_last_12_months: overview.net_income_last_12_months || null,
+						projected_revenue_next_12_months: overview.projected_revenue_next_12_months || null,
+					}
+				: null;
+
+			// Calculate percentage based on actual completion status
+			const percentage = this.calculatePercentage(
+				application.is_complete || false,
+				business || null,
+				financialOverviewData,
+				enrichedDocumentsByPage,
+			);
 
 			return {
 				current_page: currentPage,
 				is_complete: application.is_complete || false,
-				step1: overview
-					? {
-							revenue_last_12_months: overview.revenue_last_12_months || null,
-							net_income_last_12_months: overview.net_income_last_12_months || null,
-							projected_revenue_next_12_months: overview.projected_revenue_next_12_months || null,
-						}
-					: null,
+				company_profile: business || null,
+				financial_overview: financialOverviewData,
 				percentage,
-				step2: enrichedDocumentsByPage['financial-reports'] || [],
-				step3: enrichedDocumentsByPage['accounts-inventory'] || [],
-				step4: enrichedDocumentsByPage['ecommerce-performance'] || [],
-				step5: enrichedDocumentsByPage['team-ownership'] || [],
+				financial_reports: enrichedDocumentsByPage['financial-reports'] || [],
+				accounts_inventory: enrichedDocumentsByPage['accounts-inventory'] || [],
+				ecommerce_performance: enrichedDocumentsByPage['ecommerce-performance'] || [],
+				team_ownership: enrichedDocumentsByPage['team-ownership'] || [],
 			};
 		} catch (error) {
 			logger.error(error);
@@ -286,7 +348,7 @@ export class FinancialWizardService {
 	 * @returns {Promise<Array>} List of documents with asset URLs
 	 * @throws {Error} When document retrieval fails
 	 */
-	public async getDocumentsByPage(userId: number, page: string) {
+	public async getDocumentsByPage(userId: number, page: FinancialWizardPage) {
 		try {
 			const application = await this.repo.findApplicationByUserId(userId);
 			if (!application) {

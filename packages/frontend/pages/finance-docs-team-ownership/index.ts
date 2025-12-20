@@ -6,12 +6,13 @@ import type { FinancialDocumentBody } from 'shared/types/financial-wizard';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
-import { progressFinancialWizardPercentage } from '$utils/helpers';
+import { constructNavBarClasses, progressFinancialWizardPercentage } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const initTeamOwnershipPage = async () => {
+  constructNavBarClasses();
   processMiddleware();
-  await progressFinancialWizardPercentage();
+  const result = await progressFinancialWizardPercentage();
 
   //ONLY SHEET AND XLSX ALLOWED
   const ALLOWED_FILE_TYPES = [
@@ -394,6 +395,28 @@ const initTeamOwnershipPage = async () => {
       submitButton.disabled = false;
     }
   });
+
+  // Prefill helper text if documents are already uploaded
+  if (result?.team_ownership) {
+    const managementBios = result.team_ownership.find(
+      (document) => document.document_type === 'management_bios'
+    );
+    if (managementBios) {
+      managementBiosHelpText.textContent = managementBios.asset_name || '';
+    }
+    const investorDeck = result.team_ownership.find(
+      (document) => document.document_type === 'investor_deck'
+    );
+    if (investorDeck) {
+      investorDeckHelpText.textContent = investorDeck.asset_name || '';
+    }
+    const capTable = result.team_ownership.find(
+      (document) => document.document_type === 'cap_table'
+    );
+    if (capTable) {
+      capitalisationTableHelpText.textContent = capTable.asset_name || '';
+    }
+  }
 };
 
 initTeamOwnershipPage();

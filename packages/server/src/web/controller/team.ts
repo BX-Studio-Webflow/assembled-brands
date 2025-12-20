@@ -84,19 +84,19 @@ export class TeamController {
 				return serveBadRequest(c, 'Team not found');
 			}
 
-			// Check if user already exists
+			// Check if there's already a pending invitation for this email and team
+			const existingInvitations = await this.service.getMyInvitations(invitee_email);
+			if (existingInvitations.some((inv) => inv.team_id === team_id && inv.status === 'pending')) {
+				return serveBadRequest(c, 'This user already has a pending invitation');
+			}
+
+			// Check if user already exists and is already a team member
 			const existingUser = await this.service.userService.findByEmail(invitee_email);
 			if (existingUser) {
 				// Check if invitee is already a team member
 				const userTeams = await this.service.getUserTeams(existingUser.id);
 				if (userTeams.some((team: TeamMember) => team.team_id === team_id)) {
 					return serveBadRequest(c, 'User is already a member of this team');
-				}
-			} else {
-				// Check if there's already a pending invitation for this email
-				const existingInvitations = await this.service.getMyInvitations(invitee_email);
-				if (existingInvitations.some((inv) => inv.team_id === team_id && inv.status === 'pending')) {
-					return serveBadRequest(c, 'This user already has a pending invitation to this team');
 				}
 			}
 
@@ -256,6 +256,16 @@ export class TeamController {
 			const invitation = await this.service.repo.getInvitation(invitationId);
 			if (!invitation) {
 				return serveBadRequest(c, 'Invitation not found');
+			}
+
+			// Check if invitation is already accepted
+			if (invitation.status === 'accepted') {
+				return serveBadRequest(c, 'This invitation has already been accepted');
+			}
+
+			// Check if invitation is already rejected
+			if (invitation.status === 'rejected') {
+				return serveBadRequest(c, 'This invitation has already been rejected');
 			}
 
 			const result = await this.service.rejectInvitation(invitationId);

@@ -35,7 +35,95 @@ export const progressFinancialWizardPercentage = async () => {
     logout.addEventListener('click', () => {
       logoutUser();
     });
+    return response;
   } catch (error) {
     console.error('Failed to load financial wizard progress:', error);
+  }
+};
+
+export const constructNavBarClasses = () => {
+  const sidebarMenu = queryElement<HTMLElement>('[dev-target="sidebar-menu"]');
+  if (!sidebarMenu) {
+    console.error('Ensure [dev-target="sidebar-menu"] is present.');
+    return;
+  }
+
+  // Get current route
+  const currentPath = window.location.pathname;
+
+  // Map routes to dev-target attributes
+  type RouteMap = {
+    [key: string]: {
+      nav_attr: string;
+      nav_class: string;
+    };
+  };
+  const routeMap: RouteMap = {
+    '/dev/finance-company-profile': {
+      nav_attr: 'nav-company-profile-link',
+      nav_class: 'is-active',
+    },
+    '/finance-company-profile': {
+      nav_attr: 'nav-company-profile-link',
+      nav_class: 'is-active',
+    },
+    '/dev/finance-financial-overview': {
+      nav_attr: 'nav-financial-overview-link',
+      nav_class: 'is-active',
+    },
+    '/finance-financial-overview': {
+      nav_attr: 'nav-financial-overview-link',
+      nav_class: 'is-active',
+    },
+    '/dev/finance-docs-financial-reports': {
+      nav_attr: 'nav-financial-reports-link',
+      nav_class: 'is-active-financial',
+    },
+    '/finance-docs-financial-reports': {
+      nav_attr: 'nav-financial-reports-link',
+      nav_class: 'is-active-financial',
+    },
+    '/dev/finance-docs-accounts-and-inventory': {
+      nav_attr: 'nav-accounts-inventory-link',
+      nav_class: 'is-active-financial',
+    },
+    '/finance-docs-accounts-and-inventory': {
+      nav_attr: 'nav-accounts-inventory-link',
+      nav_class: 'is-active-financial',
+    },
+    '/dev/finance-docs-ecommerce-performance': {
+      nav_attr: 'nav-eccomerce-performance-link',
+      nav_class: 'is-active-financial',
+    },
+    '/finance-docs-ecommerce-performance': {
+      nav_attr: 'nav-eccomerce-performance-link',
+      nav_class: 'is-active-financial',
+    },
+    '/dev/finance-docs-team-and-ownership': {
+      nav_attr: 'nav-team-ownership-link',
+      nav_class: 'is-active-financial',
+    },
+    '/finance-docs-team-and-ownership': {
+      nav_attr: 'nav-team-ownership-link',
+      nav_class: 'is-active-financial',
+    },
+  };
+
+  // Find the matching dev-target for current route
+  const activeTarget = routeMap[currentPath];
+
+  if (activeTarget) {
+    // Remove is-active class from all nav links
+    const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
+    allNavLinks.forEach((link) => {
+      link.classList.remove('is-active');
+      link.classList.remove('is-active-financial');
+    });
+
+    // Add is-active class to the current route's link
+    const activeLink = queryElement<HTMLElement>(`[dev-target="${activeTarget.nav_attr}"]`);
+    if (activeLink) {
+      activeLink.classList.add(activeTarget.nav_class);
+    }
   }
 };

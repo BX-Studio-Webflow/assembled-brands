@@ -131,7 +131,7 @@ export class Server {
 		const assetController = new AssetController(assetService, userService, emailService, notificationService);
 
 		const businessController = new BusinessController(businessService, userService);
-		const financialWizardController = new FinancialWizardController(financialWizardService, userService, assetService);
+		const financialWizardController = new FinancialWizardController(financialWizardService, userService, assetService, businessService);
 		const onboardingWizardController = new OnboardingWizardController(onboardingWizardService, userService);
 
 		// Add team service and controller
@@ -237,7 +237,7 @@ export class Server {
 		// All routes require authentication
 		financialWizard.use(authCheck);
 
-		financialWizard.post('/step1', financialOverviewValidator, financialWizardCtrl.saveStep1);
+		financialWizard.post('/financial-overview', financialOverviewValidator, financialWizardCtrl.saveFinancialOverview);
 		financialWizard.post('/document', documentUploadValidator, financialWizardCtrl.uploadDocument);
 		financialWizard.get('/progress', financialWizardCtrl.getProgress);
 		financialWizard.get('/documents/:page', financialWizardCtrl.getDocumentsByPage);

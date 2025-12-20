@@ -4,17 +4,17 @@ import type {
   FinancialDocumentBody,
   FinancialDocumentResponse,
   FinancialDocumentsResponse,
-  FinancialStep1Body,
-  FinancialStep1Response,
+  FinancialOverviewBody,
+  FinancialOverviewResponse,
   FinancialWizardProgressResponse,
   UpdatePageBody,
   UpdatePageResponse,
 } from '../types/financial-wizard';
 import ApiService from './ApiService';
 
-export const apiSaveFinancialStep1 = (data: FinancialStep1Body) => {
-  return ApiService.fetchDataWithAxios<FinancialStep1Response>({
-    url: '/financial-wizard/step1',
+export const apiSaveFinancialOverview = (data: FinancialOverviewBody) => {
+  return ApiService.fetchDataWithAxios<FinancialOverviewResponse>({
+    url: '/financial-wizard/financial-overview',
     method: 'post',
     data,
   });

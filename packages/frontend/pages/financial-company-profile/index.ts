@@ -4,12 +4,13 @@ import type { UpdateBusinessRequest } from 'shared/types/business';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
-import { progressFinancialWizardPercentage } from '$utils/helpers';
+import { constructNavBarClasses, progressFinancialWizardPercentage } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
-const initTeamInvitePage = async () => {
+const initFinancialCompanyProfilePage = async () => {
+  constructNavBarClasses();
   processMiddleware();
-  await progressFinancialWizardPercentage();
+  const result = await progressFinancialWizardPercentage();
   const form = document.querySelector('[dev-target="finance-company-profile"]');
   if (!form) {
     console.error(
@@ -22,20 +23,20 @@ const initTeamInvitePage = async () => {
     '[dev-target="company-legal-name"]',
     form
   );
-  const companyHeadquartersInput = queryElement<HTMLTextAreaElement>(
+  const companyHeadquartersInput = queryElement<HTMLSelectElement>(
     '[dev-target="company-hq"]',
     form
   );
-  const companyYear = queryElement<HTMLButtonElement>('[dev-target="company-year"]', form);
-  const accountingSoftwareInput = queryElement<HTMLButtonElement>(
+  const companyYear = queryElement<HTMLInputElement>('[dev-target="company-year"]', form);
+  const accountingSoftwareInput = queryElement<HTMLSelectElement>(
     '[dev-target="accounting-software"]',
     form
   );
-  const accountingSoftwareOther = queryElement<HTMLButtonElement>(
+  const accountingSoftwareOther = queryElement<HTMLInputElement>(
     '[dev-target="other-accounting-software"]',
     form
   );
-  const accountingSoftwareOtherWrapper = queryElement<HTMLButtonElement>(
+  const accountingSoftwareOtherWrapper = queryElement<HTMLDivElement>(
     '[dev-target="other-accounting-software-wrapper"]',
     form
   );
@@ -76,7 +77,8 @@ const initTeamInvitePage = async () => {
     return;
   }
 
-  accountingSoftwareInput.addEventListener('change', () => {
+  // Handle accounting software change event
+  const handleAccountingSoftwareChange = () => {
     const { value } = accountingSoftwareInput;
 
     if (value === 'other') {
@@ -84,7 +86,32 @@ const initTeamInvitePage = async () => {
     } else {
       accountingSoftwareOtherWrapper.classList.add('hide');
     }
-  });
+  };
+
+  accountingSoftwareInput.addEventListener('change', handleAccountingSoftwareChange);
+
+  //Preset the values if they are available
+  if (result?.company_profile) {
+    if (result.company_profile.legal_name) {
+      companyLegalNameInput.value = result.company_profile.legal_name;
+    }
+    if (result.company_profile.headquarters) {
+      companyHeadquartersInput.value = result.company_profile.headquarters;
+      // Trigger change event to ensure select is properly updated
+      companyHeadquartersInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (result.company_profile.year_formed) {
+      companyYear.value = result.company_profile.year_formed;
+    }
+    if (result.company_profile.accounting_software) {
+      accountingSoftwareInput.value = result.company_profile.accounting_software;
+      // Trigger change event to ensure select is properly updated and wrapper visibility is set
+      accountingSoftwareInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (result.company_profile.other_accounting_software) {
+      accountingSoftwareOther.value = result.company_profile.other_accounting_software;
+    }
+  }
 
   backButton.addEventListener('click', () => {
     navigateToPath('/dashboard');
@@ -132,11 +159,11 @@ const initTeamInvitePage = async () => {
       await apiUpdateBusiness(payload);
 
       submitButton.classList.add('is-success');
-      submitButton.value = 'Saved. Continuing...';
+      submitButton.value = 'Continuing...';
 
       setTimeout(() => {
-        navigateToPath('/finance-docs-financial-reports');
-      }, 500);
+        navigateToPath('/finance-financial-overview');
+      }, 200);
     } catch (error) {
       const { message } = error as AxiosError;
       console.error(message);
@@ -146,4 +173,4 @@ const initTeamInvitePage = async () => {
   });
 };
 
-initTeamInvitePage();
+initFinancialCompanyProfilePage();

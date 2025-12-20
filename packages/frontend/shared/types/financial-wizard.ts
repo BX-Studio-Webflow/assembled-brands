@@ -1,5 +1,7 @@
-// Step 1: Financial Overview
-export type FinancialStep1Body = {
+import type { Business } from './business';
+
+// Financial Overview
+export type FinancialOverviewBody = {
   revenue_last_12_months: string;
   net_income_last_12_months: string;
   projected_revenue_next_12_months: string;
@@ -47,8 +49,8 @@ export type FinancialDocument = {
   id: number;
   application_id: number;
   asset_id: number;
-  page: string;
-  document_type: string;
+  page: FinancialDocumentBody['page'];
+  document_type: FinancialDocumentBody['document_type'];
   is_current: boolean;
   version: number;
   notes: string | null;
@@ -63,19 +65,20 @@ export type FinancialWizardProgressResponse = {
   current_page: string;
   is_complete: boolean;
   percentage: number;
-  step1: {
+  company_profile: Business | null;
+  financial_overview: {
     revenue_last_12_months: string | null;
     net_income_last_12_months: string | null;
     projected_revenue_next_12_months: string | null;
   } | null;
-  step2: FinancialDocument[];
-  step3: FinancialDocument[];
-  step4: FinancialDocument[];
-  step5: FinancialDocument[];
+  financial_reports: FinancialDocument[];
+  accounts_inventory: FinancialDocument[];
+  ecommerce_performance: FinancialDocument[];
+  team_ownership: FinancialDocument[];
 };
 
 // API Response Types
-export type FinancialStep1Response = {
+export type FinancialOverviewResponse = {
   message: string;
   overview: {
     id: number;
