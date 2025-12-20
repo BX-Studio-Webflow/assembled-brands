@@ -131,7 +131,7 @@ export class Server {
 		const assetController = new AssetController(assetService, userService, emailService, notificationService);
 
 		const businessController = new BusinessController(businessService, userService);
-		const financialWizardController = new FinancialWizardController(financialWizardService, userService, assetService);
+		const financialWizardController = new FinancialWizardController(financialWizardService, userService, assetService, businessService);
 		const onboardingWizardController = new OnboardingWizardController(onboardingWizardService, userService);
 
 		// Add team service and controller

@@ -3,6 +3,7 @@ import type { Context } from 'hono';
 
 import { logger } from '../../lib/logger.js';
 import type { AssetService } from '../../service/asset.js';
+import { BusinessService } from '../../service/business.js';
 import { FinancialWizardService } from '../../service/financial-wizard.js';
 import type { UserService } from '../../service/user.js';
 import type { FinancialDocumentBody, FinancialOverviewBody, UpdatePageBody } from '../validator/financial-wizard.js';
@@ -13,11 +14,12 @@ export class FinancialWizardController {
 	private service: FinancialWizardService;
 	private userService: UserService;
 	private assetService: AssetService;
-
-	constructor(service: FinancialWizardService, userService: UserService, assetService: AssetService) {
+	private businessService: BusinessService;
+	constructor(service: FinancialWizardService, userService: UserService, assetService: AssetService, businessService: BusinessService) {
 		this.service = service;
 		this.userService = userService;
 		this.assetService = assetService;
+		this.businessService = businessService;
 	}
 
 	/**
@@ -96,7 +98,8 @@ export class FinancialWizardController {
 			if (!user) {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
-
+			//get business
+			const business = await this.businessService.getBusinessByUserId(user.id);
 			const progress = await this.service.getProgress(user.id);
 			if (!progress) {
 				return serveData(c, {
@@ -104,7 +107,7 @@ export class FinancialWizardController {
 					progress: null,
 				});
 			}
-
+			progress.company_profile = business;
 			return serveData(c, {
 				...progress,
 			});

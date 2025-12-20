@@ -24,7 +24,6 @@ type FinancialWizardPage = (typeof PAGE_ORDER)[number];
 export class FinancialWizardService {
 	private repo: FinancialWizardRepository;
 	private assetService: AssetService;
-
 	constructor(repo: FinancialWizardRepository, assetService: AssetService) {
 		this.repo = repo;
 		this.assetService = assetService;
@@ -163,8 +162,10 @@ export class FinancialWizardService {
 				return null;
 			}
 
-			const overview = await this.repo.findFinancialOverviewByApplicationId(application.id);
-			const documents = await this.repo.findDocumentsByApplicationId(application.id, false);
+			const [overview, documents] = await Promise.all([
+				this.repo.findFinancialOverviewByApplicationId(application.id),
+				this.repo.findDocumentsByApplicationId(application.id, false),
+			]);
 
 			const documentsByPage: Record<string, typeof documents> = {};
 			for (const doc of documents) {
@@ -215,7 +216,8 @@ export class FinancialWizardService {
 			return {
 				current_page: currentPage,
 				is_complete: application.is_complete || false,
-				step1: overview
+				company_profile: null,
+				financial_overview: overview
 					? {
 							revenue_last_12_months: overview.revenue_last_12_months || null,
 							net_income_last_12_months: overview.net_income_last_12_months || null,
@@ -223,10 +225,10 @@ export class FinancialWizardService {
 						}
 					: null,
 				percentage,
-				step2: enrichedDocumentsByPage['financial-reports'] || [],
-				step3: enrichedDocumentsByPage['accounts-inventory'] || [],
-				step4: enrichedDocumentsByPage['ecommerce-performance'] || [],
-				step5: enrichedDocumentsByPage['team-ownership'] || [],
+				financial_reports: enrichedDocumentsByPage['financial-reports'] || [],
+				accounts_inventory: enrichedDocumentsByPage['accounts-inventory'] || [],
+				ecommerce_performance: enrichedDocumentsByPage['ecommerce-performance'] || [],
+				team_ownership: enrichedDocumentsByPage['team-ownership'] || [],
 			};
 		} catch (error) {
 			logger.error(error);

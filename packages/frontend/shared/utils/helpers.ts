@@ -35,6 +35,7 @@ export const progressFinancialWizardPercentage = async () => {
     logout.addEventListener('click', () => {
       logoutUser();
     });
+    return response;
   } catch (error) {
     console.error('Failed to load financial wizard progress:', error);
   }
