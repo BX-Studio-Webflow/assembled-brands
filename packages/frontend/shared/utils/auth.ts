@@ -31,3 +31,8 @@ export const processMiddleware = (): string | null => {
   }
   return cookie;
 };
+
+export const logoutUser = () => {
+  deleteCookie('accessToken');
+  navigateToPath('/login?error=logged-out', false);
+};

@@ -172,6 +172,7 @@ export class OnboardingWizardService {
 				revenue_qualification: data.revenue_qualification,
 				is_qualified: isQualified,
 				is_rejected: !isQualified,
+				is_complete: isQualified && application.current_step === 3,
 				rejection_reason: !isQualified ? 'Revenue qualification not met' : null,
 				current_step: 3,
 				updated_at: new Date(),

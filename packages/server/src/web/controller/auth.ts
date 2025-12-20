@@ -9,6 +9,8 @@ import type { UserRepository } from '../../repository/user.js';
 import { NewUser } from '../../schema/schema.ts';
 import type { AssetService } from '../../service/asset.js';
 import type { BusinessService } from '../../service/business.js';
+import { FinancialWizardService } from '../../service/financial-wizard.ts';
+import { OnboardingWizardService } from '../../service/onboarding-wizard.ts';
 import type { S3Service } from '../../service/s3.js';
 import type { UserService } from '../../service/user.js';
 import { generateSecurePassword } from '../../util/string.ts';
@@ -31,19 +33,24 @@ export class AuthController {
 	private s3Service: S3Service;
 	private assetService: AssetService;
 	private userRepository: UserRepository;
-
+	private financialWizardService: FinancialWizardService;
+	private onboardingWizardService: OnboardingWizardService;
 	constructor(
 		userService: UserService,
 		businessService: BusinessService,
 		s3Service: S3Service,
 		assetService: AssetService,
 		userRepository: UserRepository,
+		financialWizardService: FinancialWizardService,
+		onboardingWizardService: OnboardingWizardService,
 	) {
 		this.service = userService;
 		this.businessService = businessService;
 		this.s3Service = s3Service;
 		this.assetService = assetService;
 		this.userRepository = userRepository;
+		this.financialWizardService = financialWizardService;
+		this.onboardingWizardService = onboardingWizardService;
 	}
 
 	/**
@@ -78,11 +85,19 @@ export class AuthController {
 				);
 			}
 
+			//get progress
+			const [financialWizardProgress, onboardingProgress] = await Promise.all([
+				this.financialWizardService.getProgress(user.id),
+				this.onboardingWizardService.getProgress(user.id),
+			]);
+
 			const token = await encode(user.id, user.email);
 			const serializedUser = await serializeUser(user);
 			return c.json({
 				token,
 				user: serializedUser,
+				financialWizardProgress,
+				onboardingProgress,
 			});
 		} catch (err) {
 			logger.error(err);

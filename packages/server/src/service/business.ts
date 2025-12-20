@@ -3,6 +3,7 @@ import { BusinessRepository } from '../repository/business.ts';
 import { getContentType } from '../util/string.ts';
 import type { BusinessBody, BusinessQuery } from '../web/validator/business.ts';
 import type { AssetService } from './asset.js';
+import type { FinancialWizardService } from './financial-wizard.ts';
 import type { S3Service } from './s3.js';
 import type { TeamService } from './team.ts';
 
@@ -14,12 +15,20 @@ export class BusinessService {
 	private s3Service: S3Service;
 	private assetService: AssetService;
 	private teamService: TeamService;
+	private financialWizardService: FinancialWizardService;
 
-	constructor(repository: BusinessRepository, s3Service: S3Service, assetService: AssetService, teamService: TeamService) {
+	constructor(
+		repository: BusinessRepository,
+		s3Service: S3Service,
+		assetService: AssetService,
+		teamService: TeamService,
+		financialWizardService: FinancialWizardService,
+	) {
 		this.repository = repository;
 		this.s3Service = s3Service;
 		this.assetService = assetService;
 		this.teamService = teamService;
+		this.financialWizardService = financialWizardService;
 	}
 
 	/**
@@ -152,6 +161,7 @@ export class BusinessService {
 			} else {
 				// Create business and team in parallel
 				await Promise.all([this.repository.create(businessData), this.teamService.createTeam(business.legal_name, userId)]);
+				await this.financialWizardService.trackBusinessProfile(userId);
 			}
 
 			// Return business with resolved asset URLs

@@ -115,11 +115,19 @@ export class Server {
 		const hubSpotService = new HubSpotService();
 		const onboardingWizardService = new OnboardingWizardService(onboardingWizardRepo, hubSpotService, userService);
 
-		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService);
+		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService, financialWizardService);
 		const emailService = new EmailService(emailRepo);
 
 		// Setup controllers
-		const authController = new AuthController(userService, businessService, s3Service, assetService, userRepo);
+		const authController = new AuthController(
+			userService,
+			businessService,
+			s3Service,
+			assetService,
+			userRepo,
+			financialWizardService,
+			onboardingWizardService,
+		);
 		const assetController = new AssetController(assetService, userService, emailService, notificationService);
 
 		const businessController = new BusinessController(businessService, userService);

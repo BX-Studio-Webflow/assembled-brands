@@ -2,6 +2,7 @@ import type { AxiosError } from 'axios';
 import { apiSignIn } from 'shared/services/AuthService';
 
 import { setCookie } from '$utils/auth';
+import { navigateToPath } from '$utils/config';
 import { isValidEmail } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
@@ -84,7 +85,23 @@ const initLoginPage = () => {
         email: email.value,
         password: password.value,
       });
+
       setCookie('accessToken', response.token, 10);
+
+      const currentOnboardingStep = response.onboardingProgress.current_step;
+      const onboardingIsComplete = response.onboardingProgress.is_complete;
+
+      if (!onboardingIsComplete && currentOnboardingStep === 1) {
+        navigateToPath('/onboarding-step-1');
+      } else if (!onboardingIsComplete && currentOnboardingStep === 2) {
+        navigateToPath('/onboarding-step-2');
+      } else if (!onboardingIsComplete && currentOnboardingStep === 3) {
+        navigateToPath('/onboarding-step-3');
+      } else if (onboardingIsComplete && currentOnboardingStep === 3) {
+        navigateToPath('/finance-company-profile');
+      }
+
+      //const financialWizardPage = response.financialWizardProgress.current_page;
     } catch (error) {
       const { message } = error as AxiosError;
       const { code } = (error as AxiosError).response?.data as { code: string };

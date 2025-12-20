@@ -1,8 +1,8 @@
 {
 	"version": "6",
 	"dialect": "sqlite",
-	"id": "49cb3ac7-2d12-4fda-82c0-a16777cfcae3",
-	"prevId": "c587dbd6-ecba-46f1-807c-9ba087c8956e",
+	"id": "9a5a3e6d-f212-4150-bd04-3cc77e54bda7",
+	"prevId": "49cb3ac7-2d12-4fda-82c0-a16777cfcae3",
 	"tables": {
 		"assets": {
 			"name": "assets",
@@ -593,7 +593,7 @@
 					"primaryKey": false,
 					"notNull": false,
 					"autoincrement": false,
-					"default": "'financial-overview'"
+					"default": "'company-profile'"
 				},
 				"is_complete": {
 					"name": "is_complete",
@@ -1390,10 +1390,7 @@
 	"_meta": {
 		"schemas": {},
 		"tables": {},
-		"columns": {
-			"\"financial_documents\".\"step\"": "\"financial_documents\".\"page\"",
-			"\"financial_wizard_applications\".\"current_step\"": "\"financial_wizard_applications\".\"current_page\""
-		}
+		"columns": {}
 	},
 	"internal": {
 		"indexes": {}

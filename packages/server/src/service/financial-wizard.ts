@@ -7,7 +7,14 @@ import type { AssetService } from './asset.js';
 /**
  * Page order for progress calculation
  */
-const PAGE_ORDER = ['financial-overview', 'financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership'] as const;
+const PAGE_ORDER = [
+	'company-profile',
+	'financial-overview',
+	'financial-reports',
+	'accounts-inventory',
+	'ecommerce-performance',
+	'team-ownership',
+] as const;
 
 type FinancialWizardPage = (typeof PAGE_ORDER)[number];
 
@@ -35,7 +42,7 @@ export class FinancialWizardService {
 			if (!application) {
 				application = await this.repo.createApplication({
 					user_id: userId,
-					current_page: 'financial-overview',
+					current_page: 'company-profile',
 					is_complete: false,
 				});
 				if (!application) {
@@ -200,7 +207,7 @@ export class FinancialWizardService {
 				);
 			}
 
-			const currentPage = (application.current_page || 'financial-overview') as FinancialWizardPage;
+			const currentPage = (application.current_page || 'company-profile') as FinancialWizardPage;
 			const currentPageIndex = PAGE_ORDER.indexOf(currentPage);
 			const totalPages = PAGE_ORDER.length;
 			const percentage = application.is_complete ? 100 : Math.round(((currentPageIndex + 1) / totalPages) * 100);
@@ -300,6 +307,33 @@ export class FinancialWizardService {
 			);
 
 			return enrichedDocuments;
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Tracks business profile completion
+	 * @param {number} userId - ID of the user
+	 * @returns {Promise<void>}
+	 * @throws {Error} When tracking fails
+	 */
+	public async trackBusinessProfile(userId: number): Promise<void> {
+		try {
+			const application = await this.getOrCreateApplication(userId);
+			if (!application) {
+				throw new Error('Application not found');
+			}
+
+			// Update to company-profile page if not already at a later page
+			const currentPageIndex = PAGE_ORDER.indexOf(application.current_page as FinancialWizardPage);
+			const companyProfileIndex = PAGE_ORDER.indexOf('company-profile');
+			if (currentPageIndex < companyProfileIndex) {
+				await this.repo.updateApplication(application.id, {
+					current_page: 'company-profile',
+				});
+			}
 		} catch (error) {
 			logger.error(error);
 			throw error;

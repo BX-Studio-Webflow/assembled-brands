@@ -1,5 +1,5 @@
 -- Add current_page column to financial_wizard_applications
-ALTER TABLE `financial_wizard_applications` ADD COLUMN `current_page` text DEFAULT 'financial-overview';
+ALTER TABLE `financial_wizard_applications` ADD COLUMN `current_page` text DEFAULT 'company-profile';
 
 -- Migrate existing current_step values to current_page
 UPDATE `financial_wizard_applications` 

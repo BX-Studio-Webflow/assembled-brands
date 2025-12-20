@@ -13,7 +13,14 @@ export type FinancialOverviewBody = z.infer<typeof financialOverviewSchema>;
 
 // Document Upload
 const documentUploadSchema = z.object({
-	page: z.enum(['financial-overview', 'financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership']),
+	page: z.enum([
+		'company-profile',
+		'financial-overview',
+		'financial-reports',
+		'accounts-inventory',
+		'ecommerce-performance',
+		'team-ownership',
+	]),
 	document_type: z.enum([
 		// Financial Reports (Step 2)
 		'monthly_balance_sheet',
@@ -42,7 +49,14 @@ export type FinancialDocumentBody = z.infer<typeof documentUploadSchema>;
 
 // Update Page (for financial wizard)
 const updatePageSchema = z.object({
-	page: z.enum(['financial-overview', 'financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership']),
+	page: z.enum([
+		'company-profile',
+		'financial-overview',
+		'financial-reports',
+		'accounts-inventory',
+		'ecommerce-performance',
+		'team-ownership',
+	]),
 });
 
 export const updatePageValidator = zValidator('json', updatePageSchema);

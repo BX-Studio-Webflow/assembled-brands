@@ -128,7 +128,14 @@ export class FinancialWizardController {
 			}
 
 			const page = c.req.param('page');
-			const validPages = ['financial-overview', 'financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership'];
+			const validPages = [
+				'company-profile',
+				'financial-overview',
+				'financial-reports',
+				'accounts-inventory',
+				'ecommerce-performance',
+				'team-ownership',
+			];
 			if (!page || !validPages.includes(page)) {
 				return serveBadRequest(c, 'Invalid page identifier');
 			}

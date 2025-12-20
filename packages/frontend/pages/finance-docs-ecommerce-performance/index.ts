@@ -185,8 +185,8 @@ const initEcommercePerformancePage = async () => {
       const xhr = new XMLHttpRequest();
       xhr.upload.addEventListener('progress', (event) => {
         if (event.lengthComputable) {
-          // Upload progress tracking (percent calculation kept for potential future use)
-          const _percent = Math.round((event.loaded / event.total) * 100);
+          const percent = Math.round((event.loaded / event.total) * 100);
+          console.log(`Upload progress: ${percent}%`);
         }
       });
       xhr.addEventListener('load', () => {

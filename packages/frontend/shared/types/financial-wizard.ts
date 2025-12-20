@@ -8,6 +8,7 @@ export type FinancialStep1Body = {
 // Document Upload
 export type FinancialDocumentBody = {
   page:
+    | 'company-profile'
     | 'financial-overview'
     | 'financial-reports'
     | 'accounts-inventory'
@@ -33,6 +34,7 @@ export type FinancialDocumentBody = {
 // Update Page
 export type UpdatePageBody = {
   page:
+    | 'company-profile'
     | 'financial-overview'
     | 'financial-reports'
     | 'accounts-inventory'

@@ -1,3 +1,6 @@
+import type { FinancialWizardProgressResponse } from './financial-wizard';
+import type { OnboardingProgressResponse } from './onboarding';
+
 export type SignInCredential = {
   email: string;
   password: string;
@@ -60,6 +63,8 @@ export type Token = {
 export type SignInResponse = {
   token: string;
   user: User;
+  financialWizardProgress: FinancialWizardProgressResponse;
+  onboardingProgress: OnboardingProgressResponse;
 };
 
 export type SignUpResponse = {

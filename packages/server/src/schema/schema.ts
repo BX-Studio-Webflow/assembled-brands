@@ -211,8 +211,8 @@ export const financialWizardApplicationSchema = sqliteTable('financial_wizard_ap
 
 	// Progress tracking
 	current_page: text('current_page', {
-		enum: ['financial-overview', 'financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership'],
-	}).default('financial-overview'),
+		enum: ['company-profile', 'financial-overview', 'financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership'],
+	}).default('company-profile'),
 	is_complete: integer('is_complete', { mode: 'boolean' }).default(false),
 
 	created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
@@ -252,7 +252,7 @@ export const financialDocumentSchema = sqliteTable('financial_documents', {
 
 	// Document categorization
 	page: text('page', {
-		enum: ['financial-overview', 'financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership'],
+		enum: ['company-profile', 'financial-overview', 'financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership'],
 	}).notNull(), // Which page this document belongs to
 	document_type: text('document_type', {
 		enum: [
