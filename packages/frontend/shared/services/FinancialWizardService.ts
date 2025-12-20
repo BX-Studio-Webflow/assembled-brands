@@ -4,9 +4,9 @@ import type {
   FinancialDocumentBody,
   FinancialDocumentResponse,
   FinancialDocumentsResponse,
-  FinancialProgressApiResponse,
   FinancialStep1Body,
   FinancialStep1Response,
+  FinancialWizardProgressResponse,
   UpdateStepBody,
   UpdateStepResponse,
 } from '../types/financial-wizard';
@@ -29,7 +29,7 @@ export const apiUploadFinancialDocument = (data: FinancialDocumentBody) => {
 };
 
 export const apiGetFinancialProgress = () => {
-  return ApiService.fetchDataWithAxios<FinancialProgressApiResponse>({
+  return ApiService.fetchDataWithAxios<FinancialWizardProgressResponse>({
     url: '/financial-wizard/progress',
     method: 'get',
   });

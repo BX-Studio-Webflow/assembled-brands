@@ -81,11 +81,6 @@ export type FinancialDocumentResponse = {
   document: FinancialDocument;
 };
 
-export type FinancialProgressApiResponse = {
-  progress: FinancialWizardProgressResponse | null;
-  message?: string;
-};
-
 export type FinancialDocumentsResponse = {
   documents: FinancialDocument[];
 };

@@ -111,10 +111,8 @@ export class FinancialWizardController {
 			const percentage = progress.is_complete ? 100 : Math.round((currentStep / totalSteps) * 100);
 
 			return serveData(c, {
-				progress: {
-					...progress,
-					percentage,
-				},
+				...progress,
+				percentage,
 			});
 		} catch (error) {
 			logger.error(error);
