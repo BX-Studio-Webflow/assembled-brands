@@ -3,6 +3,7 @@ import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import type { NewFinancialDocument, NewFinancialOverview, NewFinancialWizardApplication, schema } from '../schema/schema.js';
 import { financialDocumentSchema, financialOverviewSchema, financialWizardApplicationSchema } from '../schema/schema.js';
+import { FinancialWizardPage } from '../service/financial-wizard.js';
 
 export class FinancialWizardRepository {
 	private db: DrizzleD1Database<typeof schema>;
@@ -88,6 +89,7 @@ export class FinancialWizardRepository {
 			.insert(financialDocumentSchema)
 			.values({
 				...document,
+				notes: document.notes ?? 'New upload at ' + new Date().toISOString(),
 				version: nextVersion,
 				is_current: true,
 			})
@@ -124,7 +126,7 @@ export class FinancialWizardRepository {
 		});
 	}
 
-	public async findDocumentsByPage(applicationId: number, page: string) {
+	public async findDocumentsByPage(applicationId: number, page: FinancialWizardPage) {
 		return this.db.query.financialDocumentSchema.findMany({
 			where: and(
 				eq(financialDocumentSchema.application_id, applicationId),
