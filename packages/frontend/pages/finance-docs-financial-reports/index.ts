@@ -256,7 +256,7 @@ const initFinanceReportsPage = async () => {
 
     // Step 3: Create financial document record
     const documentPayload: FinancialDocumentBody = {
-      step: 2,
+      page: 'financial-reports',
       document_type: documentType,
       asset_id: assetId,
     };

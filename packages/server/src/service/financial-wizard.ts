@@ -5,6 +5,13 @@ import type { FinancialOverviewBody, FinancialWizardProgressResponse } from '../
 import type { AssetService } from './asset.js';
 
 /**
+ * Page order for progress calculation
+ */
+const PAGE_ORDER = ['financial-overview', 'financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership'] as const;
+
+type FinancialWizardPage = (typeof PAGE_ORDER)[number];
+
+/**
  * Service class for managing financial wizard operations
  */
 export class FinancialWizardService {
@@ -28,7 +35,7 @@ export class FinancialWizardService {
 			if (!application) {
 				application = await this.repo.createApplication({
 					user_id: userId,
-					current_step: 1,
+					current_page: 'financial-overview',
 					is_complete: false,
 				});
 				if (!application) {
@@ -78,7 +85,7 @@ export class FinancialWizardService {
 			});
 
 			await this.repo.updateApplication(application.id, {
-				current_step: Math.max(application.current_step || 1, 1),
+				current_page: 'financial-overview',
 			});
 
 			return overview;
@@ -91,7 +98,7 @@ export class FinancialWizardService {
 	/**
 	 * Uploads a financial document
 	 * @param {number} userId - ID of the user
-	 * @param {number} step - Step number (2-5)
+	 * @param {string} page - Page identifier
 	 * @param {NewFinancialDocument['document_type']} documentType - Type of document
 	 * @param {number} assetId - ID of the uploaded asset
 	 * @param {string} [notes] - Optional notes about the document
@@ -100,7 +107,7 @@ export class FinancialWizardService {
 	 */
 	public async uploadDocument(
 		userId: number,
-		step: number,
+		page: string,
 		documentType: NewFinancialDocument['document_type'],
 		assetId: number,
 		notes?: string,
@@ -115,14 +122,19 @@ export class FinancialWizardService {
 			const document = await this.repo.createDocument({
 				application_id: application.id,
 				asset_id: assetId,
-				step,
+				page: page as FinancialWizardPage,
 				document_type: documentType,
 				notes: notes || null,
 			});
 
-			await this.repo.updateApplication(application.id, {
-				current_step: Math.max(application.current_step || 1, step),
-			});
+			// Update current_page to the highest page in order
+			const currentPageIndex = PAGE_ORDER.indexOf(application.current_page as FinancialWizardPage);
+			const newPageIndex = PAGE_ORDER.indexOf(page as FinancialWizardPage);
+			if (newPageIndex > currentPageIndex) {
+				await this.repo.updateApplication(application.id, {
+					current_page: page as FinancialWizardPage,
+				});
+			}
 
 			return document;
 		} catch (error) {
@@ -147,21 +159,22 @@ export class FinancialWizardService {
 			const overview = await this.repo.findFinancialOverviewByApplicationId(application.id);
 			const documents = await this.repo.findDocumentsByApplicationId(application.id, false);
 
-			const documentsByStep: Record<number, typeof documents> = {};
+			const documentsByPage: Record<string, typeof documents> = {};
 			for (const doc of documents) {
-				if (!documentsByStep[doc.step]) {
-					documentsByStep[doc.step] = [];
+				const page = doc.page || 'financial-reports';
+				if (!documentsByPage[page]) {
+					documentsByPage[page] = [];
 				}
-				documentsByStep[doc.step].push(doc);
+				documentsByPage[page].push(doc);
 			}
 
-			const enrichedDocumentsByStep: Record<
-				number,
+			const enrichedDocumentsByPage: Record<
+				string,
 				Array<{
 					id: number;
 					application_id: number;
 					asset_id: number;
-					step: number;
+					page: string;
 					document_type: string;
 					is_current: boolean;
 					version: number;
@@ -172,8 +185,8 @@ export class FinancialWizardService {
 					asset_name: string | null;
 				}>
 			> = {};
-			for (const [step, docs] of Object.entries(documentsByStep)) {
-				enrichedDocumentsByStep[Number(step)] = await Promise.all(
+			for (const [page, docs] of Object.entries(documentsByPage)) {
+				enrichedDocumentsByPage[page] = await Promise.all(
 					docs.map(async (doc) => {
 						const asset = await this.assetService.getAsset(doc.asset_id);
 						return {
@@ -187,8 +200,13 @@ export class FinancialWizardService {
 				);
 			}
 
+			const currentPage = (application.current_page || 'financial-overview') as FinancialWizardPage;
+			const currentPageIndex = PAGE_ORDER.indexOf(currentPage);
+			const totalPages = PAGE_ORDER.length;
+			const percentage = application.is_complete ? 100 : Math.round(((currentPageIndex + 1) / totalPages) * 100);
+
 			return {
-				current_step: application.current_step || 1,
+				current_page: currentPage,
 				is_complete: application.is_complete || false,
 				step1: overview
 					? {
@@ -197,11 +215,11 @@ export class FinancialWizardService {
 							projected_revenue_next_12_months: overview.projected_revenue_next_12_months || null,
 						}
 					: null,
-				percentage: Math.round((application.current_step || 1 / 5) * 100),
-				step2: enrichedDocumentsByStep[2] || [],
-				step3: enrichedDocumentsByStep[3] || [],
-				step4: enrichedDocumentsByStep[4] || [],
-				step5: enrichedDocumentsByStep[5] || [],
+				percentage,
+				step2: enrichedDocumentsByPage['financial-reports'] || [],
+				step3: enrichedDocumentsByPage['accounts-inventory'] || [],
+				step4: enrichedDocumentsByPage['ecommerce-performance'] || [],
+				step5: enrichedDocumentsByPage['team-ownership'] || [],
 			};
 		} catch (error) {
 			logger.error(error);
@@ -210,13 +228,13 @@ export class FinancialWizardService {
 	}
 
 	/**
-	 * Updates application step
+	 * Updates application page
 	 * @param {number} userId - ID of the user
-	 * @param {number} step - Step number to update to
+	 * @param {string} page - Page identifier to update to
 	 * @returns {Promise<FinancialWizardApplication>} The updated application
-	 * @throws {Error} When step update fails or application not found
+	 * @throws {Error} When page update fails or application not found
 	 */
-	public async updateStep(userId: number, step: number) {
+	public async updatePage(userId: number, page: string) {
 		try {
 			const application = await this.repo.findApplicationByUserId(userId);
 			if (!application) {
@@ -224,7 +242,7 @@ export class FinancialWizardService {
 			}
 
 			return await this.repo.updateApplication(application.id, {
-				current_step: step,
+				current_page: page as FinancialWizardPage,
 			});
 		} catch (error) {
 			logger.error(error);
@@ -255,20 +273,20 @@ export class FinancialWizardService {
 	}
 
 	/**
-	 * Gets documents for a specific step
+	 * Gets documents for a specific page
 	 * @param {number} userId - ID of the user
-	 * @param {number} step - Step number (2-5)
+	 * @param {string} page - Page identifier
 	 * @returns {Promise<Array>} List of documents with asset URLs
 	 * @throws {Error} When document retrieval fails
 	 */
-	public async getDocumentsByStep(userId: number, step: number) {
+	public async getDocumentsByPage(userId: number, page: string) {
 		try {
 			const application = await this.repo.findApplicationByUserId(userId);
 			if (!application) {
 				throw new Error('Application not found');
 			}
 
-			const documents = await this.repo.findDocumentsByStep(application.id, step);
+			const documents = await this.repo.findDocumentsByPage(application.id, page);
 
 			const enrichedDocuments = await Promise.all(
 				documents.map(async (doc) => {

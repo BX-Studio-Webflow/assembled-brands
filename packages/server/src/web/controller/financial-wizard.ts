@@ -5,7 +5,7 @@ import { logger } from '../../lib/logger.js';
 import type { AssetService } from '../../service/asset.js';
 import { FinancialWizardService } from '../../service/financial-wizard.js';
 import type { UserService } from '../../service/user.js';
-import type { FinancialDocumentBody, FinancialOverviewBody, UpdateStepBody } from '../validator/financial-wizard.js';
+import type { FinancialDocumentBody, FinancialOverviewBody, UpdatePageBody } from '../validator/financial-wizard.js';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { serveData } from './resp/resp.js';
 
@@ -72,7 +72,7 @@ export class FinancialWizardController {
 			}
 
 			const body: FinancialDocumentBody = await c.req.json();
-			const document = await this.service.uploadDocument(user.id, body.step, body.document_type, body.asset_id, body.notes);
+			const document = await this.service.uploadDocument(user.id, body.page, body.document_type, body.asset_id, body.notes);
 
 			return serveData(c, {
 				message: 'Document uploaded successfully',
@@ -105,14 +105,8 @@ export class FinancialWizardController {
 				});
 			}
 
-			// Calculate percentage (5 steps total)
-			const currentStep = progress.current_step || 1;
-			const totalSteps = 5;
-			const percentage = progress.is_complete ? 100 : Math.round((currentStep / totalSteps) * 100);
-
 			return serveData(c, {
 				...progress,
-				percentage,
 			});
 		} catch (error) {
 			logger.error(error);
@@ -121,21 +115,22 @@ export class FinancialWizardController {
 	};
 
 	/**
-	 * Gets documents for a specific step
-	 * @param {Context} c - The Hono context containing step parameter
-	 * @returns {Promise<Response>} Response containing documents for the step
+	 * Gets documents for a specific page
+	 * @param {Context} c - The Hono context containing page parameter
+	 * @returns {Promise<Response>} Response containing documents for the page
 	 * @throws {Error} When document retrieval fails
 	 */
-	public getDocumentsByStep = async (c: Context) => {
+	public getDocumentsByPage = async (c: Context) => {
 		try {
 			const user = await this.getUser(c);
 			if (!user) {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const step = Number.parseInt(c.req.param('step'));
-			if (!step || step < 2 || step > 5) {
-				return serveBadRequest(c, 'Invalid step number');
+			const page = c.req.param('page');
+			const validPages = ['financial-overview', 'financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership'];
+			if (!page || !validPages.includes(page)) {
+				return serveBadRequest(c, 'Invalid page identifier');
 			}
 
 			const application = await this.service.findByUserId(user.id);
@@ -143,7 +138,7 @@ export class FinancialWizardController {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
-			const documents = await this.service.getDocumentsByStep(user.id, step);
+			const documents = await this.service.getDocumentsByPage(user.id, page);
 
 			return serveData(c, {
 				documents,
@@ -155,12 +150,12 @@ export class FinancialWizardController {
 	};
 
 	/**
-	 * Updates the current step
-	 * @param {Context} c - The Hono context containing step update data
+	 * Updates the current page
+	 * @param {Context} c - The Hono context containing page update data
 	 * @returns {Promise<Response>} Response containing updated application data
-	 * @throws {Error} When step update fails
+	 * @throws {Error} When page update fails
 	 */
-	public updateStep = async (c: Context) => {
+	public updatePage = async (c: Context) => {
 		try {
 			const user = await this.getUser(c);
 			if (!user) {
@@ -172,11 +167,11 @@ export class FinancialWizardController {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
-			const body: UpdateStepBody = await c.req.json();
-			const updatedApplication = await this.service.updateStep(user.id, body.step);
+			const body: UpdatePageBody = await c.req.json();
+			const updatedApplication = await this.service.updatePage(user.id, body.page);
 
 			return serveData(c, {
-				message: 'Step updated successfully',
+				message: 'Page updated successfully',
 				application: updatedApplication,
 			});
 		} catch (error) {

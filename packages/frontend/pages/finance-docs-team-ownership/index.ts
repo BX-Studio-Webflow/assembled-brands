@@ -255,7 +255,7 @@ const initTeamOwnershipPage = async () => {
 
     // Step 3: Create financial document record
     const documentPayload: FinancialDocumentBody = {
-      step: 5,
+      page: 'team-ownership',
       document_type: documentType,
       asset_id: assetId,
     };

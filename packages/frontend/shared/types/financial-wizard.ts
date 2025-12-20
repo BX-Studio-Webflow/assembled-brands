@@ -7,7 +7,12 @@ export type FinancialStep1Body = {
 
 // Document Upload
 export type FinancialDocumentBody = {
-  step: number; // 2-5
+  page:
+    | 'financial-overview'
+    | 'financial-reports'
+    | 'accounts-inventory'
+    | 'ecommerce-performance'
+    | 'team-ownership';
   document_type:
     | 'monthly_balance_sheet'
     | 'monthly_income_statement'
@@ -25,9 +30,14 @@ export type FinancialDocumentBody = {
   notes?: string;
 };
 
-// Update Step
-export type UpdateStepBody = {
-  step: number; // 1-5
+// Update Page
+export type UpdatePageBody = {
+  page:
+    | 'financial-overview'
+    | 'financial-reports'
+    | 'accounts-inventory'
+    | 'ecommerce-performance'
+    | 'team-ownership';
 };
 
 // Document Type
@@ -35,7 +45,7 @@ export type FinancialDocument = {
   id: number;
   application_id: number;
   asset_id: number;
-  step: number;
+  page: string;
   document_type: string;
   is_current: boolean;
   version: number;
@@ -48,7 +58,7 @@ export type FinancialDocument = {
 
 // Progress Response
 export type FinancialWizardProgressResponse = {
-  current_step: number;
+  current_page: string;
   is_complete: boolean;
   percentage: number;
   step1: {
@@ -85,12 +95,12 @@ export type FinancialDocumentsResponse = {
   documents: FinancialDocument[];
 };
 
-export type UpdateStepResponse = {
+export type UpdatePageResponse = {
   message: string;
   application: {
     id: number;
     user_id: number;
-    current_step: number;
+    current_page: string;
     is_complete: boolean;
     created_at: string;
     updated_at: string;
@@ -102,7 +112,7 @@ export type CompleteApplicationResponse = {
   application: {
     id: number;
     user_id: number;
-    current_step: number;
+    current_page: string;
     is_complete: boolean;
     created_at: string;
     updated_at: string;

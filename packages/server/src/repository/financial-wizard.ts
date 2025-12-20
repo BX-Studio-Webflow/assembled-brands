@@ -124,11 +124,11 @@ export class FinancialWizardRepository {
 		});
 	}
 
-	public async findDocumentsByStep(applicationId: number, step: number) {
+	public async findDocumentsByPage(applicationId: number, page: string) {
 		return this.db.query.financialDocumentSchema.findMany({
 			where: and(
 				eq(financialDocumentSchema.application_id, applicationId),
-				eq(financialDocumentSchema.step, step),
+				eq(financialDocumentSchema.page, page),
 				eq(financialDocumentSchema.is_current, true),
 			),
 			orderBy: [desc(financialDocumentSchema.created_at)],

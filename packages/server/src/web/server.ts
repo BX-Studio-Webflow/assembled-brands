@@ -34,7 +34,12 @@ import { TeamController } from './controller/team.js';
 import { teamAccess } from './middleware/team.js';
 import { assetQueryValidator, completeMultipartUploadValidator, createMultipartAssetValidator } from './validator/asset.ts';
 import { businessQueryValidator, businessValidator, uploadBusinessLogoValidator } from './validator/business.ts';
-import { documentUploadValidator, financialOverviewValidator, updateStepValidator } from './validator/financial-wizard.ts';
+import {
+	documentUploadValidator,
+	financialOverviewValidator,
+	updatePageValidator,
+	updateStepValidator,
+} from './validator/financial-wizard.ts';
 import { onboardingStep1Validator, onboardingStep2Validator, onboardingStep3Validator } from './validator/onboarding.ts';
 import { createTeamValidator, inviteMemberValidator, revokeAccessValidator, teamQueryValidator } from './validator/team.ts';
 import {
@@ -227,8 +232,8 @@ export class Server {
 		financialWizard.post('/step1', financialOverviewValidator, financialWizardCtrl.saveStep1);
 		financialWizard.post('/document', documentUploadValidator, financialWizardCtrl.uploadDocument);
 		financialWizard.get('/progress', financialWizardCtrl.getProgress);
-		financialWizard.get('/documents/:step', financialWizardCtrl.getDocumentsByStep);
-		financialWizard.post('/step', updateStepValidator, financialWizardCtrl.updateStep);
+		financialWizard.get('/documents/:page', financialWizardCtrl.getDocumentsByPage);
+		financialWizard.post('/page', updatePageValidator, financialWizardCtrl.updatePage);
 		financialWizard.post('/complete', financialWizardCtrl.completeApplication);
 		financialWizard.delete('/document/:id', financialWizardCtrl.deleteDocument);
 

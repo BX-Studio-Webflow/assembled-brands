@@ -185,8 +185,8 @@ const initEcommercePerformancePage = async () => {
       const xhr = new XMLHttpRequest();
       xhr.upload.addEventListener('progress', (event) => {
         if (event.lengthComputable) {
-          const percent = Math.round((event.loaded / event.total) * 100);
-          console.log(`Upload progress: ${percent}%`);
+          // Upload progress tracking (percent calculation kept for potential future use)
+          const _percent = Math.round((event.loaded / event.total) * 100);
         }
       });
       xhr.addEventListener('load', () => {
@@ -207,7 +207,7 @@ const initEcommercePerformancePage = async () => {
 
     // Step 3: Create financial document record
     const documentPayload: FinancialDocumentBody = {
-      step: 4,
+      page: 'ecommerce-performance',
       document_type: documentType,
       asset_id: assetId,
     };

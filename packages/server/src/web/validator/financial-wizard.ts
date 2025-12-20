@@ -13,7 +13,7 @@ export type FinancialOverviewBody = z.infer<typeof financialOverviewSchema>;
 
 // Document Upload
 const documentUploadSchema = z.object({
-	step: z.number().int().min(2).max(5),
+	page: z.enum(['financial-overview', 'financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership']),
 	document_type: z.enum([
 		// Financial Reports (Step 2)
 		'monthly_balance_sheet',
@@ -40,9 +40,17 @@ const documentUploadSchema = z.object({
 export const documentUploadValidator = zValidator('json', documentUploadSchema);
 export type FinancialDocumentBody = z.infer<typeof documentUploadSchema>;
 
-// Update Step
+// Update Page (for financial wizard)
+const updatePageSchema = z.object({
+	page: z.enum(['financial-overview', 'financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership']),
+});
+
+export const updatePageValidator = zValidator('json', updatePageSchema);
+export type UpdatePageBody = z.infer<typeof updatePageSchema>;
+
+// Update Step (for onboarding wizard - still uses numeric steps)
 const updateStepSchema = z.object({
-	step: z.number().int().min(1).max(5),
+	step: z.number().int().min(1).max(3),
 });
 
 export const updateStepValidator = zValidator('json', updateStepSchema);
@@ -50,7 +58,7 @@ export type UpdateStepBody = z.infer<typeof updateStepSchema>;
 
 // Progress Response Type
 export type FinancialWizardProgressResponse = {
-	current_step: number;
+	current_page: string;
 	is_complete: boolean;
 	percentage: number;
 	step1: {
@@ -62,7 +70,7 @@ export type FinancialWizardProgressResponse = {
 		id: number;
 		application_id: number;
 		asset_id: number;
-		step: number;
+		page: string;
 		document_type: string;
 		is_current: boolean;
 		version: number;
@@ -76,7 +84,7 @@ export type FinancialWizardProgressResponse = {
 		id: number;
 		application_id: number;
 		asset_id: number;
-		step: number;
+		page: string;
 		document_type: string;
 		is_current: boolean;
 		version: number;
@@ -90,7 +98,7 @@ export type FinancialWizardProgressResponse = {
 		id: number;
 		application_id: number;
 		asset_id: number;
-		step: number;
+		page: string;
 		document_type: string;
 		is_current: boolean;
 		version: number;
@@ -104,7 +112,7 @@ export type FinancialWizardProgressResponse = {
 		id: number;
 		application_id: number;
 		asset_id: number;
-		step: number;
+		page: string;
 		document_type: string;
 		is_current: boolean;
 		version: number;

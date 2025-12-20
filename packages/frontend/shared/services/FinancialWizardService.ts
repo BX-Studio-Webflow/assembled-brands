@@ -7,8 +7,8 @@ import type {
   FinancialStep1Body,
   FinancialStep1Response,
   FinancialWizardProgressResponse,
-  UpdateStepBody,
-  UpdateStepResponse,
+  UpdatePageBody,
+  UpdatePageResponse,
 } from '../types/financial-wizard';
 import ApiService from './ApiService';
 
@@ -35,16 +35,16 @@ export const apiGetFinancialProgress = () => {
   });
 };
 
-export const apiGetFinancialDocumentsByStep = (step: number) => {
+export const apiGetFinancialDocumentsByPage = (page: string) => {
   return ApiService.fetchDataWithAxios<FinancialDocumentsResponse>({
-    url: `/financial-wizard/documents/${step}`,
+    url: `/financial-wizard/documents/${page}`,
     method: 'get',
   });
 };
 
-export const apiUpdateFinancialStep = (data: UpdateStepBody) => {
-  return ApiService.fetchDataWithAxios<UpdateStepResponse>({
-    url: '/financial-wizard/step',
+export const apiUpdateFinancialPage = (data: UpdatePageBody) => {
+  return ApiService.fetchDataWithAxios<UpdatePageResponse>({
+    url: '/financial-wizard/page',
     method: 'post',
     data,
   });

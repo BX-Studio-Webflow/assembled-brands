@@ -255,7 +255,7 @@ const initAccountsInventoryPage = async () => {
 
     // Step 3: Create financial document record
     const documentPayload: FinancialDocumentBody = {
-      step: 3,
+      page: 'accounts-inventory',
       document_type: documentType,
       asset_id: assetId,
     };
