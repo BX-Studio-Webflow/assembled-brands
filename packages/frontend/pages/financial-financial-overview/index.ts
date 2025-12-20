@@ -1,16 +1,16 @@
 import type { AxiosError } from 'axios';
-import { apiSaveFinancialStep1 } from 'shared/services/FinancialWizardService';
-import type { FinancialStep1Body } from 'shared/types/financial-wizard';
+import { apiSaveFinancialOverview } from 'shared/services/FinancialWizardService';
+import type { FinancialOverviewBody } from 'shared/types/financial-wizard';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
 import { constructNavBarClasses, progressFinancialWizardPercentage } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
-const initFinancialWizardStep1Page = async () => {
+const initFinancialOverviewPage = async () => {
+  constructNavBarClasses();
   processMiddleware();
   const result = await progressFinancialWizardPercentage();
-  constructNavBarClasses();
   const form = document.querySelector('[dev-target="financial-overview-form"]');
   if (!form) {
     console.error(
@@ -81,14 +81,14 @@ const initFinancialWizardStep1Page = async () => {
       return;
     }
 
-    const payload: FinancialStep1Body = {
+    const payload: FinancialOverviewBody = {
       revenue_last_12_months: companyRevenue.value,
       net_income_last_12_months: companyNetIncome.value,
       projected_revenue_next_12_months: companyProjectedRevenue.value,
     };
 
     try {
-      await apiSaveFinancialStep1(payload);
+      await apiSaveFinancialOverview(payload);
 
       submitButton.classList.add('is-success');
       submitButton.value = 'Saved. Continuing...';
@@ -113,4 +113,4 @@ const initFinancialWizardStep1Page = async () => {
   }
 };
 
-initFinancialWizardStep1Page();
+initFinancialOverviewPage();

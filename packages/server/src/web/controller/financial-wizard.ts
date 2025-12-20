@@ -35,12 +35,12 @@ export class FinancialWizardController {
 	}
 
 	/**
-	 * Saves Step 1: Financial Overview
+	 * Saves Financial Overview
 	 * @param {Context} c - The Hono context containing financial overview data
 	 * @returns {Promise<Response>} Response containing saved overview data
 	 * @throws {Error} When saving financial overview fails
 	 */
-	public saveStep1 = async (c: Context) => {
+	public saveFinancialOverview = async (c: Context) => {
 		try {
 			const user = await this.getUser(c);
 			if (!user) {

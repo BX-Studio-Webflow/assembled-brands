@@ -8,9 +8,9 @@ import { constructNavBarClasses, progressFinancialWizardPercentage } from '$util
 import { queryElement } from '$utils/selectors';
 
 const initFinancialCompanyProfilePage = async () => {
+  constructNavBarClasses();
   processMiddleware();
   const result = await progressFinancialWizardPercentage();
-  constructNavBarClasses();
   const form = document.querySelector('[dev-target="finance-company-profile"]');
   if (!form) {
     console.error(

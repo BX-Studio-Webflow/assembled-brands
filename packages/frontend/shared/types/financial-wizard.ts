@@ -1,7 +1,7 @@
 import type { Business } from './business';
 
-// Step 1: Financial Overview
-export type FinancialStep1Body = {
+// Financial Overview
+export type FinancialOverviewBody = {
   revenue_last_12_months: string;
   net_income_last_12_months: string;
   projected_revenue_next_12_months: string;
@@ -78,7 +78,7 @@ export type FinancialWizardProgressResponse = {
 };
 
 // API Response Types
-export type FinancialStep1Response = {
+export type FinancialOverviewResponse = {
   message: string;
   overview: {
     id: number;

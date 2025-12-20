@@ -10,9 +10,9 @@ import { constructNavBarClasses, progressFinancialWizardPercentage } from '$util
 import { queryElement } from '$utils/selectors';
 
 const initTeamOwnershipPage = async () => {
+  constructNavBarClasses();
   processMiddleware();
   const result = await progressFinancialWizardPercentage();
-  constructNavBarClasses();
 
   //ONLY SHEET AND XLSX ALLOWED
   const ALLOWED_FILE_TYPES = [
