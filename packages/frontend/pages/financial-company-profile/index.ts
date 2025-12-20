@@ -7,7 +7,7 @@ import { navigateToPath } from '$utils/config';
 import { progressFinancialWizardPercentage } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
-const initTeamInvitePage = async () => {
+const initFinancialCompanyProfilePage = async () => {
   processMiddleware();
   const result = await progressFinancialWizardPercentage();
   const form = document.querySelector('[dev-target="finance-company-profile"]');
@@ -161,7 +161,7 @@ const initTeamInvitePage = async () => {
       submitButton.value = 'Continuing...';
 
       setTimeout(() => {
-        navigateToPath('/finance-docs-financial-reports');
+        navigateToPath('/finance-financial-overview');
       }, 200);
     } catch (error) {
       const { message } = error as AxiosError;
@@ -172,4 +172,4 @@ const initTeamInvitePage = async () => {
   });
 };
 
-initTeamInvitePage();
+initFinancialCompanyProfilePage();

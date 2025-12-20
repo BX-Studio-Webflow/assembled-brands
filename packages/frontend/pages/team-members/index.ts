@@ -2,10 +2,12 @@ import { apiGetTeamInvitations } from 'shared/services/TeamService';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
+import { progressFinancialWizardPercentage } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const TeamMembersPage = async () => {
   processMiddleware();
+  progressFinancialWizardPercentage();
 
   // Find the table and template row
   const table = document.querySelector('[fs-table-element="table"]');

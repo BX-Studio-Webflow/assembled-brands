@@ -9,7 +9,7 @@ import { queryElement } from '$utils/selectors';
 
 const initFinancialWizardStep1Page = async () => {
   processMiddleware();
-  await progressFinancialWizardPercentage();
+  const result = await progressFinancialWizardPercentage();
   const form = document.querySelector('[dev-target="financial-overview-form"]');
   if (!form) {
     console.error(
@@ -102,6 +102,14 @@ const initFinancialWizardStep1Page = async () => {
       submitButton.value = message || 'There was a problem saving your information';
     }
   });
+
+  //preset the values if they are available
+  if (result?.financial_overview) {
+    companyRevenue.value = result.financial_overview.revenue_last_12_months || '';
+    companyNetIncome.value = result.financial_overview.net_income_last_12_months || '';
+    companyProjectedRevenue.value =
+      result.financial_overview.projected_revenue_next_12_months || '';
+  }
 };
 
 initFinancialWizardStep1Page();
