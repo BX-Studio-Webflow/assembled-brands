@@ -15,16 +15,22 @@ export const isValidEmail = (email: string) => {
 };
 
 export const progressFinancialWizardPercentage = async () => {
-  //get progress percentage
-  const response = await apiGetFinancialProgress();
+  try {
+    //get progress percentage
+    const response = await apiGetFinancialProgress();
 
-  const percentage = response.percentage || 0;
-  const progressFill = queryElement<HTMLDivElement>('[dev-target="progress-percentage-fill"]');
-  const progressLabel = queryElement<HTMLDivElement>('[dev-target="progress-percentage-label"]');
-  if (!progressFill || !progressLabel) {
-    console.error('Ensure [dev-target="progress-percentage-fill"] is present.');
-    return;
+    const percentage = response?.percentage || 0;
+    const progressFill = queryElement<HTMLDivElement>('[dev-target="progress-percentage-fill"]');
+    const progressLabel = queryElement<HTMLDivElement>('[dev-target="progress-percentage-label"]');
+    if (!progressFill || !progressLabel) {
+      console.error(
+        'Ensure [dev-target="progress-percentage-fill"] and [dev-target="progress-percentage-label"] are present.'
+      );
+      return;
+    }
+    progressFill.style.width = `${percentage}%`;
+    progressLabel.textContent = `Progress ${percentage}%`;
+  } catch (error) {
+    console.error('Failed to load financial wizard progress:', error);
   }
-  progressFill.style.width = `${percentage}%`;
-  progressLabel.textContent = `Progress ${percentage}%`;
 };

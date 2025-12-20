@@ -4,11 +4,12 @@ import type { FinancialStep1Body } from 'shared/types/financial-wizard';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
+import { progressFinancialWizardPercentage } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
-const initFinancialWizardStep1Page = () => {
+const initFinancialWizardStep1Page = async () => {
   processMiddleware();
-
+  await progressFinancialWizardPercentage();
   const form = document.querySelector('[dev-target="financial-overview-form"]');
   if (!form) {
     console.error(

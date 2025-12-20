@@ -9,7 +9,7 @@ import { queryElement } from '$utils/selectors';
 
 const initTeamInvitePage = async () => {
   processMiddleware();
-  progressFinancialWizardPercentage();
+  await progressFinancialWizardPercentage();
   const form = document.querySelector('[dev-target="finance-company-profile"]');
   if (!form) {
     console.error(

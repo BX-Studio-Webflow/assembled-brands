@@ -3,11 +3,12 @@ import { apiGetMyTeams, apiInviteTeamMember } from 'shared/services/TeamService'
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
+import { progressFinancialWizardPercentage } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const initInviteTeamMembersPage = async () => {
   processMiddleware();
-
+  progressFinancialWizardPercentage();
   const form = document.querySelector('[dev-target="add-team-member-form"]');
   if (!form) {
     console.error(
