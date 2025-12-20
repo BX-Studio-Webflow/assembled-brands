@@ -4,7 +4,7 @@ import type { Context } from 'hono';
 import { logger } from '../../lib/logger.js';
 import type { AssetService } from '../../service/asset.js';
 import { BusinessService } from '../../service/business.js';
-import { FinancialWizardService } from '../../service/financial-wizard.js';
+import { FinancialWizardPage, FinancialWizardService } from '../../service/financial-wizard.js';
 import type { UserService } from '../../service/user.js';
 import type { FinancialDocumentBody, FinancialOverviewBody, UpdatePageBody } from '../validator/financial-wizard.js';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
@@ -130,7 +130,7 @@ export class FinancialWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const page = c.req.param('page');
+			const page = c.req.param('page') as FinancialWizardPage;
 			const validPages = [
 				'company-profile',
 				'financial-overview',

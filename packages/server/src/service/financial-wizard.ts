@@ -16,7 +16,7 @@ const PAGE_ORDER = [
 	'team-ownership',
 ] as const;
 
-type FinancialWizardPage = (typeof PAGE_ORDER)[number];
+export type FinancialWizardPage = (typeof PAGE_ORDER)[number];
 
 /**
  * Service class for managing financial wizard operations
@@ -288,7 +288,7 @@ export class FinancialWizardService {
 	 * @returns {Promise<Array>} List of documents with asset URLs
 	 * @throws {Error} When document retrieval fails
 	 */
-	public async getDocumentsByPage(userId: number, page: string) {
+	public async getDocumentsByPage(userId: number, page: FinancialWizardPage) {
 		try {
 			const application = await this.repo.findApplicationByUserId(userId);
 			if (!application) {
