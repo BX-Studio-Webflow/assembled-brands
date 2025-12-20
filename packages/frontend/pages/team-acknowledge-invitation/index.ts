@@ -5,10 +5,7 @@ import {
   apiRejectTeamInvitation,
 } from 'shared/services/TeamService';
 
-import { processMiddleware } from '$utils/auth';
-
 const TeamMembersPage = async () => {
-  processMiddleware();
   //get  /accept-team-invitation?invitation_id=6&team_id=2&team_name=BX
   const invitationId = new URLSearchParams(window.location.search).get('invitation_id');
   const teamName = new URLSearchParams(window.location.search).get('team_name');
@@ -25,17 +22,17 @@ const TeamMembersPage = async () => {
     : inviterName || 'The admin';
   const team_name = invitation.team?.name || teamName || 'Unknown';
   const text = `${inviter_name} has invited you to join the ${team_name} team. Click the button below to accept or reject the invitation.`;
-  const message = document.querySelector('[dev-target="team-message"]');
+  const messageElement = document.querySelector('[dev-target="team-message"]');
   const acceptButton = document.querySelector('[dev-target="accept"]');
   const rejectButton = document.querySelector('[dev-target="reject"]');
   const adminMessage = document.querySelector('[dev-target="admin-message"]');
 
-  if (!message || !acceptButton || !rejectButton || !adminMessage) {
+  if (!messageElement || !acceptButton || !rejectButton || !adminMessage) {
     console.error('Message or accept/reject buttons not found');
     return;
   }
 
-  message.textContent = text;
+  messageElement.textContent = text;
   adminMessage.textContent = invitation.message || 'Come work with us!';
   try {
     acceptButton.addEventListener('click', async () => {
@@ -46,7 +43,8 @@ const TeamMembersPage = async () => {
     });
   } catch (error) {
     const { message } = error as AxiosError;
-    console.error(message);
+    messageElement.textContent =
+      message || 'There was a problem accepting/rejecting the invitation';
   }
 };
 
