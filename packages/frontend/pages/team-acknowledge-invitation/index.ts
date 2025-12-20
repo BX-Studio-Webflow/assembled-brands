@@ -34,18 +34,26 @@ const TeamMembersPage = async () => {
 
   messageElement.textContent = text;
   adminMessage.textContent = invitation.message || 'Come work with us!';
-  try {
-    acceptButton.addEventListener('click', async () => {
+
+  acceptButton.addEventListener('click', async () => {
+    try {
       await apiAcceptTeamInvitation(Number(invitationId));
-    });
-    rejectButton.addEventListener('click', async () => {
+      adminMessage.textContent = 'Invitation accepted successfully!';
+    } catch (error) {
+      const { message } = error as AxiosError;
+      adminMessage.textContent = message || 'There was a problem accepting the invitation';
+    }
+  });
+
+  rejectButton.addEventListener('click', async () => {
+    try {
       await apiRejectTeamInvitation(Number(invitationId));
-    });
-  } catch (error) {
-    const { message } = error as AxiosError;
-    messageElement.textContent =
-      message || 'There was a problem accepting/rejecting the invitation';
-  }
+      adminMessage.textContent = 'Invitation rejected successfully!';
+    } catch (error) {
+      const { message } = error as AxiosError;
+      adminMessage.textContent = message || 'There was a problem rejecting the invitation';
+    }
+  });
 };
 
 TeamMembersPage();
