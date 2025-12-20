@@ -95,26 +95,22 @@ export class Server {
 		// Setup repos
 		const userRepo = new UserRepository(db);
 		const assetRepo = new AssetRepository(db);
-
 		const teamRepo = new TeamRepository(db);
 		const businessRepo = new BusinessRepository(db);
 		const financialWizardRepo = new FinancialWizardRepository(db);
 		const onboardingWizardRepo = new OnboardingWizardRepository(db);
-
 		const emailRepo = new EmailRepository(db);
 		const notificationRepo = new NotificationRepository(db);
+
 		// Setup services
 		const notificationService = new NotificationService(notificationRepo);
-
 		const s3Service = new S3Service();
 		const assetService = new AssetService(assetRepo, s3Service);
-
 		const userService = new UserService(userRepo);
 		const teamService = new TeamService(teamRepo, userService);
 		const financialWizardService = new FinancialWizardService(financialWizardRepo, assetService);
 		const hubSpotService = new HubSpotService();
 		const onboardingWizardService = new OnboardingWizardService(onboardingWizardRepo, hubSpotService, userService);
-
 		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService, financialWizardService);
 		const emailService = new EmailService(emailRepo);
 
