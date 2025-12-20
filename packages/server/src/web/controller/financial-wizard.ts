@@ -98,8 +98,6 @@ export class FinancialWizardController {
 			if (!user) {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
-			//get business
-			const business = await this.businessService.getBusinessByUserId(user.id);
 			const progress = await this.service.getProgress(user.id);
 			if (!progress) {
 				return serveData(c, {
@@ -107,7 +105,6 @@ export class FinancialWizardController {
 					progress: null,
 				});
 			}
-			progress.company_profile = business;
 			return serveData(c, {
 				...progress,
 			});
