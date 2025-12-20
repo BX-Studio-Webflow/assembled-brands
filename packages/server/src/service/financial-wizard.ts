@@ -210,6 +210,19 @@ export class FinancialWizardService {
 				this.repo.findDocumentsByApplicationId(application.id, false),
 			]);
 
+			// Collect all unique asset IDs and fetch them in parallel
+			const uniqueAssetIds = [...new Set(documents.map((doc) => doc.asset_id))];
+			const assets = await Promise.all(uniqueAssetIds.map((assetId) => this.assetService.getAsset(assetId)));
+
+			// Create a map of asset_id -> asset for quick lookup
+			const assetMap = new Map<number, (typeof assets)[0]>();
+			assets.forEach((asset, index) => {
+				if (asset) {
+					assetMap.set(uniqueAssetIds[index], asset);
+				}
+			});
+
+			// Group documents by page and enrich with asset data
 			const documentsByPage: Record<string, typeof documents> = {};
 			for (const doc of documents) {
 				const page = doc.page || 'financial-reports';
@@ -237,18 +250,16 @@ export class FinancialWizardService {
 				}>
 			> = {};
 			for (const [page, docs] of Object.entries(documentsByPage)) {
-				enrichedDocumentsByPage[page] = await Promise.all(
-					docs.map(async (doc) => {
-						const asset = await this.assetService.getAsset(doc.asset_id);
-						return {
-							...doc,
-							is_current: doc.is_current ?? false,
-							version: doc.version ?? 1,
-							asset_url: asset?.asset_url || null,
-							asset_name: asset?.asset_name || null,
-						};
-					}),
-				);
+				enrichedDocumentsByPage[page] = docs.map((doc) => {
+					const asset = assetMap.get(doc.asset_id);
+					return {
+						...doc,
+						is_current: doc.is_current ?? false,
+						version: doc.version ?? 1,
+						asset_url: asset?.asset_url || null,
+						asset_name: asset?.asset_name || null,
+					};
+				});
 			}
 
 			const currentPage = (application.current_page || 'company-profile') as FinancialWizardPage;
