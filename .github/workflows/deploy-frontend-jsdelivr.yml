@@ -1,0 +1,74 @@
+name: Deploy Frontend to GitHub (jsDelivr)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/frontend/**'
+      - '.github/workflows/deploy-frontend-jsdelivr.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Build and Deploy to dist branch
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend
+        run: pnpm --filter @assembled-brands/frontend build
+        env:
+          NODE_ENV: production
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Checkout dist branch or create it
+        run: |
+          if git ls-remote --heads origin dist | grep -q dist; then
+            git fetch origin dist
+            git checkout dist
+            git clean -fd
+            git rm -rf . || true
+          else
+            git checkout --orphan dist
+            git rm -rf . || true
+          fi
+
+      - name: Copy dist files to root
+        run: |
+          mkdir -p pages
+          cp -r packages/frontend/dist/pages/* pages/ || true
+          # Copy any other files from dist root if they exist
+          find packages/frontend/dist -maxdepth 1 -type f -exec cp {} . \; || true
+
+      - name: Commit and push to dist branch
+        run: |
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Deploy frontend build from main branch [skip ci]"
+            git push origin dist --force
+          fi
+
