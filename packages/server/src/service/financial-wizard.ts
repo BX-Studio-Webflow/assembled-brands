@@ -197,6 +197,7 @@ export class FinancialWizardService {
 							projected_revenue_next_12_months: overview.projected_revenue_next_12_months || null,
 						}
 					: null,
+				percentage: Math.round((application.current_step || 1 / 5) * 100),
 				step2: enrichedDocumentsByStep[2] || [],
 				step3: enrichedDocumentsByStep[3] || [],
 				step4: enrichedDocumentsByStep[4] || [],

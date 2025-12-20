@@ -105,8 +105,16 @@ export class FinancialWizardController {
 				});
 			}
 
+			// Calculate percentage (5 steps total)
+			const currentStep = progress.current_step || 1;
+			const totalSteps = 5;
+			const percentage = progress.is_complete ? 100 : Math.round((currentStep / totalSteps) * 100);
+
 			return serveData(c, {
-				progress,
+				progress: {
+					...progress,
+					percentage,
+				},
 			});
 		} catch (error) {
 			logger.error(error);

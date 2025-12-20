@@ -52,6 +52,7 @@ export type OnboardingProgressResponse = {
 	is_qualified: boolean;
 	is_rejected: boolean;
 	rejection_reason: string | null;
+	percentage: number;
 	step1: {
 		legal_name: string | null;
 		employee_count: string | null;

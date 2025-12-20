@@ -130,10 +130,39 @@ export class OnboardingWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const progress = await this.service.getProgress(user.id);
-			if (!progress) {
+			const application = await this.service.getProgress(user.id);
+			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
+
+			// Calculate percentage (3 steps total)
+			const currentStep = application.current_step || 1;
+			const totalSteps = 3;
+			const percentage = application.is_complete ? 100 : Math.round((currentStep / totalSteps) * 100);
+
+			const progress = {
+				current_step: currentStep,
+				is_complete: application.is_complete || false,
+				is_qualified: application.is_qualified || false,
+				is_rejected: application.is_rejected || false,
+				rejection_reason: application.rejection_reason || null,
+				percentage,
+				step1: {
+					legal_name: application.legal_name || null,
+					employee_count: application.employee_count || null,
+					website: application.website || null,
+				},
+				step2: {
+					years_in_business: application.years_in_business || null,
+					asset_type: application.asset_type || null,
+					desired_loan_amount: application.desired_loan_amount || null,
+				},
+				step3: {
+					company_type: application.company_type || null,
+					company_type_other: application.company_type_other || null,
+					revenue_qualification: application.revenue_qualification || null,
+				},
+			};
 
 			return serveData(c, {
 				progress,

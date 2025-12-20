@@ -50,6 +50,7 @@ export type FinancialDocument = {
 export type FinancialWizardProgressResponse = {
   current_step: number;
   is_complete: boolean;
+  percentage: number;
   step1: {
     revenue_last_12_months: string | null;
     net_income_last_12_months: string | null;
