@@ -4,12 +4,13 @@ import type { UpdateBusinessRequest } from 'shared/types/business';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
-import { progressFinancialWizardPercentage } from '$utils/helpers';
+import { constructNavBarClasses, progressFinancialWizardPercentage } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const initFinancialCompanyProfilePage = async () => {
   processMiddleware();
   const result = await progressFinancialWizardPercentage();
+  constructNavBarClasses();
   const form = document.querySelector('[dev-target="finance-company-profile"]');
   if (!form) {
     console.error(

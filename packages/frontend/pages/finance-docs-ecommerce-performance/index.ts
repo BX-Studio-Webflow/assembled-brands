@@ -6,12 +6,13 @@ import type { FinancialDocumentBody } from 'shared/types/financial-wizard';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
-import { progressFinancialWizardPercentage } from '$utils/helpers';
+import { constructNavBarClasses, progressFinancialWizardPercentage } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const initEcommercePerformancePage = async () => {
   processMiddleware();
   const result = await progressFinancialWizardPercentage();
+  constructNavBarClasses();
 
   //ONLY SHEET AND XLSX ALLOWED
   const ALLOWED_FILE_TYPES = [
