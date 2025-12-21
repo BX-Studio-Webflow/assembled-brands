@@ -2773,7 +2773,7 @@ var isValidEmail = (email) => {
 };
 
 // pages/cold-lead-register/index.ts
-var initLoginPage = () => {
+var initColdLeadRegisterPage = () => {
   const form = document.querySelector('[dev-target="signup-form"]');
   if (!form) {
     console.error('Login form not found. Element: [dev-target="signup-form"] not found');
@@ -2833,8 +2833,7 @@ var initLoginPage = () => {
     }
   });
 };
-window.Webflow ||= [];
-window.Webflow.push(() => {
-  initLoginPage();
+document.addEventListener("DOMContentLoaded", () => {
+  initColdLeadRegisterPage();
 });
 //# sourceMappingURL=index.js.map
