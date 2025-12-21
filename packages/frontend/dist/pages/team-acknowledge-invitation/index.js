@@ -2808,5 +2808,8 @@ var TeamMembersPage = async () => {
     }
   });
 };
-TeamMembersPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  TeamMembersPage();
+});
 //# sourceMappingURL=index.js.map

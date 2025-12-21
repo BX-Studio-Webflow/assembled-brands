@@ -143,4 +143,7 @@ const initOnboardingStep3Page = () => {
   });
 };
 
-initOnboardingStep3Page();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initOnboardingStep3Page();
+});

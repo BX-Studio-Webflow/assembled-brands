@@ -419,4 +419,7 @@ const initAccountsInventoryPage = async () => {
   }
 };
 
-initAccountsInventoryPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initAccountsInventoryPage();
+});

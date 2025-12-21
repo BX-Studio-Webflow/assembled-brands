@@ -173,4 +173,7 @@ const initFinancialCompanyProfilePage = async () => {
   });
 };
 
-initFinancialCompanyProfilePage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initFinancialCompanyProfilePage();
+});

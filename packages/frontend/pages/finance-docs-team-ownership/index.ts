@@ -419,4 +419,7 @@ const initTeamOwnershipPage = async () => {
   }
 };
 
-initTeamOwnershipPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initTeamOwnershipPage();
+});

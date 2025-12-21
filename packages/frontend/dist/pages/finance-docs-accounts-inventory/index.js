@@ -3204,5 +3204,8 @@ var initAccountsInventoryPage = async () => {
     }
   }
 };
-initAccountsInventoryPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initAccountsInventoryPage();
+});
 //# sourceMappingURL=index.js.map

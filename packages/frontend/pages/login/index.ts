@@ -126,4 +126,7 @@ const initLoginPage = () => {
   });
 };
 
-initLoginPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initLoginPage();
+});

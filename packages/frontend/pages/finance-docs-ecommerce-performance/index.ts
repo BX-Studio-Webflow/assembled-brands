@@ -342,4 +342,7 @@ const initEcommercePerformancePage = async () => {
   }
 };
 
-initEcommercePerformancePage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initEcommercePerformancePage();
+});

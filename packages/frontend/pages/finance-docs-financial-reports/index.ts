@@ -374,4 +374,7 @@ const initFinanceReportsPage = async () => {
   }
 };
 
-initFinanceReportsPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initFinanceReportsPage();
+});

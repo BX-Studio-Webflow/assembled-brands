@@ -3139,5 +3139,8 @@ var initEcommercePerformancePage = async () => {
     }
   }
 };
-initEcommercePerformancePage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initEcommercePerformancePage();
+});
 //# sourceMappingURL=index.js.map
