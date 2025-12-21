@@ -1,9 +1,10 @@
-name: Release
+name: Release & Publish
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -12,10 +13,10 @@ permissions:
   pull-requests: write
 
 jobs:
-  version:
-    name: Version Packages
-    timeout-minutes: 15
+  version-and-publish:
+    name: Version & Publish Packages
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -37,7 +38,7 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Create Release Pull Request
+      - name: Version Packages
         id: changesets
         uses: changesets/action@v1
         with:
@@ -48,16 +49,24 @@ jobs:
           PAT: ${{ secrets.PAT }}
           GITHUB_TOKEN: ${{ secrets.PAT }}
 
-      - name: Create Git Tag After Version PR Merge
+      - name: Create Git Tag
         if: steps.changesets.outputs.hasChangesets == 'false'
         env:
           PAT: ${{ secrets.PAT }}
-          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          VERSION=$(node -p "require('./package.json').version")
+          VERSION=$(node -p "require('./packages/frontend/package.json').version")
           if ! git rev-parse "v${VERSION}" >/dev/null 2>&1; then
             git tag -a "v${VERSION}" -m "Release v${VERSION}"
-            git push origin "v${VERSION}"
-          fi
+            git push https://x-access-token:${PAT}@github.com/${{ github.repository }} "v${VERSION}"
+
+      - name: Build Frontend
+        run: pnpm --filter @assembled-brands/frontend build
+
+      - name: Publish to npm
+        run: |
+          cd packages/frontend
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
