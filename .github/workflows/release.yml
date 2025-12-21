@@ -65,6 +65,12 @@ jobs:
       - name: Build Frontend
         run: pnpm --filter @assembled-brands/frontend build
 
+
+      - name: Authenticate npm
+        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish to npm
         run: |
           cd packages/frontend
