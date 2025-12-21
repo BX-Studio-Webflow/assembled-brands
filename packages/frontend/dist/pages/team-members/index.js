@@ -2870,5 +2870,8 @@ var TeamMembersPage = async () => {
     console.error("Failed to load team members:", error);
   }
 };
-TeamMembersPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  TeamMembersPage();
+});
 //# sourceMappingURL=index.js.map

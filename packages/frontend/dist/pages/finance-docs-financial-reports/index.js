@@ -3175,5 +3175,8 @@ var initFinanceReportsPage = async () => {
     }
   }
 };
-initFinanceReportsPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initFinanceReportsPage();
+});
 //# sourceMappingURL=index.js.map

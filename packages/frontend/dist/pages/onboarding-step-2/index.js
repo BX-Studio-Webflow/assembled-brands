@@ -2866,5 +2866,8 @@ var initOnboardingStep2Page = () => {
     }
   });
 };
-initOnboardingStep2Page();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initOnboardingStep2Page();
+});
 //# sourceMappingURL=index.js.map

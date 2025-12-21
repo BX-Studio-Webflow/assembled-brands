@@ -2884,5 +2884,8 @@ var initOnboardingStep3Page = () => {
     }
   });
 };
-initOnboardingStep3Page();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initOnboardingStep3Page();
+});
 //# sourceMappingURL=index.js.map

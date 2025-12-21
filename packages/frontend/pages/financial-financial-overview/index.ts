@@ -113,4 +113,7 @@ const initFinancialOverviewPage = async () => {
   }
 };
 
-initFinancialOverviewPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initFinancialOverviewPage();
+});

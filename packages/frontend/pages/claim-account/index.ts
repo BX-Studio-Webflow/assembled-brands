@@ -172,4 +172,7 @@ const initClaimAccountPage = () => {
   });
 };
 
-initClaimAccountPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initClaimAccountPage();
+});

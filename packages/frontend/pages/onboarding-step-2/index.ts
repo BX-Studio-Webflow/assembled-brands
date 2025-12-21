@@ -119,4 +119,7 @@ const initOnboardingStep2Page = () => {
   });
 };
 
-initOnboardingStep2Page();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initOnboardingStep2Page();
+});

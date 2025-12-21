@@ -2974,5 +2974,8 @@ var initInviteTeamMembersPage = async () => {
     }
   });
 };
-initInviteTeamMembersPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initInviteTeamMembersPage();
+});
 //# sourceMappingURL=index.js.map

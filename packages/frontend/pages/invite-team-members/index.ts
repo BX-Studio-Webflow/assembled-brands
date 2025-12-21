@@ -189,4 +189,7 @@ const initInviteTeamMembersPage = async () => {
   });
 };
 
-initInviteTeamMembersPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initInviteTeamMembersPage();
+});

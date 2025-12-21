@@ -3020,5 +3020,8 @@ var initFinancialCompanyProfilePage = async () => {
     }
   });
 };
-initFinancialCompanyProfilePage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initFinancialCompanyProfilePage();
+});
 //# sourceMappingURL=index.js.map

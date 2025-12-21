@@ -2962,5 +2962,8 @@ var initFinancialOverviewPage = async () => {
     companyProjectedRevenue.value = result.financial_overview.projected_revenue_next_12_months || "";
   }
 };
-initFinancialOverviewPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initFinancialOverviewPage();
+});
 //# sourceMappingURL=index.js.map

@@ -2927,5 +2927,8 @@ var initClaimAccountPage = () => {
     }
   });
 };
-initClaimAccountPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initClaimAccountPage();
+});
 //# sourceMappingURL=index.js.map

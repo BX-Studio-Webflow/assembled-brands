@@ -2857,5 +2857,8 @@ var initLoginPage = () => {
     }
   });
 };
-initLoginPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initLoginPage();
+});
 //# sourceMappingURL=index.js.map

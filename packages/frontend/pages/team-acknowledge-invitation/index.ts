@@ -56,4 +56,7 @@ const TeamMembersPage = async () => {
   });
 };
 
-TeamMembersPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  TeamMembersPage();
+});
