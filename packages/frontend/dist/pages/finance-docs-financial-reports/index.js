@@ -2625,16 +2625,16 @@ var appConfig = {
   TOKEN_TYPE: "Bearer",
   REQUEST_HEADER_AUTH_KEY: "Authorization"
 };
-var navigateToPath = (path, skipDevMode = false) => {
-  let newPath = "";
-  if (devMode === "local" && !skipDevMode) {
-    newPath = `/dev${path}`;
-  } else if (devMode === "remote-dev" && !skipDevMode) {
-    newPath = `/dev${path}`;
-  } else {
-    newPath = `/${path}`;
+var navigateToPath = (path) => {
+  if (!path) {
+    console.error("navigateToPath: path is empty or undefined");
+    return;
   }
-  window.location.assign(newPath);
+  const normalizedPath = path.replace(/^\/+/, "");
+  let finalPath = normalizedPath;
+  finalPath = `dev/${normalizedPath}`;
+  const newUrl = `${window.location.origin}/${finalPath}`;
+  window.location.assign(newUrl);
 };
 
 // shared/utils/auth.ts
@@ -2879,6 +2879,16 @@ var constructNavBarClasses = () => {
     }
   }
 };
+var fileToBase64 = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const result = reader.result;
+    const parts = result.split(",");
+    resolve(parts.length > 1 ? parts[1] : parts[0]);
+  };
+  reader.onerror = () => reject(new Error("Failed to read file as base64"));
+  reader.readAsDataURL(file);
+});
 
 // pages/finance-docs-financial-reports/index.ts
 var initFinanceReportsPage = async () => {
@@ -3081,10 +3091,14 @@ var initFinanceReportsPage = async () => {
       xhr.setRequestHeader("Content-Type", file.type);
       xhr.send(file);
     });
+    const base64Data = await fileToBase64(file);
     const documentPayload = {
       page: "financial-reports",
       document_type: documentType,
-      asset_id: assetId
+      asset_id: assetId,
+      file_name: file.name,
+      file_mime_type: file.type,
+      file_data: base64Data
     };
     await apiUploadFinancialDocument(documentPayload);
   };

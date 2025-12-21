@@ -103,6 +103,7 @@ const initAccountSetupFinishVerificationPage = () => {
       return;
     }
     try {
+      navigateToPath('/onboarding-step-1');
       const response = await apiVerifyRegistration({
         token: Number(token),
         id: Number(id),
