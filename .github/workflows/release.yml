@@ -60,6 +60,7 @@ jobs:
           if ! git rev-parse "v${VERSION}" >/dev/null 2>&1; then
             git tag -a "v${VERSION}" -m "Release v${VERSION}"
             git push https://x-access-token:${PAT}@github.com/${{ github.repository }} "v${VERSION}"
+          fi
 
       - name: Build Frontend
         run: pnpm --filter @assembled-brands/frontend build
