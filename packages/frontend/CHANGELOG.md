@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.2.0
+
+### Minor Changes
+
+- 3207cee: fix-test
+
 ## 0.1.0
 
 ### Minor Changes
