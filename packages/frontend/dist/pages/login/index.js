@@ -2614,7 +2614,7 @@ var {
 } = axios_default;
 
 // shared/utils/config.ts
-var devMode = localStorage.getItem("dev-mode");
+var devMode = localStorage.getItem("api-mode");
 var API_LOCAL_DEV_URL = "http://127.0.0.1:8787";
 var API_REMOTE_DEV_URL = "https://assembled-brands-dev.crystal-e8a.workers.dev";
 var API_PROD_URL = "https://assembled-brands-prod.crystal-e8a.workers.dev";
@@ -2627,13 +2627,15 @@ var appConfig = {
   REQUEST_HEADER_AUTH_KEY: "Authorization"
 };
 var navigateToPath = (path, skipDevMode = false) => {
+  let newPath = "";
   if (devMode === "local" && !skipDevMode) {
-    window.location.href = `/dev${path}`;
+    newPath = `/dev${path}`;
   } else if (devMode === "remote-dev" && !skipDevMode) {
-    window.location.href = `/dev${path}`;
+    newPath = `/dev${path}`;
   } else {
-    window.location.href = `/${path}`;
+    newPath = `/${path}`;
   }
+  window.location.assign(newPath);
 };
 
 // shared/utils/auth.ts
@@ -2684,8 +2686,10 @@ var AxiosRequestIntrceptorConfigCallback_default = AxiosRequestIntrceptorConfigC
 // shared/services/axios/AxiosResponseIntrceptorErrorCallback.ts
 var UNAUTHORIZED_CODES = [401, 419, 440];
 var AxiosResponseIntrceptorErrorCallback = (error) => {
-  console.warn(error);
   const { response } = error;
+  if (window.location.pathname.includes("/login")) {
+    return Promise.reject(error);
+  }
   if (response && UNAUTHORIZED_CODES.includes(response.status)) {
     deleteCookie("accessToken");
     navigateToPath("/login?error=unauthorized", false);
@@ -2847,6 +2851,7 @@ var initLoginPage = () => {
       } else if (onboardingIsComplete && currentOnboardingStep === 3) {
         navigateToPath("/finance-company-profile");
       }
+      console.log("response", response);
     } catch (error) {
       const { message } = error;
       const { code } = error.response?.data;

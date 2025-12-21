@@ -1,0 +1,4 @@
+{
+  "name": "assembled-frontend-assets",
+  "pages_build_output_dir": "./dist",
+}
