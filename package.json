@@ -24,6 +24,8 @@
     "frontend:build": "pnpm --filter @assembled-brands/frontend build",
     "server:dev": "wrangler dev",
     "server:build": "wrangler deploy",
+    "frontend:deploy": "pnpm --filter @assembled-brands/frontend run deploy",
+    "server:deploy": "pnpm --filter server deploy",
     "lint": "concurrently \"pnpm -r lint\" \"prettier --check ./packages --ignore-path .prettierignore\"",
     "lint:fix": "concurrently \"pnpm -r lint:fix\" \"prettier --write ./packages --ignore-path .prettierignore\"",
     "check": "pnpm --filter @assembled-brands/frontend check && pnpm --filter server check && tsc --noEmit",

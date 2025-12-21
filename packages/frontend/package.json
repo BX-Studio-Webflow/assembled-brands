@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development node ./bin/build.js",
     "build": "cross-env NODE_ENV=production node ./bin/build.js",
-    "deploy": "concurrently \"pnpm build\" \"pnpm wrangler pages deploy ./dist\"",
+    "deploy": "pnpm build && wrangler pages deploy --project-name assembled-frontend-assets",
     "check": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
