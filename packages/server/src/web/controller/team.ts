@@ -140,7 +140,7 @@ export class TeamController {
 				return serveBadRequest(c, 'You are not a host of any team');
 			}
 
-			const invitations = await this.service.getTeamInvitations(team.id);
+			const invitations = await this.service.getTeamInvitations(team.team_id);
 
 			return c.json(invitations);
 		} catch (error) {

@@ -209,6 +209,7 @@ export class TeamService {
 
 	/**
 	 * Retrieves a team by host ID
+	 * Does cross-linking the team members to get the host details and the team details
 	 * @param {number} userId - ID of the host
 	 * @returns {Promise<Object>} The team
 	 */
