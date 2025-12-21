@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.1
+
+### Patch Changes
+
+- dwefesf
+
 ## 0.3.0
 
 ### Minor Changes
