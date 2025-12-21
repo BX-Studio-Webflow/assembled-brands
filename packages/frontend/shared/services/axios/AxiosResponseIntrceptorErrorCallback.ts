@@ -6,8 +6,12 @@ import { navigateToPath } from '$utils/config';
 const UNAUTHORIZED_CODES = [401, 419, 440];
 
 const AxiosResponseIntrceptorErrorCallback = (error: AxiosError) => {
-  console.warn(error);
   const { response } = error;
+
+  // Skip if login request
+  if (window.location.pathname.includes('/login')) {
+    return Promise.reject(error);
+  }
 
   if (response && UNAUTHORIZED_CODES.includes(response.status)) {
     deleteCookie('accessToken');

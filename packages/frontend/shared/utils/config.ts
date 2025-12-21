@@ -1,6 +1,6 @@
 type DevMode = 'local' | 'remote-dev' | 'production';
 
-const devMode: DevMode = localStorage.getItem('dev-mode') as DevMode;
+const devMode: DevMode = localStorage.getItem('api-mode') as DevMode;
 
 const API_LOCAL_DEV_URL = 'http://127.0.0.1:8787';
 const API_REMOTE_DEV_URL = 'https://assembled-brands-dev.crystal-e8a.workers.dev';
@@ -20,13 +20,15 @@ export const appConfig = {
   REQUEST_HEADER_AUTH_KEY: 'Authorization',
 };
 
-//navigae to path depending on dev mode
+//navigate to path depending on dev mode
 export const navigateToPath = (path: string, skipDevMode: boolean = false) => {
+  let newPath: string = '';
   if (devMode === 'local' && !skipDevMode) {
-    window.location.href = `/dev${path}`;
+    newPath = `/dev${path}`;
   } else if (devMode === 'remote-dev' && !skipDevMode) {
-    window.location.href = `/dev${path}`;
+    newPath = `/dev${path}`;
   } else {
-    window.location.href = `/${path}`;
+    newPath = `/${path}`;
   }
+  window.location.assign(newPath);
 };
