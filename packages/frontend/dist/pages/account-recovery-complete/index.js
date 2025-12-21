@@ -2761,7 +2761,7 @@ var queryElement = (selector, scope = document) => {
 };
 
 // pages/account-recovery-complete/index.ts
-var initLoginPage = () => {
+var initAccountRecoveryCompletePage = () => {
   const form = document.querySelector('[dev-target="reset-form"]');
   if (!form) {
     console.error('Login form not found. Element: [dev-target="reset-form"] not found');
@@ -2859,6 +2859,10 @@ var initLoginPage = () => {
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initLoginPage();
+  try {
+    initAccountRecoveryCompletePage();
+  } catch (error) {
+    console.error(error);
+  }
 });
 //# sourceMappingURL=index.js.map

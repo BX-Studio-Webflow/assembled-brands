@@ -4,7 +4,7 @@ import { apiForgotPassword } from 'shared/services/AuthService';
 import { isValidEmail } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
-const initLoginPage = () => {
+const initAccountRecoveryInitiatePage = () => {
   const form = document.querySelector('[dev-target="reset-form"]');
   if (!form) {
     console.error('Login form not found. Element: [dev-target="reset-form"] not found');
@@ -64,5 +64,9 @@ const initLoginPage = () => {
 
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initLoginPage();
+  try {
+    initAccountRecoveryInitiatePage();
+  } catch (error) {
+    console.error(error);
+  }
 });

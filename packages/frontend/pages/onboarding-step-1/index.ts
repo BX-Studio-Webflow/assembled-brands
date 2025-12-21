@@ -122,5 +122,9 @@ const initOnboardingStep1Page = () => {
 
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initOnboardingStep1Page();
+  try {
+    initOnboardingStep1Page();
+  } catch (error) {
+    console.error(error);
+  }
 });

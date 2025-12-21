@@ -2773,7 +2773,7 @@ var isValidEmail = (email) => {
 };
 
 // pages/account-recovery-initiate/index.ts
-var initLoginPage = () => {
+var initAccountRecoveryInitiatePage = () => {
   const form = document.querySelector('[dev-target="reset-form"]');
   if (!form) {
     console.error('Login form not found. Element: [dev-target="reset-form"] not found');
@@ -2822,6 +2822,10 @@ var initLoginPage = () => {
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initLoginPage();
+  try {
+    initAccountRecoveryInitiatePage();
+  } catch (error) {
+    console.error(error);
+  }
 });
 //# sourceMappingURL=index.js.map

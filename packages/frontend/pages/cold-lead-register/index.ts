@@ -75,6 +75,11 @@ const initColdLeadRegisterPage = () => {
   });
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-  initColdLeadRegisterPage();
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  try {
+    initColdLeadRegisterPage();
+  } catch (error) {
+    console.error(error);
+  }
 });

@@ -145,5 +145,9 @@ const initOnboardingStep3Page = () => {
 
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initOnboardingStep3Page();
+  try {
+    initOnboardingStep3Page();
+  } catch (error) {
+    console.error(error);
+  }
 });

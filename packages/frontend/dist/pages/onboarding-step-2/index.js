@@ -2868,6 +2868,10 @@ var initOnboardingStep2Page = () => {
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initOnboardingStep2Page();
+  try {
+    initOnboardingStep2Page();
+  } catch (error) {
+    console.error(error);
+  }
 });
 //# sourceMappingURL=index.js.map

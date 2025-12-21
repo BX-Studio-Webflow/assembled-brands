@@ -2882,7 +2882,7 @@ var constructNavBarClasses = () => {
 };
 
 // pages/finance-docs-accounts-inventory/index.ts
-var initAccountsInventoryPage = async () => {
+var initFinanceDocsAccountsInventoryPage = async () => {
   constructNavBarClasses();
   processMiddleware();
   const result = await progressFinancialWizardPercentage();
@@ -3206,6 +3206,10 @@ var initAccountsInventoryPage = async () => {
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initAccountsInventoryPage();
+  try {
+    initFinanceDocsAccountsInventoryPage();
+  } catch (error) {
+    console.error(error);
+  }
 });
 //# sourceMappingURL=index.js.map

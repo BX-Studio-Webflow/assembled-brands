@@ -344,5 +344,9 @@ const initEcommercePerformancePage = async () => {
 
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initEcommercePerformancePage();
+  try {
+    initEcommercePerformancePage();
+  } catch (error) {
+    console.error(error);
+  }
 });

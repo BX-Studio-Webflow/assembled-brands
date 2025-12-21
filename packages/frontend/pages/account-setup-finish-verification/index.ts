@@ -5,7 +5,7 @@ import { setCookie } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
 import { queryElement } from '$utils/selectors';
 
-const initLoginPage = () => {
+const initAccountSetupFinishVerificationPage = () => {
   const form = document.querySelector('[dev-target="reset-form"]');
   if (!form) {
     console.error('Login form not found. Element: [dev-target="reset-form"] not found');
@@ -132,5 +132,9 @@ const initLoginPage = () => {
 
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initLoginPage();
+  try {
+    initAccountSetupFinishVerificationPage();
+  } catch (error) {
+    console.error(error);
+  }
 });

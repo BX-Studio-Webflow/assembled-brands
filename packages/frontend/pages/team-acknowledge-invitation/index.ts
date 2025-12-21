@@ -58,5 +58,9 @@ const TeamMembersPage = async () => {
 
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  TeamMembersPage();
+  try {
+    TeamMembersPage();
+  } catch (error) {
+    console.error(error);
+  }
 });

@@ -3022,6 +3022,10 @@ var initFinancialCompanyProfilePage = async () => {
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initFinancialCompanyProfilePage();
+  try {
+    initFinancialCompanyProfilePage();
+  } catch (error) {
+    console.error(error);
+  }
 });
 //# sourceMappingURL=index.js.map

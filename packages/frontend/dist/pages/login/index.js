@@ -2875,6 +2875,10 @@ var initLoginPage = () => {
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initLoginPage();
+  try {
+    initLoginPage();
+  } catch (error) {
+    console.error(error);
+  }
 });
 //# sourceMappingURL=index.js.map

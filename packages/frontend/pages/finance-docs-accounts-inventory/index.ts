@@ -9,7 +9,7 @@ import { navigateToPath } from '$utils/config';
 import { constructNavBarClasses, progressFinancialWizardPercentage } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
-const initAccountsInventoryPage = async () => {
+const initFinanceDocsAccountsInventoryPage = async () => {
   constructNavBarClasses();
   processMiddleware();
   const result = await progressFinancialWizardPercentage();
@@ -421,5 +421,9 @@ const initAccountsInventoryPage = async () => {
 
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initAccountsInventoryPage();
+  try {
+    initFinanceDocsAccountsInventoryPage();
+  } catch (error) {
+    console.error(error);
+  }
 });

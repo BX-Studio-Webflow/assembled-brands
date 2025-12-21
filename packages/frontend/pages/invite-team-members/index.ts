@@ -191,5 +191,9 @@ const initInviteTeamMembersPage = async () => {
 
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initInviteTeamMembersPage();
+  try {
+    initInviteTeamMembersPage();
+  } catch (error) {
+    console.error(error);
+  }
 });

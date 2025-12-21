@@ -3206,6 +3206,10 @@ var initTeamOwnershipPage = async () => {
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initTeamOwnershipPage();
+  try {
+    initTeamOwnershipPage();
+  } catch (error) {
+    console.error(error);
+  }
 });
 //# sourceMappingURL=index.js.map

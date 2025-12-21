@@ -2761,7 +2761,7 @@ var queryElement = (selector, scope = document) => {
 };
 
 // pages/account-setup-finish-verification/index.ts
-var initLoginPage = () => {
+var initAccountSetupFinishVerificationPage = () => {
   const form = document.querySelector('[dev-target="reset-form"]');
   if (!form) {
     console.error('Login form not found. Element: [dev-target="reset-form"] not found');
@@ -2864,6 +2864,10 @@ var initLoginPage = () => {
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initLoginPage();
+  try {
+    initAccountSetupFinishVerificationPage();
+  } catch (error) {
+    console.error(error);
+  }
 });
 //# sourceMappingURL=index.js.map
