@@ -1,102 +1,152 @@
-# Release & Deployment Process
+# Release & Publish Process
 
-This project uses [Changesets](https://github.com/changesets/changesets) for automated version management and deployments.
+This repository uses **Changesets** and **GitHub Actions** to automate versioning, tagging, building, and publishing packages to npm. The process minimizes manual work while ensuring consistent and traceable releases.
 
-## How It Works
+---
 
-1. **Create Changeset**: When you make changes, create a changeset describing them
-2. **Version Bump**: When PRs are merged to `master`, Changesets automatically creates a version bump PR
-3. **Version & Deploy**: When the version PR is merged, it automatically:
-   - Creates a git tag (e.g., `v1.0.0`)
-   - Triggers deployment to Cloudflare Pages
+## Prerequisites
 
-## Creating a Changeset
+* `pnpm` installed locally
+* Access to push branches and open pull requests
+* GitHub repository secrets configured:
 
-When you make changes that should be released:
+  * `PAT` – Personal Access Token with `contents` and `pull-requests` permissions
+  * `NPM_TOKEN` – npm access token with publish permissions
 
-```bash
-pnpm changeset
-```
+---
 
-You'll be prompted to:
-- Select which packages changed
-- Choose the type of change (major, minor, patch)
-- Write a summary of the changes
+## Manual Release Preparation (Fix Branch)
 
-This creates a file in `.changeset/` that describes your changes.
+All releases must start from a **fix branch**.
 
-## Release Workflow
+1. From the **root directory**, generate a changeset:
 
-### Automatic Process
+   ```bash
+   pnpm changeset
+   ```
 
-1. **Make changes** → Create changeset with `pnpm changeset`
-2. **Commit and push** → Merge PR to `master`
-3. **Version PR created** → Changesets bot creates a PR with version bumps
-4. **Merge version PR** → Automatically:
-   - Bumps package versions
-   - Updates CHANGELOG.md
-   - Creates git tag (e.g., `v1.0.0`)
-   - **Deploys to Cloudflare Pages** 🚀
+   During this step:
 
-### Manual Process
+   * Select the affected package(s)
+   * Choose the correct version bump (patch / minor / major)
+   * Write a clear description of the change
 
-If you need to manually trigger:
+2. Apply the version updates locally:
 
-```bash
-# Version packages (creates version bump PR)
-pnpm changeset:version
-```
+   ```bash
+   pnpm changeset version
+   ```
 
-## Deployment
+3. Commit and push your changes:
 
-Deployment happens automatically when:
-- ✅ A version tag is created (after changesets publishes)
-- ✅ You manually trigger the workflow
+   ```bash
+   git add .
+   git commit -m "chore: prepare release"
+   git push
+   ```
 
-The frontend is automatically built and deployed to Cloudflare Pages.
+4. Open a Pull Request targeting the `main` branch and merge it.
 
-## Required Secrets
+---
 
-### For Deploying to Cloudflare Pages (required)
-- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with Pages:Edit permissions
-- `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare account ID
+## Automated Release (on `main`)
 
-## GitHub Actions Workflows
+When changes are merged into `main`, the **Release & Publish** GitHub Action is triggered automatically.
 
-- **`.github/workflows/release.yml`**: Handles version bumping and tag creation
-- **`.github/workflows/deploy.yml`**: Handles deployment to Cloudflare Pages
-- **`.github/workflows/ci.yml`**: Runs tests and linting on PRs
+---
 
-## Example Workflow
+## GitHub Actions Workflow
 
-```bash
-# 1. Make your changes
-git checkout -b feature/my-feature
-# ... make changes ...
+### Trigger
 
-# 2. Create changeset
-pnpm changeset
-# Select: patch/minor/major
-# Write: "Added new feature X"
+The workflow runs on:
 
-# 3. Commit and push
-git add .
-git commit -m "feat: add new feature X"
-git push origin feature/my-feature
+* Pushes to the `main` branch
+* Manual invocation via `workflow_dispatch`
 
-# 4. Create PR and merge to master
-# → Version PR is created automatically
-# → Merge version PR
-# → Deployment happens automatically! 🎉
-```
+Concurrency is enforced per branch to avoid overlapping releases.
 
-## Troubleshooting
+---
 
-### Changesets not creating version PR
-- Ensure GitHub Actions has write permissions (Settings > Actions > General > Workflow permissions)
-- Check that changeset files exist in `.changeset/` directory
+### Workflow Steps
 
-### Deployment fails
-- Verify Cloudflare credentials are correct
-- Check that the `packages/frontend/dist` directory exists after build
-- Ensure Cloudflare Pages project `assembled-frontend-assets` exists
+1. **Checkout Repository**
+
+   * Full git history is fetched
+   * Authentication is done using a Personal Access Token (PAT)
+
+2. **Setup Environment**
+
+   * Node.js `22.x`
+   * pnpm `10.11.1`
+   * Dependencies installed via pnpm
+
+3. **Version Packages**
+
+   * Runs:
+
+     ```bash
+     pnpm changeset version
+     ```
+   * Commits version changes with:
+
+     ```
+     chore: version packages
+     ```
+   * Creates or updates a Changesets release PR if required
+
+4. **Create Git Tag**
+
+   * Reads the version from:
+
+     ```
+     packages/frontend/package.json
+     ```
+   * Creates an annotated git tag:
+
+     ```
+     vX.Y.Z
+     ```
+   * Pushes the tag if it does not already exist
+
+5. **Build Frontend Package**
+
+   ```bash
+   pnpm --filter @assembled-brands/frontend build
+   ```
+
+6. **Authenticate npm**
+
+   * Uses `NPM_TOKEN` to authenticate with the npm registry
+
+7. **Publish to npm**
+
+   * Publishes the frontend package as a public npm package:
+
+     ```
+     @assembled-brands/frontend
+     ```
+
+---
+
+## Release Outcome
+
+After a successful workflow run:
+
+* ✅ Versions are updated and committed
+* ✅ A git tag (`vX.Y.Z`) is created
+* ✅ The frontend package is built successfully
+* ✅ The package is published to npm
+
+---
+
+## Summary
+
+This release flow provides:
+
+* Automated semantic versioning
+* Safe and repeatable releases
+* Traceability through git commits and tags
+* Zero manual publishing steps
+
+All contributors should follow this process to ensure consistent and reliable releases.

@@ -13,8 +13,8 @@ permissions:
   pull-requests: write
 
 jobs:
-  version-and-publish:
-    name: Version & Publish Packages
+  publish:
+    name: Build & Publish
     runs-on: ubuntu-latest
 
     steps:
@@ -38,33 +38,8 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Version Packages
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          version: pnpm changeset version
-          commit: 'chore: version packages'
-          title: 'chore: version packages'
-        env:
-          PAT: ${{ secrets.PAT }}
-          GITHUB_TOKEN: ${{ secrets.PAT }}
-
-      - name: Create Git Tag
-        if: steps.changesets.outputs.hasChangesets == 'false'
-        env:
-          PAT: ${{ secrets.PAT }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          VERSION=$(node -p "require('./packages/frontend/package.json').version")
-          if ! git rev-parse "v${VERSION}" >/dev/null 2>&1; then
-            git tag -a "v${VERSION}" -m "Release v${VERSION}"
-            git push https://x-access-token:${PAT}@github.com/${{ github.repository }} "v${VERSION}"
-          fi
-
       - name: Build Frontend
         run: pnpm --filter @assembled-brands/frontend build
-
 
       - name: Authenticate npm
         run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
