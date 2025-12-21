@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.2.1
+
+### Patch Changes
+
+- 7e1fd84: fix: new deployments
+
 ## 0.2.0
 
 ### Minor Changes
