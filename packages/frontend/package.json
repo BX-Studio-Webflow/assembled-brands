@@ -1,9 +1,10 @@
 {
   "name": "@assembled-brands/frontend",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "main": "./index.ts",
+  "files": ["dist"],
   "types": "./index.ts",
   "scripts": {
     "dev": "cross-env NODE_ENV=development node ./bin/build.js",

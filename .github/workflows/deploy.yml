@@ -1,4 +1,4 @@
-name: Deploy
+name: Deploy to Node Package Manager
 
 on:
   push:
@@ -7,25 +7,25 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy-frontend:
-    name: Deploy Frontend to Cloudflare Pages
+  publish-frontend:
+    name: Publish Frontend to NPM
     runs-on: ubuntu-latest
-    environment:
-      name: production
+
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.11.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
-          cache: pnpm
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.1
 
       - name: Install Dependencies
         run: pnpm install --no-frozen-lockfile
@@ -33,11 +33,9 @@ jobs:
       - name: Build Frontend
         run: pnpm --filter @assembled-brands/frontend build
 
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1.5.0
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: assembled-frontend-assets
-          directory: packages/frontend/dist
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish to npm
+        run: |
+          cd packages/frontend
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
