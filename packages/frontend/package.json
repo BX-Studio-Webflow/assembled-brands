@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "main": "./index.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "types": "./index.ts",
   "scripts": {
     "dev": "cross-env NODE_ENV=development node ./bin/build.js",
