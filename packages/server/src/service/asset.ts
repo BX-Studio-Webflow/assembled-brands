@@ -3,7 +3,7 @@ import { eq, like } from 'drizzle-orm';
 import type { AssetRepository } from '../repository/asset.js';
 import type { Asset, NewAsset } from '../schema/schema.js';
 import { assetsSchema } from '../schema/schema.js';
-import { createGoogleJWT, generateAssetKey, getKeyFromUrl } from '../util/string.ts';
+import { createGoogleJWT, generateAssetKey, getKeyFromUrl, normalizeFolderName } from '../util/string.ts';
 import type { AssetQuery } from '../web/validator/asset.js';
 import type { S3Service } from './s3.js';
 
@@ -511,9 +511,10 @@ export class AssetService {
 
 	async getOrCreateFolder(folderName: string, parentId: string): Promise<string> {
 		const accessToken = await this.getGoogleAccessToken();
+		const normalizedName = normalizeFolderName(folderName);
 
 		const query = encodeURIComponent(
-			`name='${folderName}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+			`name='${normalizedName}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
 		);
 
 		const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id)&supportsAllDrives=true`, {
@@ -531,7 +532,7 @@ export class AssetService {
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
-				name: folderName,
+				name: normalizedName,
 				mimeType: 'application/vnd.google-apps.folder',
 				parents: [parentId],
 			}),

@@ -265,3 +265,15 @@ function pemToArrayBuffer(pem: string) {
 	for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
 	return arr.buffer;
 }
+
+export const normalizeFolderName = (name: string): string => {
+	return name
+		.trim() // Remove leading/trailing spaces
+		.toLowerCase() // Case-insensitive
+		.replace(/[/\\:*?"<>|]/g, '-') // Replace forbidden characters with hyphen
+		.replace(/\s+/g, '-') // Replace spaces with hyphens
+		.replace(/--+/g, '-') // Collapse multiple hyphens
+		.replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+		.replace(/\s+/g, ' ') // Collapse multiple spaces to single space
+		.replace(/-+/g, '-'); // Collapse multiple hyphens
+};
