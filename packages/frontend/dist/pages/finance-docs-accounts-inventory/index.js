@@ -2617,9 +2617,8 @@ var {
 var devMode = localStorage.getItem("api-mode");
 var API_LOCAL_DEV_URL = "http://127.0.0.1:8787";
 var API_REMOTE_DEV_URL = "https://assembled-brands-dev.crystal-e8a.workers.dev";
-var API_PROD_URL = "https://assembled-brands-prod.crystal-e8a.workers.dev";
 var appConfig = {
-  apiBaseUrl: devMode === "local" ? API_LOCAL_DEV_URL : devMode === "remote-dev" ? API_REMOTE_DEV_URL : API_PROD_URL,
+  apiBaseUrl: devMode === "local" ? API_LOCAL_DEV_URL : API_REMOTE_DEV_URL,
   apiVersion: "/api/v1",
   accessTokenPersistStrategy: "cookie",
   TOKEN_NAME_IN_STORAGE: "accessToken",
