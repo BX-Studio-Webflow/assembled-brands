@@ -85,7 +85,6 @@ const TeamMembersPage = async () => {
   }
 };
 
-window.Webflow ||= [];
-window.Webflow.push(() => {
+document.addEventListener('DOMContentLoaded', () => {
   TeamMembersPage();
 });

@@ -4,7 +4,7 @@ import { apiColdLeadRegister } from 'shared/services/AuthService';
 import { isValidEmail } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
-const initLoginPage = () => {
+const initColdLeadRegisterPage = () => {
   const form = document.querySelector('[dev-target="signup-form"]');
   if (!form) {
     console.error('Login form not found. Element: [dev-target="signup-form"] not found');
@@ -75,7 +75,6 @@ const initLoginPage = () => {
   });
 };
 
-window.Webflow ||= [];
-window.Webflow.push(() => {
-  initLoginPage();
+document.addEventListener('DOMContentLoaded', () => {
+  initColdLeadRegisterPage();
 });
