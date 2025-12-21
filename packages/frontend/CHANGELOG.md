@@ -1,5 +1,17 @@
 # @assembled-brands/frontend
 
+## 0.4.0
+
+### Minor Changes
+
+- 160547c: ig
+
+### Patch Changes
+
+- b951b55: fix minor
+- ddde10c: firx path
+- 9e77707: FIX: PATH
+
 ## 0.2.2
 
 ### Patch Changes
