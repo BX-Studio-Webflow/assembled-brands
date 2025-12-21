@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.2.2
+
+### Patch Changes
+
+- 4efc7ab: fir patch
+
 ## 0.2.1
 
 ### Patch Changes
