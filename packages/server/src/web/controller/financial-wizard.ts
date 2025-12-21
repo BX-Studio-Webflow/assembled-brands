@@ -298,30 +298,11 @@ export class FinancialWizardController {
 				return serveBadRequest(c, 'Google client email or private key not set');
 			}
 
-			// Get the file from the request
-			const formData = await c.req.formData();
-			const file = formData.get('file') as File | null;
-
-			if (!file) {
-				return serveBadRequest(c, 'No file provided. Please send a file with the key "file"');
-			}
-
-			// Get file data
-			const fileData = await file.arrayBuffer();
-			const fileName = file.name || 'uploaded-file';
-			const mimeType = file.type || 'application/octet-stream';
-
 			// Upload to Google Drive using asset service
 			const folderId = env.GOOGLE_DRIVE_FOLDER_ID || undefined;
-			const uploadedFile = await this.assetService.uploadToGoogleDrive(fileData, fileName, mimeType, folderId, 'Test Business');
-
+			const folder = await this.assetService.getOrCreateFolder('Test Upload Folder', folderId);
 			return serveData(c, {
-				message: 'File uploaded to Google Drive successfully',
-				file: {
-					id: uploadedFile.id,
-					name: uploadedFile.name,
-					webViewLink: uploadedFile.webViewLink,
-				},
+				folder,
 			});
 		} catch (error) {
 			logger.error(error);
