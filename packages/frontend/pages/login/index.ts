@@ -100,7 +100,7 @@ const initLoginPage = () => {
       } else if (onboardingIsComplete && currentOnboardingStep === 3) {
         navigateToPath('/finance-company-profile');
       }
-
+      console.log('response', response);
       //const financialWizardPage = response.financialWizardProgress.current_page;
     } catch (error) {
       const { message } = error as AxiosError;
