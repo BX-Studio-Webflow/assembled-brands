@@ -94,10 +94,10 @@ export class AuthController {
 			const token = await encode(user.id, user.email);
 			const serializedUser = await serializeUser(user);
 			return c.json({
-				token,
+				token: token,
 				user: serializedUser,
-				financialWizardProgress,
-				onboardingProgress,
+				financialWizardProgress: financialWizardProgress,
+				onboardingProgress: onboardingProgress,
 			});
 		} catch (err) {
 			logger.error(err);

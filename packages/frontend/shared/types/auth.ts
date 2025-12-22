@@ -63,8 +63,8 @@ export type Token = {
 export type SignInResponse = {
   token: string;
   user: User;
-  financialWizardProgress: FinancialWizardProgressResponse;
-  onboardingProgress: OnboardingProgressResponse;
+  financialWizardProgress: FinancialWizardProgressResponse | null | undefined;
+  onboardingProgress: OnboardingProgressResponse | undefined;
 };
 
 export type SignUpResponse = {
