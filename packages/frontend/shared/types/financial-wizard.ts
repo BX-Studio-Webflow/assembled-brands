@@ -65,7 +65,7 @@ export type FinancialDocument = {
 
 // Progress Response
 export type FinancialWizardProgressResponse = {
-  current_page: string;
+  current_page: FinancialDocumentBody['page'];
   is_complete: boolean;
   percentage: number;
   company_profile: Business | null;

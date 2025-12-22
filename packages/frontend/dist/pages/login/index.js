@@ -2841,6 +2841,8 @@ var initLoginPage = () => {
       setCookie("accessToken", response.token, 10);
       const currentOnboardingStep = response.onboardingProgress?.current_step;
       const onboardingIsComplete = response.onboardingProgress?.is_complete;
+      const currentfinancialPage = response.financialWizardProgress?.current_page;
+      const financialWizardComplete = response.financialWizardProgress?.is_complete;
       if (!response.onboardingProgress) {
         navigateToPath("/onboarding-step-1");
       } else if (!onboardingIsComplete && currentOnboardingStep === 1) {
@@ -2849,8 +2851,20 @@ var initLoginPage = () => {
         navigateToPath("/onboarding-step-2");
       } else if (!onboardingIsComplete && currentOnboardingStep === 3) {
         navigateToPath("/onboarding-step-3");
-      } else if (onboardingIsComplete && currentOnboardingStep === 3) {
+      } else if (!response.financialWizardProgress) {
         navigateToPath("/finance-company-profile");
+      } else if (!financialWizardComplete && currentfinancialPage === "company-profile") {
+        navigateToPath("/finance-company-profile");
+      } else if (!financialWizardComplete && currentfinancialPage === "financial-overview") {
+        navigateToPath("/finance-financial-overview");
+      } else if (!financialWizardComplete && currentfinancialPage === "financial-reports") {
+        navigateToPath("/finance-docs-financial-reports");
+      } else if (!financialWizardComplete && currentfinancialPage === "accounts-inventory") {
+        navigateToPath("/finance-docs-accounts-and-inventory");
+      } else if (!financialWizardComplete && currentfinancialPage === "ecommerce-performance") {
+        navigateToPath("/finance-docs-ecommerce-performance");
+      } else if (!financialWizardComplete && currentfinancialPage === "team-ownership") {
+        navigateToPath("/finance-docs-team-and-ownership");
       }
     } catch (error) {
       const { message } = error;

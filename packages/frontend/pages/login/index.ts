@@ -90,6 +90,17 @@ const initLoginPage = () => {
 
       const currentOnboardingStep = response.onboardingProgress?.current_step;
       const onboardingIsComplete = response.onboardingProgress?.is_complete;
+
+      const currentfinancialPage = response.financialWizardProgress?.current_page;
+      const financialWizardComplete = response.financialWizardProgress?.is_complete;
+      /**
+       * TODO
+       * The current logic is state-based, not flow-based.
+       * It always redirects to the saved step, even if that step is already completed. What you want is:
+       * If current step/page is complete → go to the next step
+       * If not complete → stay on (or redirect to) the current step
+       * For each step, backend should provide current_step_completed: boolean
+       */
       if (!response.onboardingProgress) {
         navigateToPath('/onboarding-step-1');
       } else if (!onboardingIsComplete && currentOnboardingStep === 1) {
@@ -98,10 +109,21 @@ const initLoginPage = () => {
         navigateToPath('/onboarding-step-2');
       } else if (!onboardingIsComplete && currentOnboardingStep === 3) {
         navigateToPath('/onboarding-step-3');
-      } else if (onboardingIsComplete && currentOnboardingStep === 3) {
+      } else if (!response.financialWizardProgress) {
         navigateToPath('/finance-company-profile');
+      } else if (!financialWizardComplete && currentfinancialPage === 'company-profile') {
+        navigateToPath('/finance-company-profile');
+      } else if (!financialWizardComplete && currentfinancialPage === 'financial-overview') {
+        navigateToPath('/finance-financial-overview');
+      } else if (!financialWizardComplete && currentfinancialPage === 'financial-reports') {
+        navigateToPath('/finance-docs-financial-reports');
+      } else if (!financialWizardComplete && currentfinancialPage === 'accounts-inventory') {
+        navigateToPath('/finance-docs-accounts-and-inventory');
+      } else if (!financialWizardComplete && currentfinancialPage === 'ecommerce-performance') {
+        navigateToPath('/finance-docs-ecommerce-performance');
+      } else if (!financialWizardComplete && currentfinancialPage === 'team-ownership') {
+        navigateToPath('/finance-docs-team-and-ownership');
       }
-      //const financialWizardPage = response.financialWizardProgress.current_page;
     } catch (error) {
       const { message } = error as AxiosError;
       const { code } = (error as AxiosError).response?.data as { code: string };
