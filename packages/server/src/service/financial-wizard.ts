@@ -116,7 +116,7 @@ export class FinancialWizardService {
 		page: string,
 		documentType: NewFinancialDocument['document_type'],
 		assetId: number,
-		notes?: string,
+		notes: string,
 	) {
 		try {
 			const application = await this.getOrCreateApplication(userId);
@@ -130,7 +130,7 @@ export class FinancialWizardService {
 				asset_id: assetId,
 				page: page as FinancialWizardPage,
 				document_type: documentType,
-				notes: notes || null,
+				notes: notes,
 			});
 
 			// Update current_page to the highest page in order

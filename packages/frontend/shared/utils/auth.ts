@@ -27,12 +27,12 @@ export const deleteCookie = (name: string): void => {
 export const processMiddleware = (): string | null => {
   const cookie = getCookie('accessToken');
   if (!cookie) {
-    navigateToPath('/login?error=unauthorized', false);
+    navigateToPath('/login?error=unauthorized');
   }
   return cookie;
 };
 
 export const logoutUser = () => {
   deleteCookie('accessToken');
-  navigateToPath('/login?error=logged-out', false);
+  navigateToPath('/login?error=logged-out');
 };

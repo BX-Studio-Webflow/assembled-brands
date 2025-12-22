@@ -66,6 +66,13 @@ export class FinancialWizardController {
 	 * @returns {Promise<Response>} Response containing uploaded document data
 	 * @throws {Error} When document upload fails
 	 */
+	/**
+	 * ✅ Scope
+    On upload, file should be routed to:
+    Correct company folder inside /Assembled Applications/[Company Name]/
+    Structured naming convention
+    Drive link captured
+	 */
 	public uploadDocument = async (c: Context) => {
 		try {
 			const user = await this.getUser(c);
@@ -74,7 +81,35 @@ export class FinancialWizardController {
 			}
 
 			const body: FinancialDocumentBody = await c.req.json();
-			const document = await this.service.uploadDocument(user.id, body.page, body.document_type, body.asset_id, body.notes);
+
+			// Upload to Google Drive using asset service
+			const rootFolderId = env.GOOGLE_DRIVE_FOLDER_ID || undefined;
+			const { file_data, file_name, file_mime_type, document_type, page } = body;
+
+			const fileData = Buffer.from(file_data, 'base64');
+
+			const business = await this.businessService.getBusinessByUserId(user.id);
+			if (!business) {
+				return serveBadRequest(c, 'Business not found for user');
+			}
+
+			// 1️⃣ Ensure 'Assembled Applications' exists
+			const assembledFolderId = await this.assetService.getOrCreateFolder('Assembled Applications', rootFolderId);
+
+			// 2️⃣ Ensure '[Company Name]' exists inside it
+			const companyFolderId = await this.assetService.getOrCreateFolder(business.legal_name, assembledFolderId);
+
+			const structuredName = `${document_type}-${page}-${Date.now()}-${file_name}`;
+
+			const uploadedFile = await this.assetService.uploadToGoogleDrive(fileData, structuredName, file_mime_type, companyFolderId);
+
+			const notes = {
+				id: uploadedFile.id,
+				name: uploadedFile.name,
+				webViewLink: uploadedFile.webViewLink,
+			};
+
+			const document = await this.service.uploadDocument(user.id, body.page, body.document_type, body.asset_id, String(notes));
 
 			return serveData(c, {
 				message: 'Document uploaded successfully',
@@ -263,30 +298,11 @@ export class FinancialWizardController {
 				return serveBadRequest(c, 'Google client email or private key not set');
 			}
 
-			// Get the file from the request
-			const formData = await c.req.formData();
-			const file = formData.get('file') as File | null;
-
-			if (!file) {
-				return serveBadRequest(c, 'No file provided. Please send a file with the key "file"');
-			}
-
-			// Get file data
-			const fileData = await file.arrayBuffer();
-			const fileName = file.name || 'uploaded-file';
-			const mimeType = file.type || 'application/octet-stream';
-
 			// Upload to Google Drive using asset service
 			const folderId = env.GOOGLE_DRIVE_FOLDER_ID || undefined;
-			const uploadedFile = await this.assetService.uploadToGoogleDrive(fileData, fileName, mimeType, folderId);
-
+			const folder = await this.assetService.getOrCreateFolder('Test Upload Folder', folderId);
 			return serveData(c, {
-				message: 'File uploaded to Google Drive successfully',
-				file: {
-					id: uploadedFile.id,
-					name: uploadedFile.name,
-					webViewLink: uploadedFile.webViewLink,
-				},
+				folder,
 			});
 		} catch (error) {
 			logger.error(error);

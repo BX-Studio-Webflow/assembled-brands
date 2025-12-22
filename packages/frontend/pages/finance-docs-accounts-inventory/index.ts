@@ -6,7 +6,11 @@ import type { FinancialDocumentBody } from 'shared/types/financial-wizard';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
-import { constructNavBarClasses, progressFinancialWizardPercentage } from '$utils/helpers';
+import {
+  constructNavBarClasses,
+  fileToBase64,
+  progressFinancialWizardPercentage,
+} from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const initFinanceDocsAccountsInventoryPage = async () => {
@@ -254,11 +258,16 @@ const initFinanceDocsAccountsInventoryPage = async () => {
       xhr.send(file);
     });
 
+    const base64 = await fileToBase64(file);
+
     // Step 3: Create financial document record
     const documentPayload: FinancialDocumentBody = {
       page: 'accounts-inventory',
       document_type: documentType,
       asset_id: assetId,
+      file_data: base64,
+      file_name: file.name,
+      file_mime_type: file.type,
     };
 
     await apiUploadFinancialDocument(documentPayload);

@@ -89,7 +89,7 @@ export class FinancialWizardRepository {
 			.insert(financialDocumentSchema)
 			.values({
 				...document,
-				notes: document.notes ?? 'New upload at ' + new Date().toISOString(),
+				notes: document.notes,
 				version: nextVersion,
 				is_current: true,
 			})

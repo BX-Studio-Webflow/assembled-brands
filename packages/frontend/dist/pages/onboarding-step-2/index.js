@@ -2625,16 +2625,16 @@ var appConfig = {
   TOKEN_TYPE: "Bearer",
   REQUEST_HEADER_AUTH_KEY: "Authorization"
 };
-var navigateToPath = (path, skipDevMode = false) => {
-  let newPath = "";
-  if (devMode === "local" && !skipDevMode) {
-    newPath = `/dev${path}`;
-  } else if (devMode === "remote-dev" && !skipDevMode) {
-    newPath = `/dev${path}`;
-  } else {
-    newPath = `/${path}`;
+var navigateToPath = (path) => {
+  if (!path) {
+    console.error("navigateToPath: path is empty or undefined");
+    return;
   }
-  window.location.assign(newPath);
+  const normalizedPath = path.replace(/^\/+/, "");
+  let finalPath = normalizedPath;
+  finalPath = `dev/${normalizedPath}`;
+  const newUrl = `${window.location.origin}/${finalPath}`;
+  window.location.assign(newUrl);
 };
 
 // shared/utils/auth.ts
@@ -2658,7 +2658,7 @@ var deleteCookie = (name) => {
 var processMiddleware = () => {
   const cookie = getCookie("accessToken");
   if (!cookie) {
-    navigateToPath("/login?error=unauthorized", false);
+    navigateToPath("/login?error=unauthorized");
   }
   return cookie;
 };
@@ -2698,7 +2698,7 @@ var AxiosResponseIntrceptorErrorCallback = (error) => {
   }
   if (response && UNAUTHORIZED_CODES.includes(response.status)) {
     deleteCookie("accessToken");
-    navigateToPath("/login?error=unauthorized", false);
+    navigateToPath("/login?error=unauthorized");
   }
 };
 var AxiosResponseIntrceptorErrorCallback_default = AxiosResponseIntrceptorErrorCallback;

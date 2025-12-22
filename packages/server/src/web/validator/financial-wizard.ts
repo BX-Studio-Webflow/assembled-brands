@@ -15,6 +15,9 @@ export type FinancialOverviewBody = z.infer<typeof financialOverviewSchema>;
 
 // Document Upload
 const documentUploadSchema = z.object({
+	file_data: z.string().min(1, 'File data is required'),
+	file_name: z.string().min(1, 'File name is required'),
+	file_mime_type: z.string().min(1, 'File MIME type is required'),
 	page: z.enum([
 		'company-profile',
 		'financial-overview',

@@ -88,10 +88,11 @@ const initLoginPage = () => {
 
       setCookie('accessToken', response.token, 10);
 
-      const currentOnboardingStep = response.onboardingProgress.current_step;
-      const onboardingIsComplete = response.onboardingProgress.is_complete;
-
-      if (!onboardingIsComplete && currentOnboardingStep === 1) {
+      const currentOnboardingStep = response.onboardingProgress?.current_step;
+      const onboardingIsComplete = response.onboardingProgress?.is_complete;
+      if (!response.onboardingProgress) {
+        navigateToPath('/onboarding-step-1');
+      } else if (!onboardingIsComplete && currentOnboardingStep === 1) {
         navigateToPath('/onboarding-step-1');
       } else if (!onboardingIsComplete && currentOnboardingStep === 2) {
         navigateToPath('/onboarding-step-2');
@@ -100,7 +101,6 @@ const initLoginPage = () => {
       } else if (onboardingIsComplete && currentOnboardingStep === 3) {
         navigateToPath('/finance-company-profile');
       }
-      console.log('response', response);
       //const financialWizardPage = response.financialWizardProgress.current_page;
     } catch (error) {
       const { message } = error as AxiosError;

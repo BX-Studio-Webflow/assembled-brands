@@ -266,7 +266,7 @@ export class Server {
 		//const authCheck = jwt({ secret: env.SECRET_KEY });
 
 		// Unauthenticated routes
-		google.post('/drive/test', financialWizardCtrl.testGoogleDrive);
+		google.get('/drive/test', financialWizardCtrl.testGoogleDrive);
 
 		api.route('/google', google);
 	}

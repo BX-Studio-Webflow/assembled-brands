@@ -15,15 +15,30 @@ export const appConfig = {
   REQUEST_HEADER_AUTH_KEY: 'Authorization',
 };
 
-//navigate to path depending on dev mode
-export const navigateToPath = (path: string, skipDevMode: boolean = false) => {
-  let newPath: string = '';
-  if (devMode === 'local' && !skipDevMode) {
-    newPath = `/dev${path}`;
-  } else if (devMode === 'remote-dev' && !skipDevMode) {
-    newPath = `/dev${path}`;
-  } else {
-    newPath = `/${path}`;
+export const navigateToPath = (path: string) => {
+  if (!path) {
+    console.error('navigateToPath: path is empty or undefined');
+    return;
   }
-  window.location.assign(newPath);
+
+  // Read dev mode from localStorage or default to 'prod'
+  //const devMode = localStorage.getItem('api-mode') || 'production';
+
+  // Normalize the path: remove any leading slashes
+  const normalizedPath = path.replace(/^\/+/, '');
+
+  // Determine the path based on devMode
+  let finalPath = normalizedPath;
+  /*
+  Disable check for now as we have only dev pages!!
+  TODO: Enable this check when we have production pages
+  if (!skipDevMode && (devMode === 'local' || devMode === 'remote-dev')) {
+    finalPath = `dev/${normalizedPath}`;
+  }*/
+  finalPath = `dev/${normalizedPath}`;
+
+  // Prepend the current origin to always stay on the same domain
+  const newUrl = `${window.location.origin}/${finalPath}`;
+
+  window.location.assign(newUrl);
 };

@@ -9,6 +9,9 @@ export type FinancialOverviewBody = {
 
 // Document Upload
 export type FinancialDocumentBody = {
+  file_data: string;
+  file_name: string;
+  file_mime_type: string;
   page:
     | 'company-profile'
     | 'financial-overview'

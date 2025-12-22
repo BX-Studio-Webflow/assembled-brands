@@ -3,7 +3,7 @@ import { eq, like } from 'drizzle-orm';
 import type { AssetRepository } from '../repository/asset.js';
 import type { Asset, NewAsset } from '../schema/schema.js';
 import { assetsSchema } from '../schema/schema.js';
-import { createGoogleJWT, generateAssetKey, getKeyFromUrl } from '../util/string.ts';
+import { createGoogleJWT, generateAssetKey, getKeyFromUrl, normalizeFolderName } from '../util/string.ts';
 import type { AssetQuery } from '../web/validator/asset.js';
 import type { S3Service } from './s3.js';
 
@@ -404,7 +404,7 @@ export class AssetService {
 		fileData: ArrayBuffer | Uint8Array,
 		fileName: string,
 		mimeType: string,
-		folderId?: string,
+		companyFolderId: string,
 	): Promise<{ id: string; name: string; webViewLink: string }> => {
 		const accessToken = await this.getGoogleAccessToken();
 
@@ -421,8 +421,8 @@ export class AssetService {
 			mimeType: mimeType,
 		};
 
-		if (folderId) {
-			metadata.parents = [folderId];
+		if (companyFolderId) {
+			metadata.parents = [companyFolderId];
 		}
 
 		// Upload using multipart upload for better compatibility
@@ -456,14 +456,17 @@ export class AssetService {
 			offset += part.length;
 		}
 
-		const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true', {
-			method: 'POST',
-			headers: {
-				Authorization: `Bearer ${accessToken}`,
-				'Content-Type': `multipart/related; boundary=${boundary}`,
+		const response = await fetch(
+			'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&fields=id,name,webViewLink',
+			{
+				method: 'POST',
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+					'Content-Type': `multipart/related; boundary=${boundary}`,
+				},
+				body: body,
 			},
-			body: body,
-		});
+		);
 
 		if (!response.ok) {
 			const error = await response.text();
@@ -499,4 +502,44 @@ export class AssetService {
 			webViewLink: webViewLink,
 		};
 	};
+	/**
+	 * Gets or creates a folder in Google Drive
+	 * @param {string} companyName - The name of the company (folder name)
+	 * @param {string} rootFolderId - The ID of the root folder to create the company folder in
+	 * @returns {Promise<string>} The ID of the company folder
+	 */
+
+	async getOrCreateFolder(folderName: string, parentId: string): Promise<string> {
+		const accessToken = await this.getGoogleAccessToken();
+		const normalizedName = normalizeFolderName(folderName);
+
+		const query = encodeURIComponent(
+			`name='${normalizedName}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+		);
+
+		const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id)&supportsAllDrives=true`, {
+			headers: { Authorization: `Bearer ${accessToken}` },
+		});
+
+		type FileResponse = { files: { id: string }[] };
+		const { files } = (await searchRes.json()) as FileResponse;
+		if (files?.length) return files[0].id;
+
+		// Create folder if not exists
+		const createRes = await fetch('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', {
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				name: normalizedName,
+				mimeType: 'application/vnd.google-apps.folder',
+				parents: [parentId],
+			}),
+		});
+		type Folder = { id: string };
+		const folder = (await createRes.json()) as Folder;
+		return folder.id;
+	}
 }
