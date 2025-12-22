@@ -15,7 +15,7 @@ const AxiosResponseIntrceptorErrorCallback = (error: AxiosError) => {
 
   if (response && UNAUTHORIZED_CODES.includes(response.status)) {
     deleteCookie('accessToken');
-    navigateToPath('/login?error=unauthorized', false);
+    navigateToPath('/login?error=unauthorized');
   }
 };
 

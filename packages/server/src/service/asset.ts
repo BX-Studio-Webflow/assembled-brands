@@ -521,7 +521,8 @@ export class AssetService {
 			headers: { Authorization: `Bearer ${accessToken}` },
 		});
 
-		const { files } = await searchRes.json();
+		type FileResponse = { files: { id: string }[] };
+		const { files } = (await searchRes.json()) as FileResponse;
 		if (files?.length) return files[0].id;
 
 		// Create folder if not exists
@@ -537,8 +538,8 @@ export class AssetService {
 				parents: [parentId],
 			}),
 		});
-
-		const folder = await createRes.json();
+		type Folder = { id: string };
+		const folder = (await createRes.json()) as Folder;
 		return folder.id;
 	}
 }

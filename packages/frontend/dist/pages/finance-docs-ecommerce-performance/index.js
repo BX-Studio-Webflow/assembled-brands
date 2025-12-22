@@ -2658,13 +2658,13 @@ var deleteCookie = (name) => {
 var processMiddleware = () => {
   const cookie = getCookie("accessToken");
   if (!cookie) {
-    navigateToPath("/login?error=unauthorized", false);
+    navigateToPath("/login?error=unauthorized");
   }
   return cookie;
 };
 var logoutUser = () => {
   deleteCookie("accessToken");
-  navigateToPath("/login?error=logged-out", false);
+  navigateToPath("/login?error=logged-out");
 };
 
 // shared/services/axios/AxiosRequestIntrceptorConfigCallback.ts
@@ -2702,7 +2702,7 @@ var AxiosResponseIntrceptorErrorCallback = (error) => {
   }
   if (response && UNAUTHORIZED_CODES.includes(response.status)) {
     deleteCookie("accessToken");
-    navigateToPath("/login?error=unauthorized", false);
+    navigateToPath("/login?error=unauthorized");
   }
 };
 var AxiosResponseIntrceptorErrorCallback_default = AxiosResponseIntrceptorErrorCallback;
