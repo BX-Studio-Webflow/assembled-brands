@@ -83,6 +83,10 @@ git push origin main
   - Install dependencies
   - Build frontend (`pnpm --filter @assembled-brands/frontend build`)
   - Publish package to npm
+  - If you merge a branch to main without changeset, the Release & Publish / Build & Publish (push) will Fail
+  - This is because you cannot publish over the previously published versions
+  - Thus changeset is required to bump version!!!
+
 
 After workflow completes, the frontend package is live on npm.
 

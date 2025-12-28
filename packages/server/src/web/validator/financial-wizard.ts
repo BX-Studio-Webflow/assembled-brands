@@ -103,4 +103,5 @@ export type FinancialWizardProgressResponse = {
 	accounts_inventory: FinancialDocumentProgress[];
 	ecommerce_performance: FinancialDocumentProgress[];
 	team_ownership: FinancialDocumentProgress[];
+	business: Business | null;
 };

@@ -2772,6 +2772,62 @@ var isValidEmail = (email) => {
 };
 
 // pages/login/index.ts
+var FINANCIAL_WIZARD_PAGES = [
+  "company-profile",
+  "financial-overview",
+  "financial-reports",
+  "accounts-inventory",
+  "ecommerce-performance",
+  "team-ownership"
+];
+var FINANCIAL_WIZARD_PAGE_TO_ROUTE = {
+  "company-profile": "/finance-company-profile",
+  "financial-overview": "/finance-financial-overview",
+  "financial-reports": "/finance-docs-financial-reports",
+  "accounts-inventory": "/finance-docs-accounts-and-inventory",
+  "ecommerce-performance": "/finance-docs-ecommerce-performance",
+  "team-ownership": "/finance-docs-team-and-ownership"
+};
+var isFinancialWizardStepComplete = (page, progress) => {
+  if (!progress) return false;
+  switch (page) {
+    case "company-profile":
+      return progress.company_profile !== null;
+    case "financial-overview":
+      return progress.financial_overview !== null;
+    case "financial-reports":
+      return progress.financial_reports.length > 0;
+    case "accounts-inventory":
+      return progress.accounts_inventory.length > 0;
+    case "ecommerce-performance":
+      return progress.ecommerce_performance.length > 0;
+    case "team-ownership":
+      return progress.team_ownership.length > 0;
+    default:
+      return false;
+  }
+};
+var getNextFinancialWizardStep = (progress) => {
+  if (!progress) {
+    return "/finance-company-profile";
+  }
+  const currentPage = progress.current_page;
+  const currentPageIndex = FINANCIAL_WIZARD_PAGES.indexOf(currentPage);
+  if (currentPageIndex === -1) {
+    return "/finance-company-profile";
+  }
+  const isCurrentStepComplete = isFinancialWizardStepComplete(currentPage, progress);
+  if (!isCurrentStepComplete) {
+    return FINANCIAL_WIZARD_PAGE_TO_ROUTE[currentPage] || "/finance-company-profile";
+  }
+  for (let i = currentPageIndex + 1; i < FINANCIAL_WIZARD_PAGES.length; i++) {
+    const page = FINANCIAL_WIZARD_PAGES[i];
+    if (!isFinancialWizardStepComplete(page, progress)) {
+      return FINANCIAL_WIZARD_PAGE_TO_ROUTE[page];
+    }
+  }
+  return null;
+};
 var initLoginPage = () => {
   const form = document.querySelector('[dev-target="login-form"]');
   if (!form) {
@@ -2841,30 +2897,28 @@ var initLoginPage = () => {
       setCookie("accessToken", response.token, 10);
       const currentOnboardingStep = response.onboardingProgress?.current_step;
       const onboardingIsComplete = response.onboardingProgress?.is_complete;
-      const currentfinancialPage = response.financialWizardProgress?.current_page;
-      const financialWizardComplete = response.financialWizardProgress?.is_complete;
       if (!response.onboardingProgress) {
         navigateToPath("/onboarding-step-1");
-      } else if (!onboardingIsComplete && currentOnboardingStep === 1) {
+        return;
+      }
+      if (!onboardingIsComplete && currentOnboardingStep === 1) {
         navigateToPath("/onboarding-step-1");
-      } else if (!onboardingIsComplete && currentOnboardingStep === 2) {
+        return;
+      }
+      if (!onboardingIsComplete && currentOnboardingStep === 2) {
         navigateToPath("/onboarding-step-2");
-      } else if (!onboardingIsComplete && currentOnboardingStep === 3) {
+        return;
+      }
+      if (!onboardingIsComplete && currentOnboardingStep === 3) {
         navigateToPath("/onboarding-step-3");
-      } else if (!response.financialWizardProgress) {
-        navigateToPath("/finance-company-profile");
-      } else if (!financialWizardComplete && currentfinancialPage === "company-profile") {
-        navigateToPath("/finance-company-profile");
-      } else if (!financialWizardComplete && currentfinancialPage === "financial-overview") {
-        navigateToPath("/finance-financial-overview");
-      } else if (!financialWizardComplete && currentfinancialPage === "financial-reports") {
-        navigateToPath("/finance-docs-financial-reports");
-      } else if (!financialWizardComplete && currentfinancialPage === "accounts-inventory") {
-        navigateToPath("/finance-docs-accounts-and-inventory");
-      } else if (!financialWizardComplete && currentfinancialPage === "ecommerce-performance") {
-        navigateToPath("/finance-docs-ecommerce-performance");
-      } else if (!financialWizardComplete && currentfinancialPage === "team-ownership") {
-        navigateToPath("/finance-docs-team-and-ownership");
+        return;
+      }
+      const nextFinancialWizardStep = getNextFinancialWizardStep(response.financialWizardProgress);
+      if (nextFinancialWizardStep) {
+        navigateToPath(nextFinancialWizardStep);
+      } else {
+        navigateToPath("/team-members");
+        return;
       }
     } catch (error) {
       const { message } = error;

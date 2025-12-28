@@ -40,7 +40,8 @@ export type UpdateSettingsNotificationBody = {
 export type User = {
   id: number;
   email: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   createdAt: string;
   is_verified: boolean;
   role: string;
