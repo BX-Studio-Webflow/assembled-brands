@@ -496,7 +496,7 @@ export class AuthController {
 		}
 
 		const serializedUser = await serializeUser(user);
-		return c.json({ user: serializedUser });
+		return c.json(serializedUser);
 	};
 
 	/**

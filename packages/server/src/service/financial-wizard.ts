@@ -200,12 +200,13 @@ export class FinancialWizardService {
 	public async getProgress(userId: number): Promise<FinancialWizardProgressResponse | null> {
 		try {
 			const application = await this.repo.findApplicationByUserId(userId);
+			const business = await this.repo.findBusinessByUserId(userId);
+
 			if (!application) {
 				return null;
 			}
 
-			const [business, overview, documents] = await Promise.all([
-				this.repo.findBusinessByUserId(userId),
+			const [overview, documents] = await Promise.all([
 				this.repo.findFinancialOverviewByApplicationId(application.id),
 				this.repo.findDocumentsByApplicationId(application.id, false),
 			]);
@@ -289,6 +290,7 @@ export class FinancialWizardService {
 				accounts_inventory: enrichedDocumentsByPage['accounts-inventory'] || [],
 				ecommerce_performance: enrichedDocumentsByPage['ecommerce-performance'] || [],
 				team_ownership: enrichedDocumentsByPage['team-ownership'] || [],
+				business,
 			};
 		} catch (error) {
 			logger.error(error);

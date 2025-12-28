@@ -133,11 +133,15 @@ export class FinancialWizardController {
 			if (!user) {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
-			const progress = await this.service.getProgress(user.id);
+			const [progress, business] = await Promise.all([
+				this.service.getProgress(user.id),
+				this.businessService.getBusinessByUserId(user.id),
+			]);
 			if (!progress) {
 				return serveData(c, {
 					message: 'No financial wizard progress found',
 					progress: null,
+					business,
 				});
 			}
 			return serveData(c, {

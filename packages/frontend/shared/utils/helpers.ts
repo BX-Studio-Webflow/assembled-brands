@@ -1,3 +1,4 @@
+import { apiGetUserMe } from 'shared/services/AuthService';
 import { apiGetFinancialProgress } from 'shared/services/FinancialWizardService';
 
 import { logoutUser } from './auth';
@@ -18,24 +19,40 @@ export const isValidEmail = (email: string) => {
 export const progressFinancialWizardPercentage = async () => {
   try {
     //get progress percentage
-    const response = await apiGetFinancialProgress();
+    const [financialProgress, person] = await Promise.all([
+      apiGetFinancialProgress(),
+      apiGetUserMe(),
+    ]);
 
-    const percentage = response?.percentage || 0;
+    const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement<HTMLDivElement>('[dev-target="progress-percentage-fill"]');
     const progressLabel = queryElement<HTMLDivElement>('[dev-target="progress-percentage-label"]');
+
+    const companyUsername = queryElement<HTMLDivElement>('[dev-target="user-name"]');
+    const companyEmail = queryElement<HTMLDivElement>('[dev-target="user-email"]');
+
     const logout = queryElement<HTMLButtonElement>('[dev-target="logout"]');
-    if (!progressFill || !progressLabel || !logout) {
+    if (!progressFill || !progressLabel || !logout || !companyUsername || !companyEmail) {
       console.error(
-        'Ensure [dev-target="progress-percentage-fill"], [dev-target="progress-percentage-label"], and [dev-target="logout"] are present.'
+        'Ensure [dev-target="progress-percentage-fill"], [dev-target="progress-percentage-label"], [dev-target="user-name"], [dev-target="user-email"], and [dev-target="logout"] are present.'
       );
       return;
     }
+
     progressFill.style.width = `${percentage}%`;
     progressLabel.textContent = `Progress ${percentage}%`;
+
     logout.addEventListener('click', () => {
       logoutUser();
     });
-    return response;
+
+    companyUsername.innerText =
+      financialProgress.business?.legal_name ||
+      (person.first_name || 'Full') + ' ' + (person.last_name || 'Name');
+    companyEmail.innerText =
+      financialProgress.business?.email || person.email || 'hello@company.com';
+
+    return financialProgress;
   } catch (error) {
     console.error('Failed to load financial wizard progress:', error);
   }

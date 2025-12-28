@@ -21,6 +21,7 @@ import type {
   UpdateUserProfileBody,
   UpdateUserProfileResponse,
   UploadProfileImageBody,
+  User,
   VerifyRegistrationBody,
   VerifyRegistrationResponse,
 } from '../types/auth';
@@ -74,8 +75,8 @@ export async function apiSaveBusinessDetails(data: BusinessDetails) {
   });
 }
 
-export async function apiGetUserMe<T>() {
-  return ApiService.fetchDataWithAxios<T>({
+export async function apiGetUserMe() {
+  return ApiService.fetchDataWithAxios<User>({
     url: '/user/me',
     method: 'get',
   });
