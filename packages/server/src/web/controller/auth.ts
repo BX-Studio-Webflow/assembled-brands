@@ -12,6 +12,7 @@ import type { BusinessService } from '../../service/business.js';
 import { FinancialWizardService } from '../../service/financial-wizard.ts';
 import { OnboardingWizardService } from '../../service/onboarding-wizard.ts';
 import type { S3Service } from '../../service/s3.js';
+import { TeamService } from '../../service/team.ts';
 import type { UserService } from '../../service/user.js';
 import { generateSecurePassword } from '../../util/string.ts';
 import type {
@@ -35,6 +36,7 @@ export class AuthController {
 	private userRepository: UserRepository;
 	private financialWizardService: FinancialWizardService;
 	private onboardingWizardService: OnboardingWizardService;
+	private teamService: TeamService;
 	constructor(
 		userService: UserService,
 		businessService: BusinessService,
@@ -43,6 +45,7 @@ export class AuthController {
 		userRepository: UserRepository,
 		financialWizardService: FinancialWizardService,
 		onboardingWizardService: OnboardingWizardService,
+		teamService: TeamService,
 	) {
 		this.service = userService;
 		this.businessService = businessService;
@@ -51,6 +54,7 @@ export class AuthController {
 		this.userRepository = userRepository;
 		this.financialWizardService = financialWizardService;
 		this.onboardingWizardService = onboardingWizardService;
+		this.teamService = teamService;
 	}
 
 	/**
@@ -86,9 +90,10 @@ export class AuthController {
 			}
 
 			//get progress
-			const [financialWizardProgress, onboardingProgress] = await Promise.all([
+			const [financialWizardProgress, onboardingProgress, teams] = await Promise.all([
 				this.financialWizardService.getProgress(user.id),
 				this.onboardingWizardService.getProgress(user.id),
+				this.teamService.getUserTeams(user.id),
 			]);
 
 			const token = await encode(user.id, user.email);
@@ -98,6 +103,7 @@ export class AuthController {
 				user: serializedUser,
 				financialWizardProgress: financialWizardProgress,
 				onboardingProgress: onboardingProgress,
+				teams: teams,
 			});
 		} catch (err) {
 			logger.error(err);

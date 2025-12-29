@@ -1,5 +1,11 @@
 # server
 
+## 0.0.3
+
+### Patch Changes
+
+- fix: member access
+
 ## 0.0.2
 
 ### Patch Changes

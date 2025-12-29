@@ -1,39 +1,39 @@
 import { createMiddleware } from 'hono/factory';
 
 import { TeamService } from '../../service/team';
+import { ERRORS, serveBadRequest } from '../controller/resp/error';
 
-/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export const teamAccess = (teamService: TeamService) =>
 	createMiddleware(async (c, next) => {
 		const teamId = c.req.header('X-Team-Id');
 
 		if (teamId) {
-			/*const { email } = c.get('jwtPayload');
+			const { email } = c.get('jwtPayload');
 
-      // Get team with its members
-      const { members } = await teamService.getTeamMembers(Number(teamId));
+			// Get team with its members
+			const { members } = await teamService.getTeamMembers(Number(teamId));
 
-      if (!members) {
-        return serveBadRequest(c, ERRORS.TEAM_NOT_FOUND);
-      }
+			if (!members) {
+				return serveBadRequest(c, ERRORS.TEAM_NOT_FOUND);
+			}
 
-      // Convert members object to array and find host
-      const membersArray = Object.values(members);
-      const hostMember = membersArray.find((member) => member.role === 'host');
+			// Convert members object to array and find host
+			const membersArray = Object.values(members);
+			const teamHost = membersArray.find((member) => member.role === 'host');
 
-      if (!hostMember) {
-        return serveBadRequest(c, ERRORS.TEAM_NOT_FOUND);
-      }
+			if (!teamHost) {
+				return serveBadRequest(c, ERRORS.TEAM_NOT_FOUND);
+			}
 
-      // Check if user is a member
-      const isMember = membersArray.some((member) => member?.user?.email === email);
-      if (!isMember) {
-        return serveBadRequest(c, ERRORS.TEAM_MEMBER_NOT_FOUND);
-      }
+			// Check if user is a member
+			const isMember = membersArray.some((member) => member?.user?.email === email);
+			if (!isMember) {
+				return serveBadRequest(c, ERRORS.TEAM_MEMBER_NOT_FOUND);
+			}
 
-      // Set the host and team ID in the context for downstream use
-      c.set('hostId', hostMember.user_id);
-      c.set('teamId', Number(teamId));*/
+			// Set the host and team ID in the context for downstream use
+			c.set('hostId', teamHost.user_id);
+			c.set('teamId', Number(teamId));
 		}
 
 		await next();

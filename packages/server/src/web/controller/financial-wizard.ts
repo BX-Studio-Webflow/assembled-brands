@@ -2,6 +2,7 @@ import { env } from 'cloudflare:workers';
 import type { Context } from 'hono';
 
 import { logger } from '../../lib/logger.js';
+import type { User } from '../../schema/schema.js';
 import type { AssetService } from '../../service/asset.js';
 import { BusinessService } from '../../service/business.js';
 import { FinancialWizardPage, FinancialWizardService } from '../../service/financial-wizard.js';
@@ -35,6 +36,18 @@ export class FinancialWizardController {
 	}
 
 	/**
+	 * Gets the effective user ID for the request (hostId if team access, otherwise user.id)
+	 * @param {Context} c - The Hono context
+	 * @param {User} user - The authenticated user
+	 * @returns {number} The effective user ID to use for service calls
+	 * @private
+	 */
+	private getEffectiveUserId(c: Context, user: User): number {
+		const hostId = c.get('hostId');
+		return hostId || user.id;
+	}
+
+	/**
 	 * Saves Financial Overview
 	 * @param {Context} c - The Hono context containing financial overview data
 	 * @returns {Promise<Response>} Response containing saved overview data
@@ -48,7 +61,8 @@ export class FinancialWizardController {
 			}
 
 			const body: FinancialOverviewBody = await c.req.json();
-			const overview = await this.service.saveFinancialOverview(user.id, body);
+			const effectiveUserId = this.getEffectiveUserId(c, user);
+			const overview = await this.service.saveFinancialOverview(effectiveUserId, body);
 
 			return serveData(c, {
 				message: 'Financial overview saved successfully',
@@ -88,7 +102,8 @@ export class FinancialWizardController {
 
 			const fileData = Buffer.from(file_data, 'base64');
 
-			const business = await this.businessService.getBusinessByUserId(user.id);
+			const effectiveUserId = this.getEffectiveUserId(c, user);
+			const business = await this.businessService.getBusinessByUserId(effectiveUserId);
 			if (!business) {
 				return serveBadRequest(c, 'Business not found for user');
 			}
@@ -109,7 +124,7 @@ export class FinancialWizardController {
 				webViewLink: uploadedFile.webViewLink,
 			};
 
-			const document = await this.service.uploadDocument(user.id, body.page, body.document_type, body.asset_id, String(notes));
+			const document = await this.service.uploadDocument(effectiveUserId, body.page, body.document_type, body.asset_id, String(notes));
 
 			return serveData(c, {
 				message: 'Document uploaded successfully',
@@ -133,9 +148,11 @@ export class FinancialWizardController {
 			if (!user) {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
+
+			const effectiveUserId = this.getEffectiveUserId(c, user);
 			const [progress, business] = await Promise.all([
-				this.service.getProgress(user.id),
-				this.businessService.getBusinessByUserId(user.id),
+				this.service.getProgress(effectiveUserId),
+				this.businessService.getBusinessByUserId(effectiveUserId),
 			]);
 			if (!progress) {
 				return serveData(c, {
@@ -179,12 +196,13 @@ export class FinancialWizardController {
 				return serveBadRequest(c, 'Invalid page identifier');
 			}
 
-			const application = await this.service.findByUserId(user.id);
+			const effectiveUserId = this.getEffectiveUserId(c, user);
+			const application = await this.service.findByUserId(effectiveUserId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
-			const documents = await this.service.getDocumentsByPage(user.id, page);
+			const documents = await this.service.getDocumentsByPage(effectiveUserId, page);
 
 			return serveData(c, {
 				documents,
@@ -208,13 +226,14 @@ export class FinancialWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const application = await this.service.findByUserId(user.id);
+			const effectiveUserId = this.getEffectiveUserId(c, user);
+			const application = await this.service.findByUserId(effectiveUserId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
 			const body: UpdatePageBody = await c.req.json();
-			const updatedApplication = await this.service.updatePage(user.id, body.page);
+			const updatedApplication = await this.service.updatePage(effectiveUserId, body.page);
 
 			return serveData(c, {
 				message: 'Page updated successfully',
@@ -239,12 +258,13 @@ export class FinancialWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const application = await this.service.findByUserId(user.id);
+			const effectiveUserId = this.getEffectiveUserId(c, user);
+			const application = await this.service.findByUserId(effectiveUserId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
-			const completedApplication = await this.service.completeApplication(user.id);
+			const completedApplication = await this.service.completeApplication(effectiveUserId);
 
 			return serveData(c, {
 				message: 'Financial wizard completed successfully',
@@ -269,7 +289,8 @@ export class FinancialWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const application = await this.service.findByUserId(user.id);
+			const effectiveUserId = this.getEffectiveUserId(c, user);
+			const application = await this.service.findByUserId(effectiveUserId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
@@ -279,7 +300,7 @@ export class FinancialWizardController {
 				return serveBadRequest(c, 'Invalid document ID');
 			}
 
-			await this.service.deleteDocument(user.id, documentId);
+			await this.service.deleteDocument(effectiveUserId, documentId);
 
 			return serveData(c, {
 				message: 'Document deleted successfully',

@@ -2685,7 +2685,7 @@ var AxiosRequestIntrceptorConfigCallback = (config) => {
       config.headers[appConfig.REQUEST_HEADER_AUTH_KEY] = `${appConfig.TOKEN_TYPE} ${accessToken}`;
     }
   }
-  const teamId = localStorage.getItem("team_id");
+  const teamId = localStorage.getItem("x-team-id");
   if (teamId) {
     config.headers["X-Team-Id"] = teamId;
   }
@@ -2788,6 +2788,14 @@ async function apiGetUserMe() {
   });
 }
 
+// shared/services/TeamService.ts
+var apiGetMyTeams = () => {
+  return ApiService_default.fetchDataWithAxios({
+    url: "/team/my-teams",
+    method: "get"
+  });
+};
+
 // shared/utils/selectors.ts
 var queryElement = (selector, scope = document) => {
   return scope.querySelector(selector);
@@ -2796,10 +2804,12 @@ var queryElement = (selector, scope = document) => {
 // shared/utils/helpers.ts
 var progressFinancialWizardPercentage = async () => {
   try {
-    const [financialProgress, person] = await Promise.all([
+    const [financialProgress, person, teams] = await Promise.all([
       apiGetFinancialProgress(),
-      apiGetUserMe()
+      apiGetUserMe(),
+      apiGetMyTeams()
     ]);
+    console.table(teams);
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement('[dev-target="progress-percentage-fill"]');
     const progressLabel = queryElement('[dev-target="progress-percentage-label"]');

@@ -199,8 +199,10 @@ export class FinancialWizardService {
 	 */
 	public async getProgress(userId: number): Promise<FinancialWizardProgressResponse | null> {
 		try {
-			const application = await this.repo.findApplicationByUserId(userId);
-			const business = await this.repo.findBusinessByUserId(userId);
+			const [application, business] = await Promise.all([
+				this.repo.findApplicationByUserId(userId),
+				this.repo.findBusinessByUserId(userId),
+			]);
 
 			if (!application) {
 				return null;

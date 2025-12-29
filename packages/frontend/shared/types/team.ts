@@ -143,3 +143,12 @@ export type GetInvitationResponse = {
     email: string;
   } | null;
 };
+
+export type TeamMemberRecord = {
+  id: number;
+  created_at: Date | null;
+  updated_at: Date | null;
+  role: 'host' | 'member' | null;
+  user_id: number;
+  team_id: number;
+};

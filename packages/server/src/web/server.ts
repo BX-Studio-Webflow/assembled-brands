@@ -123,6 +123,7 @@ export class Server {
 			userRepo,
 			financialWizardService,
 			onboardingWizardService,
+			teamService,
 		);
 		const assetController = new AssetController(assetService, userService, emailService, notificationService);
 
@@ -142,8 +143,8 @@ export class Server {
 		this.registerAssetRoutes(api, assetController, teamService);
 		this.registerBusinessRoutes(api, businessController);
 		this.registerTeamRoutes(api, teamController);
-		this.registerFinancialWizardRoutes(api, financialWizardController);
-		this.registerOnboardingRoutes(api, onboardingWizardController);
+		this.registerFinancialWizardRoutes(api, financialWizardController, teamService);
+		this.registerOnboardingRoutes(api, onboardingWizardController, teamService);
 		this.registerGoogleRoutes(api, financialWizardController);
 	}
 
@@ -226,12 +227,13 @@ export class Server {
 		api.route('/team', team);
 	}
 
-	private registerFinancialWizardRoutes(api: Hono, financialWizardCtrl: FinancialWizardController) {
+	private registerFinancialWizardRoutes(api: Hono, financialWizardCtrl: FinancialWizardController, teamService: TeamService) {
 		const financialWizard = new Hono();
 		const authCheck = jwt({ secret: env.SECRET_KEY });
 
 		// All routes require authentication
 		financialWizard.use(authCheck);
+		financialWizard.use(teamAccess(teamService));
 
 		financialWizard.post('/financial-overview', financialOverviewValidator, financialWizardCtrl.saveFinancialOverview);
 		financialWizard.post('/document', documentUploadValidator, financialWizardCtrl.uploadDocument);
@@ -244,12 +246,13 @@ export class Server {
 		api.route('/financial-wizard', financialWizard);
 	}
 
-	private registerOnboardingRoutes(api: Hono, onboardingWizardCtrl: OnboardingWizardController) {
+	private registerOnboardingRoutes(api: Hono, onboardingWizardCtrl: OnboardingWizardController, teamService: TeamService) {
 		const onboardingWizard = new Hono();
 		const authCheck = jwt({ secret: env.SECRET_KEY });
 
 		// All routes require authentication
 		onboardingWizard.use(authCheck);
+		onboardingWizard.use(teamAccess(teamService));
 
 		onboardingWizard.post('/step1', onboardingStep1Validator, onboardingWizardCtrl.saveStep1);
 		onboardingWizard.post('/step2', onboardingStep2Validator, onboardingWizardCtrl.saveStep2);
