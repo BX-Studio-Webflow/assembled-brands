@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.5
+
+### Patch Changes
+
+- fix: member access
+
 ## 0.3.4
 
 ### Patch Changes
