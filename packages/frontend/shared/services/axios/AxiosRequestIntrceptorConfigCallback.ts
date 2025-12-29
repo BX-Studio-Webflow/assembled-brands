@@ -27,7 +27,7 @@ const AxiosRequestIntrceptorConfigCallback = (config: InternalAxiosRequestConfig
   }
 
   // Dynamically set X-Team-Id header from localStorage
-  const teamId = localStorage.getItem('team_id');
+  const teamId = localStorage.getItem('x-team-id');
   if (teamId) {
     config.headers['X-Team-Id'] = teamId;
   }

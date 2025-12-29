@@ -1,5 +1,6 @@
 import type { FinancialWizardProgressResponse } from './financial-wizard';
 import type { OnboardingProgressResponse } from './onboarding';
+import type { TeamMemberRecord } from './team';
 
 export type SignInCredential = {
   email: string;
@@ -66,6 +67,7 @@ export type SignInResponse = {
   user: User;
   financialWizardProgress: FinancialWizardProgressResponse | null | undefined;
   onboardingProgress: OnboardingProgressResponse | undefined;
+  teams: TeamMemberRecord[];
 };
 
 export type SignUpResponse = {

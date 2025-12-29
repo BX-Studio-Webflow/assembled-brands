@@ -123,6 +123,7 @@ export class Server {
 			userRepo,
 			financialWizardService,
 			onboardingWizardService,
+			teamService,
 		);
 		const assetController = new AssetController(assetService, userService, emailService, notificationService);
 

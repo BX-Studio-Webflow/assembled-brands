@@ -1,5 +1,6 @@
 import { apiGetUserMe } from 'shared/services/AuthService';
 import { apiGetFinancialProgress } from 'shared/services/FinancialWizardService';
+import { apiGetMyTeams } from 'shared/services/TeamService';
 
 import { logoutUser } from './auth';
 import { queryElement } from './selectors';
@@ -19,10 +20,13 @@ export const isValidEmail = (email: string) => {
 export const progressFinancialWizardPercentage = async () => {
   try {
     //get progress percentage
-    const [financialProgress, person] = await Promise.all([
+    const [financialProgress, person, teams] = await Promise.all([
       apiGetFinancialProgress(),
       apiGetUserMe(),
+      apiGetMyTeams(),
     ]);
+
+    console.table(teams);
 
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement<HTMLDivElement>('[dev-target="progress-percentage-fill"]');

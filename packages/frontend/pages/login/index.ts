@@ -183,6 +183,11 @@ const initLoginPage = () => {
 
       setCookie('accessToken', response.token, 10);
 
+      //get the first team that the user is not a host and autoselect it
+      const team = response.teams.find((team) => team.role !== 'host');
+      if (team && team.team_id) {
+        localStorage.setItem('x-team-id', team.team_id.toString());
+      }
       const currentOnboardingStep = response.onboardingProgress?.current_step;
       const onboardingIsComplete = response.onboardingProgress?.is_complete;
 
