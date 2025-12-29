@@ -19,9 +19,9 @@ export const teamAccess = (teamService: TeamService) =>
 
 			// Convert members object to array and find host
 			const membersArray = Object.values(members);
-			const hostMember = membersArray.find((member) => member.role === 'host');
+			const teamHost = membersArray.find((member) => member.role === 'host');
 
-			if (!hostMember) {
+			if (!teamHost) {
 				return serveBadRequest(c, ERRORS.TEAM_NOT_FOUND);
 			}
 
@@ -32,7 +32,7 @@ export const teamAccess = (teamService: TeamService) =>
 			}
 
 			// Set the host and team ID in the context for downstream use
-			c.set('hostId', hostMember.user_id);
+			c.set('hostId', teamHost.user_id);
 			c.set('teamId', Number(teamId));
 		}
 

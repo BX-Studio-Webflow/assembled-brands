@@ -2895,10 +2895,6 @@ var initLoginPage = () => {
         password: password.value
       });
       setCookie("accessToken", response.token, 10);
-      const team = response.teams.find((team2) => team2.role !== "host");
-      if (team && team.team_id) {
-        localStorage.setItem("x-team-id", team.team_id.toString());
-      }
       const currentOnboardingStep = response.onboardingProgress?.current_step;
       const onboardingIsComplete = response.onboardingProgress?.is_complete;
       if (!response.onboardingProgress) {

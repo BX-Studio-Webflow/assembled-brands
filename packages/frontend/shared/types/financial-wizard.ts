@@ -78,7 +78,6 @@ export type FinancialWizardProgressResponse = {
   accounts_inventory: FinancialDocument[];
   ecommerce_performance: FinancialDocument[];
   team_ownership: FinancialDocument[];
-  business: Business | undefined | null;
 };
 
 // API Response Types

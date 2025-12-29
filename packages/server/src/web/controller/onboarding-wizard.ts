@@ -1,6 +1,7 @@
 import type { Context } from 'hono';
 
 import { logger } from '../../lib/logger.js';
+import type { User } from '../../schema/schema.js';
 import type { OnboardingWizardService } from '../../service/onboarding-wizard.js';
 import type { UserService } from '../../service/user.js';
 import type { UpdateStepBody } from '../validator/financial-wizard.js';
@@ -30,6 +31,18 @@ export class OnboardingWizardController {
 	}
 
 	/**
+	 * Gets the effective user ID for the request (hostId if team access, otherwise user.id)
+	 * @param {Context} c - The Hono context
+	 * @param {User} user - The authenticated user
+	 * @returns {number} The effective user ID to use for service calls
+	 * @private
+	 */
+	private getEffectiveUserId(c: Context, user: User): number {
+		const hostId = c.get('hostId');
+		return hostId || user.id;
+	}
+
+	/**
 	 * Saves Step 1: Company Info
 	 * @param {Context} c - The Hono context containing step 1 data
 	 * @returns {Promise<Response>} Response containing saved application data
@@ -43,7 +56,8 @@ export class OnboardingWizardController {
 			}
 
 			const body: OnboardingStep1Body = await c.req.json();
-			const application = await this.service.saveStep1(user.id, body);
+			const effectiveUserId = this.getEffectiveUserId(c, user);
+			const application = await this.service.saveStep1(effectiveUserId, body);
 
 			return serveData(c, {
 				message: 'Step 1 saved successfully',
@@ -68,13 +82,14 @@ export class OnboardingWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const application = await this.service.findByUserId(user.id);
+			const effectiveUserId = this.getEffectiveUserId(c, user);
+			const application = await this.service.findByUserId(effectiveUserId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
 			const body: OnboardingStep2Body = await c.req.json();
-			const updatedApplication = await this.service.saveStep2(user.id, body);
+			const updatedApplication = await this.service.saveStep2(effectiveUserId, body);
 
 			return serveData(c, {
 				message: 'Step 2 saved successfully',
@@ -99,13 +114,14 @@ export class OnboardingWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const application = await this.service.findByUserId(user.id);
+			const effectiveUserId = this.getEffectiveUserId(c, user);
+			const application = await this.service.findByUserId(effectiveUserId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
 			const body: OnboardingStep3Body = await c.req.json();
-			const updatedApplication = await this.service.saveStep3(user.id, body);
+			const updatedApplication = await this.service.saveStep3(effectiveUserId, body);
 
 			return serveData(c, {
 				message: 'Step 3 saved successfully',
@@ -130,7 +146,8 @@ export class OnboardingWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const application = await this.service.getProgress(user.id);
+			const effectiveUserId = this.getEffectiveUserId(c, user);
+			const application = await this.service.getProgress(effectiveUserId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
@@ -186,13 +203,14 @@ export class OnboardingWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const application = await this.service.findByUserId(user.id);
+			const effectiveUserId = this.getEffectiveUserId(c, user);
+			const application = await this.service.findByUserId(effectiveUserId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
 			const body: UpdateStepBody = await c.req.json();
-			const updatedApplication = await this.service.updateStep(user.id, body.step);
+			const updatedApplication = await this.service.updateStep(effectiveUserId, body.step);
 
 			return serveData(c, {
 				message: 'Step updated successfully',
@@ -217,12 +235,13 @@ export class OnboardingWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const application = await this.service.findByUserId(user.id);
+			const effectiveUserId = this.getEffectiveUserId(c, user);
+			const application = await this.service.findByUserId(effectiveUserId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
-			const completedApplication = await this.service.completeApplication(user.id);
+			const completedApplication = await this.service.completeApplication(effectiveUserId);
 
 			return serveData(c, {
 				message: 'Onboarding completed successfully',
