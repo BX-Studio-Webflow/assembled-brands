@@ -210,88 +210,50 @@ export class FinancialWizardService {
 
 			const [overview, documents] = await Promise.all([
 				this.repo.findFinancialOverviewByApplicationId(application.id),
-				this.repo.findDocumentsByApplicationId(application.id, false),
+				this.assetService.findDocumentsWithAssetsByApplicationId(application.id),
 			]);
 
-			// Collect all unique asset IDs and fetch them in parallel
-			const uniqueAssetIds = [...new Set(documents.map((doc) => doc.asset_id))];
-			const assets = await Promise.all(uniqueAssetIds.map((assetId) => this.assetService.getAsset(assetId)));
-
-			// Create a map of asset_id -> asset for quick lookup
-			const assetMap = new Map<number, (typeof assets)[0]>();
-			assets.forEach((asset, index) => {
-				if (asset) {
-					assetMap.set(uniqueAssetIds[index], asset);
-				}
-			});
-
-			// Group documents by page and enrich with asset data
+			// Group documents by page (already enriched)
 			const documentsByPage: Record<string, typeof documents> = {};
-			for (const doc of documents) {
-				const page = doc.page || 'financial-reports';
-				if (!documentsByPage[page]) {
-					documentsByPage[page] = [];
-				}
-				documentsByPage[page].push(doc);
-			}
 
-			const enrichedDocumentsByPage: Record<
-				string,
-				Array<{
-					id: number;
-					application_id: number;
-					asset_id: number;
-					page: string;
-					document_type: string;
-					is_current: boolean;
-					version: number;
-					notes: string | null;
-					created_at: Date | null;
-					updated_at: Date | null;
-					asset_url: string | null;
-					asset_name: string | null;
-				}>
-			> = {};
-			for (const [page, docs] of Object.entries(documentsByPage)) {
-				enrichedDocumentsByPage[page] = docs.map((doc) => {
-					const asset = assetMap.get(doc.asset_id);
-					return {
-						...doc,
-						is_current: doc.is_current ?? false,
-						version: doc.version ?? 1,
-						asset_url: asset?.asset_url || null,
-						asset_name: asset?.asset_name || null,
-					};
+			for (const doc of documents) {
+				const page = doc.page ?? 'financial-reports';
+				(documentsByPage[page] ??= []).push({
+					...doc,
+					is_current: doc.is_current ?? false,
+					version: doc.version ?? 1,
+					asset_url: doc.asset_url ?? null,
+					asset_name: doc.asset_name ?? null,
 				});
 			}
 
-			const currentPage = (application.current_page || 'company-profile') as FinancialWizardPage;
 			const financialOverviewData = overview
 				? {
-						revenue_last_12_months: overview.revenue_last_12_months || null,
-						net_income_last_12_months: overview.net_income_last_12_months || null,
-						projected_revenue_next_12_months: overview.projected_revenue_next_12_months || null,
+						revenue_last_12_months: overview.revenue_last_12_months ?? null,
+						net_income_last_12_months: overview.net_income_last_12_months ?? null,
+						projected_revenue_next_12_months: overview.projected_revenue_next_12_months ?? null,
 					}
 				: null;
 
-			// Calculate percentage based on actual completion status
 			const percentage = this.calculatePercentage(
-				application.is_complete || false,
-				business || null,
+				application.is_complete ?? false,
+				business ?? null,
 				financialOverviewData,
-				enrichedDocumentsByPage,
+				documentsByPage,
 			);
 
 			return {
-				current_page: currentPage,
-				is_complete: application.is_complete || false,
-				company_profile: business || null,
+				current_page: (application.current_page ?? 'company-profile') as FinancialWizardPage,
+				is_complete: application.is_complete ?? false,
+				company_profile: business ?? null,
 				financial_overview: financialOverviewData,
 				percentage,
-				financial_reports: enrichedDocumentsByPage['financial-reports'] || [],
-				accounts_inventory: enrichedDocumentsByPage['accounts-inventory'] || [],
-				ecommerce_performance: enrichedDocumentsByPage['ecommerce-performance'] || [],
-				team_ownership: enrichedDocumentsByPage['team-ownership'] || [],
+
+				financial_reports: documentsByPage['financial-reports'] ?? [],
+				accounts_inventory: documentsByPage['accounts-inventory'] ?? [],
+				ecommerce_performance: documentsByPage['ecommerce-performance'] ?? [],
+				team_ownership: documentsByPage['team-ownership'] ?? [],
+
 				business,
 			};
 		} catch (error) {

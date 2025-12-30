@@ -73,21 +73,6 @@ const updateStepSchema = z.object({
 export const updateStepValidator = zValidator('json', updateStepSchema);
 export type UpdateStepBody = z.infer<typeof updateStepSchema>;
 
-type FinancialDocumentProgress = {
-	id: number;
-	application_id: number;
-	asset_id: number;
-	page: string;
-	document_type: string;
-	is_current: boolean;
-	version: number;
-	notes: string | null;
-	created_at: Date | null;
-	updated_at: Date | null;
-	asset_url: string | null;
-	asset_name: string | null;
-};
-
 // Progress Response Type
 export type FinancialWizardProgressResponse = {
 	current_page: string;
@@ -99,9 +84,24 @@ export type FinancialWizardProgressResponse = {
 		net_income_last_12_months: string | null;
 		projected_revenue_next_12_months: string | null;
 	} | null;
-	financial_reports: FinancialDocumentProgress[];
-	accounts_inventory: FinancialDocumentProgress[];
-	ecommerce_performance: FinancialDocumentProgress[];
-	team_ownership: FinancialDocumentProgress[];
+	financial_reports: DocumentWithAsset[];
+	accounts_inventory: DocumentWithAsset[];
+	ecommerce_performance: DocumentWithAsset[];
+	team_ownership: DocumentWithAsset[];
 	business: Business | null;
+};
+
+export type DocumentWithAsset = {
+	id: number;
+	application_id: number;
+	asset_id: number | null;
+	page: string | null;
+	document_type: string;
+	is_current: boolean | null;
+	version: number | null;
+	notes: string | null;
+	created_at: Date | null;
+	updated_at: Date | null;
+	asset_url: string | null;
+	asset_name: string | null;
 };
