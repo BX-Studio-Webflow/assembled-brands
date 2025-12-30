@@ -80,13 +80,7 @@ export class FinancialWizardController {
 	 * @returns {Promise<Response>} Response containing uploaded document data
 	 * @throws {Error} When document upload fails
 	 */
-	/**
-	 * ✅ Scope
-    On upload, file should be routed to:
-    Correct company folder inside /Assembled Applications/[Company Name]/
-    Structured naming convention
-    Drive link captured
-	 */
+
 	public uploadDocument = async (c: Context) => {
 		try {
 			const user = await this.getUser(c);

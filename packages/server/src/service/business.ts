@@ -166,16 +166,7 @@ export class BusinessService {
 				const company_folder_id = await this.assetService.CreateFolder(businessData.legal_name, env.GOOGLE_DRIVE_FOLDER_ID);
 
 				//create all needed drive folders and store in advance
-				const pages = [
-					'company-profile',
-					'financial-overview',
-					'financial-reports',
-					'accounts-inventory',
-					'ecommerce-performance',
-					'team-ownership',
-					'legal',
-					'due-diligence',
-				];
+				const pages = ['financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership', 'legal', 'due-diligence'];
 				const folderPromises = pages.map((page) => this.assetService.CreateFolder(page, company_folder_id));
 
 				const folderIds = await Promise.all(folderPromises);
