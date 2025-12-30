@@ -202,7 +202,8 @@ export class FinancialWizardRepository {
 			| 'ecommerce-performance'
 			| 'team-ownership'
 			| 'legal'
-			| 'due-diligence',
+			| 'due-diligence'
+			| 'financial-screener',
 		business_id: number,
 	) {
 		const result = await this.db

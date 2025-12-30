@@ -301,6 +301,7 @@ export const financialStepFoldersSchema = sqliteTable('financial_step_folders', 
 			'team-ownership',
 			'legal',
 			'due-diligence',
+			'financial-screener',
 		],
 	}).notNull(),
 

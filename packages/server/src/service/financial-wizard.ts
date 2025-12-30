@@ -417,7 +417,7 @@ export class FinancialWizardService {
 	public async insertFinancialStepFolders(records: NewFinancialStepFolder[]): Promise<void> {
 		try {
 			if (!records || records.length < 1) {
-				throw new Error('Please avails some pages');
+				throw new Error('Please avail some pages');
 			}
 			await this.repo.insertFinancialStepFolders(records);
 		} catch (error) {
@@ -441,7 +441,8 @@ export class FinancialWizardService {
 			| 'ecommerce-performance'
 			| 'team-ownership'
 			| 'legal'
-			| 'due-diligence',
+			| 'due-diligence'
+			| 'financial-screener',
 		businessId: number,
 	) {
 		try {
