@@ -1,5 +1,11 @@
 # server
 
+## 0.0.4
+
+### Patch Changes
+
+- 0349edd: fix: patch
+
 ## 0.0.3
 
 ### Patch Changes
