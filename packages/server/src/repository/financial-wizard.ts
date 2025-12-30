@@ -1,11 +1,18 @@
 import { and, desc, eq, max } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
-import type { NewFinancialDocument, NewFinancialOverview, NewFinancialWizardApplication, schema } from '../schema/schema.js';
+import type {
+	NewFinancialDocument,
+	NewFinancialOverview,
+	NewFinancialStepFolder,
+	NewFinancialWizardApplication,
+	schema,
+} from '../schema/schema.js';
 import {
 	businessSchema,
 	financialDocumentSchema,
 	financialOverviewSchema,
+	financialStepFoldersSchema,
 	financialWizardApplicationSchema,
 	userSchema,
 } from '../schema/schema.js';
@@ -170,5 +177,52 @@ export class FinancialWizardRepository {
 	public async findBusinessByUserId(userId: number) {
 		const result = await this.db.select().from(businessSchema).where(eq(businessSchema.user_id, userId)).limit(1);
 		return result[0];
+	}
+
+	/**
+	 * Insert Financial step folder
+	 * @param {record} NewFinancialStepFolder - Record to be saved
+	 * @returns {Reord : FinancialStepFolder} The business if found
+	 */
+	public async insertfinancialStepFolder(record: NewFinancialStepFolder) {
+		const result = await this.db.insert(financialStepFoldersSchema).values(record).returning();
+		return result[0];
+	}
+	/**
+	 * Insert Financial step folder
+	 * @param {record} NewFinancialStepFolder - Record to be saved
+	 * @returns {Reord : FinancialStepFolder} The business if found
+	 */
+	public async findFolderIDByPageAndBusiness(
+		page:
+			| 'company-profile'
+			| 'financial-overview'
+			| 'financial-reports'
+			| 'accounts-inventory'
+			| 'ecommerce-performance'
+			| 'team-ownership'
+			| 'legal'
+			| 'due-diligence',
+		business_id: number,
+	) {
+		const result = await this.db
+			.select()
+			.from(financialStepFoldersSchema)
+			.where(and(eq(financialStepFoldersSchema.page, page), eq(financialStepFoldersSchema.business_id, business_id)))
+			.limit(1);
+		return result[0];
+	}
+
+	/**
+	 * Insert multiple Financial Step Folders
+	 * @param {NewFinancialStepFolder[]} records - Array of records to insert
+	 * @returns {FinancialStepFolder[]} Array of inserted folders
+	 */
+	public async insertFinancialStepFolders(records: NewFinancialStepFolder[]) {
+		if (!records || records.length === 0) return [];
+
+		const result = await this.db.insert(financialStepFoldersSchema).values(records).returning();
+
+		return result;
 	}
 }

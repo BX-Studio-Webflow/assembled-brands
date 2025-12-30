@@ -167,7 +167,7 @@ export const constructAdminSelect = async () => {
     }
 
     const applications = await apiAdminGetApplications();
-
+    select.innerHTML = '';
     // Render options
     applications.forEach((app) => {
       const name = app.first_name || '' + app.last_name || '';

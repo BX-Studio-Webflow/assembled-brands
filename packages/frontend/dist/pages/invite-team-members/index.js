@@ -2860,6 +2860,7 @@ var constructAdminSelect = async () => {
       return;
     }
     const applications = await apiAdminGetApplications();
+    select.innerHTML = "";
     applications.forEach((app) => {
       const name = app.first_name || "" + app.last_name || "";
       const option = document.createElement("option");
