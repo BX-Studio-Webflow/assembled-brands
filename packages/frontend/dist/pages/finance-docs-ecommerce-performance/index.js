@@ -2664,7 +2664,17 @@ var processMiddleware = () => {
 };
 var logoutUser = () => {
   deleteCookie("accessToken");
+  localStorage.removeItem("x-team-id");
   navigateToPath("/login?error=logged-out");
+};
+var getUserRole = () => {
+  const admin = localStorage.getItem("user");
+  const user = admin && JSON.parse(admin);
+  return user && user?.role;
+};
+var isAdmin = () => {
+  const role = getUserRole();
+  return role === "admin";
 };
 
 // shared/services/axios/AxiosRequestIntrceptorConfigCallback.ts
@@ -2779,6 +2789,12 @@ var apiGetFinancialProgress = () => {
     method: "get"
   });
 };
+var apiAdminGetApplications = () => {
+  return ApiService_default.fetchDataWithAxios({
+    url: `/financial-wizard/applications`,
+    method: "get"
+  });
+};
 
 // shared/services/AuthService.ts
 async function apiGetUserMe() {
@@ -2802,7 +2818,7 @@ var queryElement = (selector, scope = document) => {
 };
 
 // shared/utils/helpers.ts
-var progressFinancialWizardPercentage = async () => {
+var checkProgressUserAndTeams = async () => {
   try {
     const [financialProgress, person, teams] = await Promise.all([
       apiGetFinancialProgress(),
@@ -2904,6 +2920,33 @@ var constructNavBarClasses = () => {
     }
   }
 };
+var constructAdminSelect = async () => {
+  const admin = isAdmin();
+  if (admin) {
+    const selectWrapper = queryElement('[dev-target="admin-select-wrapper"]');
+    const select = queryElement('[dev-target="admin-select"]');
+    selectWrapper?.classList.remove("hide");
+    if (!selectWrapper || !select) {
+      console.error(
+        'Ensure [dev-target="admin-select"] and  [dev-target="admin-select-wrapper"] is present.'
+      );
+      return;
+    }
+    const applications = await apiAdminGetApplications();
+    applications.forEach((app) => {
+      const name = app.first_name || "" + app.last_name || "";
+      const option = document.createElement("option");
+      option.value = app.id.toString();
+      option.textContent = `${name || app.email}`;
+      select.appendChild(option);
+    });
+    select.addEventListener("change", (e) => {
+      const target = e.target;
+      const { value } = target;
+      console.log(value);
+    });
+  }
+};
 var fileToBase64 = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();
   reader.onload = () => {
@@ -2919,7 +2962,8 @@ var fileToBase64 = (file) => new Promise((resolve, reject) => {
 var initEcommercePerformancePage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  const result = await progressFinancialWizardPercentage();
+  constructAdminSelect();
+  const result = await checkProgressUserAndTeams();
   const ALLOWED_FILE_TYPES = [
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

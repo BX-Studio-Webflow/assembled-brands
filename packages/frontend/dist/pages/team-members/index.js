@@ -2664,6 +2664,7 @@ var processMiddleware = () => {
 };
 var logoutUser = () => {
   deleteCookie("accessToken");
+  localStorage.removeItem("x-team-id");
   navigateToPath("/login?error=logged-out");
 };
 
@@ -2793,7 +2794,7 @@ var queryElement = (selector, scope = document) => {
 };
 
 // shared/utils/helpers.ts
-var progressFinancialWizardPercentage = async () => {
+var checkProgressUserAndTeams = async () => {
   try {
     const [financialProgress, person, teams] = await Promise.all([
       apiGetFinancialProgress(),
@@ -2829,7 +2830,7 @@ var progressFinancialWizardPercentage = async () => {
 // pages/team-members/index.ts
 var TeamMembersPage = async () => {
   processMiddleware();
-  progressFinancialWizardPercentage();
+  checkProgressUserAndTeams();
   const table = document.querySelector('[fs-table-element="table"]');
   const tableBody = table?.querySelector(".fs-table_body");
   const templateRow = tableBody?.querySelector('[dev-target="table-row"]');

@@ -2,7 +2,13 @@ import { and, desc, eq, max } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import type { NewFinancialDocument, NewFinancialOverview, NewFinancialWizardApplication, schema } from '../schema/schema.js';
-import { businessSchema, financialDocumentSchema, financialOverviewSchema, financialWizardApplicationSchema } from '../schema/schema.js';
+import {
+	businessSchema,
+	financialDocumentSchema,
+	financialOverviewSchema,
+	financialWizardApplicationSchema,
+	userSchema,
+} from '../schema/schema.js';
 import { FinancialWizardPage } from '../service/financial-wizard.js';
 
 export class FinancialWizardRepository {
@@ -27,6 +33,21 @@ export class FinancialWizardRepository {
 		return this.db.query.financialWizardApplicationSchema.findFirst({
 			where: eq(financialWizardApplicationSchema.user_id, userId),
 		});
+	}
+
+	public async findAllApplications() {
+		return await this.db
+			.select({
+				id: financialWizardApplicationSchema.id,
+				user_id: financialWizardApplicationSchema.user_id,
+				current_page: financialWizardApplicationSchema.current_page,
+				is_complete: financialWizardApplicationSchema.is_complete,
+				first_name: userSchema.first_name,
+				last_name: userSchema.last_name,
+				email: userSchema.email,
+			})
+			.from(financialWizardApplicationSchema)
+			.leftJoin(userSchema, eq(financialWizardApplicationSchema.user_id, userSchema.id));
 	}
 
 	public async updateApplication(id: number, application: Partial<NewFinancialWizardApplication>) {

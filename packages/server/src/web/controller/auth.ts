@@ -376,6 +376,7 @@ export class AuthController {
 				name: user.first_name || 'Dear User',
 				body: `Your account has been verified. You can now login to your account.`,
 			});
+
 			return c.json({ token, user: serializedUser });
 		} catch (err) {
 			logger.error(err);

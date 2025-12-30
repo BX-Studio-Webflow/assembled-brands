@@ -1,6 +1,7 @@
 import type {
   CompleteApplicationResponse,
   DeleteDocumentResponse,
+  FinancialApplicationsResponse,
   FinancialDocumentBody,
   FinancialDocumentResponse,
   FinancialDocumentsResponse,
@@ -61,5 +62,12 @@ export const apiDeleteFinancialDocument = (id: number) => {
   return ApiService.fetchDataWithAxios<DeleteDocumentResponse>({
     url: `/financial-wizard/document/${id}`,
     method: 'delete',
+  });
+};
+
+export const apiAdminGetApplications = () => {
+  return ApiService.fetchDataWithAxios<FinancialApplicationsResponse[]>({
+    url: `/financial-wizard/applications`,
+    method: 'get',
   });
 };

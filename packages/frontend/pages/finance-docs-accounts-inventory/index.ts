@@ -7,16 +7,19 @@ import type { FinancialDocumentBody } from 'shared/types/financial-wizard';
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
 import {
+  checkProgressUserAndTeams,
+  constructAdminSelect,
   constructNavBarClasses,
   fileToBase64,
-  progressFinancialWizardPercentage,
 } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const initFinanceDocsAccountsInventoryPage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  const result = await progressFinancialWizardPercentage();
+  constructAdminSelect();
+
+  const result = await checkProgressUserAndTeams();
 
   //ONLY SHEET AND XLSX ALLOWED
   const ALLOWED_FILE_TYPES = [

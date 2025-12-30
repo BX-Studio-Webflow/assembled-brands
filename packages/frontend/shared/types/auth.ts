@@ -45,7 +45,7 @@ export type User = {
   last_name: string;
   createdAt: string;
   is_verified: boolean;
-  role: string;
+  role: 'admin' | 'user';
   phone: string;
   dial_code: string;
   profile_picture: string;

@@ -243,6 +243,8 @@ export class Server {
 		financialWizard.post('/complete', financialWizardCtrl.completeApplication);
 		financialWizard.delete('/document/:id', financialWizardCtrl.deleteDocument);
 
+		financialWizard.get('/applications', financialWizardCtrl.getAllApplications);
+
 		api.route('/financial-wizard', financialWizard);
 	}
 

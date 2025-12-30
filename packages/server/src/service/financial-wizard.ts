@@ -56,6 +56,19 @@ export class FinancialWizardService {
 	}
 
 	/**
+	 * Find applications for all users
+	 * @returns {Promise<FinancialWizardApplication>} The financial wizard application
+	 * @throws {Error} When application creation or retrieval fails
+	 */
+	public async findAllApplications() {
+		try {
+			return await this.repo.findAllApplications();
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
+	/**
 	 * Finds application by user ID
 	 * @param {number} userId - ID of the user
 	 * @returns {Promise<FinancialWizardApplication | undefined>} The application if found

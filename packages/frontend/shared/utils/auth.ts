@@ -1,3 +1,5 @@
+import type { User } from 'shared/types/auth';
+
 import { navigateToPath } from './config';
 
 // Set a cookie
@@ -36,4 +38,15 @@ export const logoutUser = () => {
   deleteCookie('accessToken');
   localStorage.removeItem('x-team-id');
   navigateToPath('/login?error=logged-out');
+};
+
+export const getUserRole = () => {
+  const admin = localStorage.getItem('user');
+  const user = admin && (JSON.parse(admin) as User);
+  return user && user?.role;
+};
+
+export const isAdmin = () => {
+  const role = getUserRole();
+  return role === 'admin';
 };
