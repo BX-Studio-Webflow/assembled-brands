@@ -560,4 +560,32 @@ export class AssetService {
 		const folder = (await createRes.json()) as Folder;
 		return folder.id;
 	}
+
+	/**
+	 * Gets or creates a folder in Google Drive
+	 * @param {string} companyName - The name of the company (folder name)
+	 * @param {string} rootFolderId - The ID of the root folder to create the company folder in
+	 * @returns {Promise<string>} The ID of the company folder
+	 */
+
+	async CreateFolder(folderName: string, parentId: string): Promise<string> {
+		const accessToken = await this.getGoogleAccessToken();
+		const normalizedName = normalizeFolderName(folderName);
+		// Create folder if not exists
+		const createRes = await fetch('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', {
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				name: normalizedName,
+				mimeType: 'application/vnd.google-apps.folder',
+				parents: [parentId],
+			}),
+		});
+		type Folder = { id: string };
+		const folder = (await createRes.json()) as Folder;
+		return folder.id;
+	}
 }

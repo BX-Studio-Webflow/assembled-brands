@@ -1,6 +1,6 @@
 import { logger } from '../lib/logger.ts';
 import type { FinancialWizardRepository } from '../repository/financial-wizard.ts';
-import { type NewFinancialDocument } from '../schema/index.ts';
+import { type NewFinancialDocument, NewFinancialStepFolder } from '../schema/index.ts';
 import type { FinancialOverviewBody, FinancialWizardProgressResponse } from '../web/validator/financial-wizard.ts';
 import type { AssetService } from './asset.js';
 
@@ -401,6 +401,52 @@ export class FinancialWizardService {
 			}
 
 			await this.repo.deleteDocument(documentId);
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Deletes a document
+	 * @param {number} userId - ID of the user
+	 * @param {number} documentId - ID of the document to delete
+	 * @returns {Promise<void>}
+	 * @throws {Error} When document deletion fails, document not found, or access denied
+	 */
+	public async insertFinancialStepFolders(records: NewFinancialStepFolder[]): Promise<void> {
+		try {
+			if (!records || records.length < 1) {
+				throw new Error('Please avail some pages');
+			}
+			await this.repo.insertFinancialStepFolders(records);
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Finds application by user ID
+	 * @param {number} userId - ID of the user
+	 * @returns {Promise<FinancialWizardApplication | undefined>} The application if found
+	 * @throws {Error} When application retrieval fails
+	 */
+	public async findFolderIDByPageAndBusiness(
+		page:
+			| 'company-profile'
+			| 'financial-overview'
+			| 'financial-reports'
+			| 'accounts-inventory'
+			| 'ecommerce-performance'
+			| 'team-ownership'
+			| 'legal'
+			| 'due-diligence'
+			| 'financial-screener',
+		businessId: number,
+	) {
+		try {
+			return await this.repo.findFolderIDByPageAndBusiness(page, businessId);
 		} catch (error) {
 			logger.error(error);
 			throw error;

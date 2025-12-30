@@ -1,5 +1,8 @@
+import { env } from 'cloudflare:workers';
+
 import { logger } from '../lib/logger.js';
 import { BusinessRepository } from '../repository/business.ts';
+import { NewFinancialStepFolder } from '../schema/schema.ts';
 import { getContentType } from '../util/string.ts';
 import type { BusinessBody, BusinessQuery } from '../web/validator/business.ts';
 import type { AssetService } from './asset.js';
@@ -159,9 +162,50 @@ export class BusinessService {
 				// Update existing business
 				await this.repository.update(existingBusiness.id, businessData);
 			} else {
-				// Create business and team in parallel
-				await Promise.all([this.repository.create(businessData), this.teamService.createTeam(business.legal_name, userId)]);
-				await this.financialWizardService.trackBusinessProfile(userId);
+				//first create a folder for this business in drive then create business and team in parallel
+				const company_folder_id = await this.assetService.CreateFolder(businessData.legal_name, env.GOOGLE_DRIVE_FOLDER_ID);
+
+				//create all needed drive folders and store in advance
+				const pages = [
+					'financial-reports',
+					'accounts-inventory',
+					'ecommerce-performance',
+					'team-ownership',
+					'legal',
+					'due-diligence',
+					'financial-screener',
+				];
+				const folderPromises = pages.map((page) => this.assetService.CreateFolder(page, company_folder_id));
+
+				const folderIds = await Promise.all(folderPromises);
+
+				// Map page names to folder IDs
+				const pageFolderMap: Record<string, string> = {};
+				pages.forEach((page, i) => {
+					pageFolderMap[page] = folderIds[i];
+				});
+
+				const businessRecord = await Promise.all([
+					this.repository.create({
+						...businessData,
+						folder_id: company_folder_id,
+					}),
+					this.teamService.createTeam(business.legal_name, userId),
+				]);
+
+				// Transform map into array of NewFinancialStepFolder
+				const stepFolderRecords: NewFinancialStepFolder[] = Object.entries(pageFolderMap).map(([page, folder_id]) => ({
+					user_id: userId,
+					business_id: businessRecord[0].id,
+					page: page as NewFinancialStepFolder['page'],
+					folder_id,
+				}));
+
+				// Bulk insert
+				await Promise.all([
+					this.financialWizardService.insertFinancialStepFolders(stepFolderRecords),
+					this.financialWizardService.trackBusinessProfile(userId),
+				]);
 			}
 
 			// Return business with resolved asset URLs

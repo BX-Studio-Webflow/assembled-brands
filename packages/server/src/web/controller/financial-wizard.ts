@@ -80,13 +80,7 @@ export class FinancialWizardController {
 	 * @returns {Promise<Response>} Response containing uploaded document data
 	 * @throws {Error} When document upload fails
 	 */
-	/**
-	 * ✅ Scope
-    On upload, file should be routed to:
-    Correct company folder inside /Assembled Applications/[Company Name]/
-    Structured naming convention
-    Drive link captured
-	 */
+
 	public uploadDocument = async (c: Context) => {
 		try {
 			const user = await this.getUser(c);
@@ -97,7 +91,6 @@ export class FinancialWizardController {
 			const body: FinancialDocumentBody = await c.req.json();
 
 			// Upload to Google Drive using asset service
-			const rootFolderId = env.GOOGLE_DRIVE_FOLDER_ID || undefined;
 			const { file_data, file_name, file_mime_type, document_type, page } = body;
 
 			const fileData = Buffer.from(file_data, 'base64');
@@ -108,15 +101,11 @@ export class FinancialWizardController {
 				return serveBadRequest(c, 'Business not found for user');
 			}
 
-			// 1️⃣ Ensure 'Assembled Applications' exists
-			const assembledFolderId = await this.assetService.getOrCreateFolder('Assembled Applications', rootFolderId);
-
-			// 2️⃣ Ensure '[Company Name]' exists inside it
-			const companyFolderId = await this.assetService.getOrCreateFolder(business.legal_name, assembledFolderId);
+			const folder = await this.service.findFolderIDByPageAndBusiness(page, business.id);
 
 			const structuredName = `${document_type}-${page}-${Date.now()}-${file_name}`;
 
-			const uploadedFile = await this.assetService.uploadToGoogleDrive(fileData, structuredName, file_mime_type, companyFolderId);
+			const uploadedFile = await this.assetService.uploadToGoogleDrive(fileData, structuredName, file_mime_type, folder.folder_id);
 
 			const notes = {
 				id: uploadedFile.id,
@@ -124,7 +113,13 @@ export class FinancialWizardController {
 				webViewLink: uploadedFile.webViewLink,
 			};
 
-			const document = await this.service.uploadDocument(effectiveUserId, body.page, body.document_type, body.asset_id, String(notes));
+			const document = await this.service.uploadDocument(
+				effectiveUserId,
+				body.page,
+				body.document_type,
+				body.asset_id,
+				JSON.stringify(notes),
+			);
 
 			return serveData(c, {
 				message: 'Document uploaded successfully',

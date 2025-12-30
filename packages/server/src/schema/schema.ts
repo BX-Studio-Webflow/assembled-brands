@@ -53,6 +53,7 @@ export const businessSchema = sqliteTable('businesses', {
 	accounting_software: text('accounting_software'),
 	other_accounting_software: text('other_accounting_software'),
 	description: text('description'),
+	folder_id: text('folder_id').notNull().default(''),
 	logo_asset_id: integer('logo_asset_id').references(() => assetsSchema.id),
 	user_id: integer('user_id')
 		.references(() => userSchema.id)
@@ -219,9 +220,6 @@ export const financialWizardApplicationSchema = sqliteTable('financial_wizard_ap
 	updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 });
 
-/**
- * Step 1: Financial Overview - Basic financial information
- */
 export const financialOverviewSchema = sqliteTable('financial_overview', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	application_id: integer('application_id')
@@ -237,10 +235,6 @@ export const financialOverviewSchema = sqliteTable('financial_overview', {
 	updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 });
 
-/**
- * Financial Documents - Links documents to wizard with versioning
- * Each document type can have multiple versions, but only one is_current
- */
 export const financialDocumentSchema = sqliteTable('financial_documents', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	application_id: integer('application_id')
@@ -287,6 +281,36 @@ export const financialDocumentSchema = sqliteTable('financial_documents', {
 	updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 });
 
+export const financialStepFoldersSchema = sqliteTable('financial_step_folders', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+
+	business_id: integer('business_id')
+		.references(() => businessSchema.id)
+		.notNull(),
+	user_id: integer('user_id')
+		.references(() => userSchema.id)
+		.notNull(),
+
+	page: text('page', {
+		enum: [
+			'company-profile',
+			'financial-overview',
+			'financial-reports',
+			'accounts-inventory',
+			'ecommerce-performance',
+			'team-ownership',
+			'legal',
+			'due-diligence',
+			'financial-screener',
+		],
+	}).notNull(),
+
+	folder_id: text('folder_id').notNull().default(''),
+
+	created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+	updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+});
+
 // Relations
 export const financialWizardApplicationRelations = relations(financialWizardApplicationSchema, ({ one, many }) => ({
 	user: one(userSchema, {
@@ -318,7 +342,22 @@ export const financialDocumentRelations = relations(financialDocumentSchema, ({ 
 	}),
 }));
 
+export const financialStepFoldersRelations = relations(financialStepFoldersSchema, ({ one }) => ({
+	business: one(businessSchema, {
+		fields: [financialStepFoldersSchema.business_id],
+		references: [businessSchema.id],
+	}),
+
+	user: one(userSchema, {
+		fields: [financialStepFoldersSchema.user_id],
+		references: [userSchema.id],
+	}),
+}));
+
 // Type exports
+export type FinancialStepFolder = typeof financialStepFoldersSchema.$inferSelect;
+export type NewFinancialStepFolder = typeof financialStepFoldersSchema.$inferInsert;
+
 export type FinancialWizardApplication = typeof financialWizardApplicationSchema.$inferSelect;
 export type NewFinancialWizardApplication = typeof financialWizardApplicationSchema.$inferInsert;
 export type FinancialOverview = typeof financialOverviewSchema.$inferSelect;
