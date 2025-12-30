@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.6
+
+### Patch Changes
+
+- 0349edd: fix: patch
+
 ## 0.3.5
 
 ### Patch Changes
