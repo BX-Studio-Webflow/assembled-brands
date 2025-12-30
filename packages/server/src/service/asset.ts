@@ -118,6 +118,24 @@ export class AssetService {
 	}
 
 	/**
+	 * Retrieves an array of assets without presigned URL
+	 * @param {number} id - ID of the asset
+	 * @returns {Promise<Asset[]>} Assets
+	 */
+	async getAssetsWithoutPresignedUrl(ids: number[]) {
+		return await this.repository.findAssets(ids);
+	}
+
+	/**
+	 * Retrieves an array of assets without presigned URL
+	 * @param {number} id - ID of the asset
+	 * @returns {Promise<Asset[]>} Assets
+	 */
+	async findDocumentsWithAssetsByApplicationId(application_id: number) {
+		return await this.repository.findDocumentsWithAssetsByApplicationId(application_id);
+	}
+
+	/**
 	 * Deletes an asset from both S3 and database
 	 * @param {number} id - ID of the asset to delete
 	 * @returns {Promise<void>}

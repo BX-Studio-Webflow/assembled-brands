@@ -2845,6 +2845,7 @@ var initAccountSetupFinishVerificationPage = () => {
         id: Number(id),
         password: password.value
       });
+      localStorage.removeItem("x-team-id");
       setCookie("accessToken", response.token, 10);
       submitButton.classList.add("is-success");
       submitButton.value = "Great! Your account is now active.";

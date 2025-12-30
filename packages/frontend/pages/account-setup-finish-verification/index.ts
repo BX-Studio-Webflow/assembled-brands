@@ -110,6 +110,7 @@ const initAccountSetupFinishVerificationPage = () => {
         password: password.value,
       });
 
+      localStorage.removeItem('x-team-id');
       setCookie('accessToken', response.token, 10);
 
       submitButton.classList.add('is-success');

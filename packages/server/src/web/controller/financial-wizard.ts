@@ -171,6 +171,29 @@ export class FinancialWizardController {
 	};
 
 	/**
+	 * Get applications
+	 * @param {Context} c - The Hono context
+	 * @returns {Promise<Response>} Response containing progress data
+	 * @throws {Error} When progress retrieval fails
+	 */
+	public getAllApplications = async (c: Context) => {
+		try {
+			const user = await this.getUser(c);
+			if (!user) {
+				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+			}
+			if (user.role !== 'admin') {
+				return serveBadRequest(c, 'Only admins can access this resource');
+			}
+
+			const applications = await this.service.findAllApplications();
+			return c.json(applications);
+		} catch (error) {
+			logger.error(error);
+			return serveInternalServerError(c, error);
+		}
+	};
+	/**
 	 * Gets documents for a specific page
 	 * @param {Context} c - The Hono context containing page parameter
 	 * @returns {Promise<Response>} Response containing documents for the page

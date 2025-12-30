@@ -4,13 +4,19 @@ import type { FinancialOverviewBody } from 'shared/types/financial-wizard';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
-import { constructNavBarClasses, progressFinancialWizardPercentage } from '$utils/helpers';
+import {
+  checkProgressUserAndTeams,
+  constructAdminSelect,
+  constructNavBarClasses,
+} from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const initFinancialOverviewPage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  const result = await progressFinancialWizardPercentage();
+  constructAdminSelect();
+
+  const result = await checkProgressUserAndTeams();
   const form = document.querySelector('[dev-target="financial-overview-form"]');
   if (!form) {
     console.error(

@@ -182,6 +182,7 @@ const initLoginPage = () => {
       });
 
       setCookie('accessToken', response.token, 10);
+      localStorage.setItem('user', JSON.stringify(response.user));
 
       const currentOnboardingStep = response.onboardingProgress?.current_step;
       const onboardingIsComplete = response.onboardingProgress?.is_complete;

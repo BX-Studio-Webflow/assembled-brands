@@ -1,9 +1,10 @@
-import { and, desc, eq, like, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, like, sql } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import type { Asset, NewAsset, schema } from '../schema/schema.js';
-import { assetsSchema } from '../schema/schema.js';
+import { assetsSchema, financialDocumentSchema } from '../schema/schema.js';
 import type { AssetQuery } from '../web/validator/asset.js';
+import { DocumentWithAsset } from '../web/validator/financial-wizard.js';
 
 export interface AssetSearchQuery {
 	asset_type?: 'image' | 'video' | 'audio' | 'document';
@@ -25,6 +26,35 @@ export class AssetRepository {
 	async find(id: number): Promise<Asset | undefined> {
 		const result = await this.db.select().from(assetsSchema).where(eq(assetsSchema.id, id)).limit(1);
 		return result[0];
+	}
+
+	async findAssets(ids: number[]): Promise<Asset[]> {
+		if (ids.length === 0) return [];
+		const result = await this.db.select().from(assetsSchema).where(inArray(assetsSchema.id, ids));
+		return result;
+	}
+
+	async findDocumentsWithAssetsByApplicationId(application_id: number): Promise<DocumentWithAsset[]> {
+		const result = await this.db
+			.select({
+				id: financialDocumentSchema.id,
+				application_id: financialDocumentSchema.application_id,
+				asset_id: financialDocumentSchema.asset_id,
+				page: financialDocumentSchema.page,
+				document_type: financialDocumentSchema.document_type,
+				is_current: financialDocumentSchema.is_current,
+				version: financialDocumentSchema.version,
+				notes: financialDocumentSchema.notes,
+				created_at: financialDocumentSchema.created_at,
+				updated_at: financialDocumentSchema.updated_at,
+				asset_url: assetsSchema.asset_url,
+				asset_name: assetsSchema.asset_name,
+			})
+			.from(financialDocumentSchema)
+			.leftJoin(assetsSchema, eq(financialDocumentSchema.asset_id, assetsSchema.id))
+			.where(eq(financialDocumentSchema.application_id, application_id));
+
+		return result;
 	}
 
 	async findByUserId(userId: number, query?: AssetQuery): Promise<{ assets: Asset[]; total: number }> {

@@ -1,8 +1,11 @@
 import { apiGetUserMe } from 'shared/services/AuthService';
-import { apiGetFinancialProgress } from 'shared/services/FinancialWizardService';
+import {
+  apiAdminGetApplications,
+  apiGetFinancialProgress,
+} from 'shared/services/FinancialWizardService';
 import { apiGetMyTeams } from 'shared/services/TeamService';
 
-import { logoutUser } from './auth';
+import { isAdmin, logoutUser } from './auth';
 import { queryElement } from './selectors';
 
 export const isValidEmail = (email: string) => {
@@ -17,7 +20,7 @@ export const isValidEmail = (email: string) => {
   return true;
 };
 
-export const progressFinancialWizardPercentage = async () => {
+export const checkProgressUserAndTeams = async () => {
   try {
     //get progress percentage
     const [financialProgress, person, teams] = await Promise.all([
@@ -146,6 +149,39 @@ export const constructNavBarClasses = () => {
     if (activeLink) {
       activeLink.classList.add(activeTarget.nav_class);
     }
+  }
+};
+
+export const constructAdminSelect = async () => {
+  const admin = isAdmin();
+  if (admin) {
+    const selectWrapper = queryElement<HTMLElement>('[dev-target="admin-select-wrapper"]');
+    const select = queryElement<HTMLElement>('[dev-target="admin-select"]');
+    selectWrapper?.classList.remove('hide');
+
+    if (!selectWrapper || !select) {
+      console.error(
+        'Ensure [dev-target="admin-select"] and  [dev-target="admin-select-wrapper"] is present.'
+      );
+      return;
+    }
+
+    const applications = await apiAdminGetApplications();
+
+    // Render options
+    applications.forEach((app) => {
+      const name = app.first_name || '' + app.last_name || '';
+      const option = document.createElement('option');
+      option.value = app.id.toString();
+      option.textContent = `${name || app.email}`;
+      select.appendChild(option);
+    });
+
+    select.addEventListener('change', (e) => {
+      const target = e.target as HTMLSelectElement;
+      const { value } = target;
+      console.log(value);
+    });
   }
 };
 

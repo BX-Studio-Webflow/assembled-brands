@@ -131,3 +131,20 @@ export type CompleteApplicationResponse = {
 export type DeleteDocumentResponse = {
   message: string;
 };
+
+export type FinancialApplicationsResponse = {
+  id: number;
+  user_id: number;
+  current_page:
+    | 'company-profile'
+    | 'financial-overview'
+    | 'financial-reports'
+    | 'accounts-inventory'
+    | 'ecommerce-performance'
+    | 'team-ownership'
+    | null;
+  is_complete: boolean | null;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+};
