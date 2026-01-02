@@ -4,13 +4,29 @@ import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import { schema, teamInvitationSchema, teamMemberSchema, teamSchema } from '../schema/schema.ts';
 import { type TeamQuery } from '../web/validator/team.ts';
 
+/**
+ * Repository for team and team member operations
+ */
 export class TeamRepository {
+	/**
+	 * Drizzle D1 database instance
+	 */
 	private db: DrizzleD1Database<typeof schema>;
 
+	/**
+	 * Construct the TeamRepository
+	 * @param {DrizzleD1Database<typeof schema>} db - Database instance
+	 */
 	constructor(db: DrizzleD1Database<typeof schema>) {
 		this.db = db;
 	}
 
+	/**
+	 * Create a new team and add the given host as a member with role 'host'
+	 * @param {string} name - Team name
+	 * @param {number} hostId - Host user ID
+	 * @returns {Promise<Team>} Created team record
+	 */
 	public async createTeam(name: string, hostId: number) {
 		const [team] = await this.db
 			.insert(teamSchema)
@@ -36,6 +52,11 @@ export class TeamRepository {
 		return team;
 	}
 
+	/**
+	 * Get a team by ID including its members
+	 * @param {number} id - Team ID
+	 * @returns {Promise<Team|undefined>} The team if found
+	 */
 	public async getTeamById(id: number) {
 		return await this.db.query.teamSchema.findFirst({
 			where: (team, { eq }) => eq(team.id, id),
@@ -45,6 +66,12 @@ export class TeamRepository {
 		});
 	}
 
+	/**
+	 * List team members with simple pagination and optional client-side search
+	 * @param {number} teamId - Team ID
+	 * @param {TeamQuery} [query] - Pagination and search options
+	 * @returns {Promise<{members: any[], total: number}>} Members and total count
+	 */
 	public async getTeamMembers(teamId: number, query?: TeamQuery) {
 		const { page = 1, limit = 10, search } = query || {};
 		const offset = (page - 1) * limit;
@@ -97,12 +124,23 @@ export class TeamRepository {
 		return { members, total: totalMembers.length };
 	}
 
+	/**
+	 * Get all teams a user is a member of
+	 * @param {number} userId - User ID
+	 * @returns {Promise<TeamMember[]>} List of team membership records
+	 */
 	public async getUserTeams(userId: number) {
 		return await this.db.query.teamMemberSchema.findMany({
 			where: (member, { eq }) => eq(member.user_id, userId),
 		});
 	}
 
+	/**
+	 * Check whether a user is the host of a team
+	 * @param {number} teamId - Team ID
+	 * @param {number} userId - User ID
+	 * @returns {Promise<boolean>} True if the user is host
+	 */
 	public async isTeamHost(teamId: number, userId: number) {
 		const member = await this.db.query.teamMemberSchema.findFirst({
 			where: (member, { and, eq }) => and(eq(member.team_id, teamId), eq(member.user_id, userId), eq(member.role, 'host')),
@@ -110,6 +148,12 @@ export class TeamRepository {
 		return !!member;
 	}
 
+	/**
+	 * Check whether a user is a member of a team
+	 * @param {number} teamId - Team ID
+	 * @param {number} userId - User ID
+	 * @returns {Promise<boolean>} True if the user is a member
+	 */
 	public async isTeamMember(teamId: number, userId: number) {
 		const member = await this.db.query.teamMemberSchema.findFirst({
 			where: (member, { and, eq }) => and(eq(member.team_id, teamId), eq(member.user_id, userId)),
@@ -117,6 +161,13 @@ export class TeamRepository {
 		return !!member;
 	}
 
+	/**
+	 * Add a user to a team with a specific role
+	 * @param {number} teamId - Team ID
+	 * @param {number} userId - User ID
+	 * @param {'host'|'member'} [role='member'] - Role for the user
+	 * @returns {Promise<number>} Inserted team member ID
+	 */
 	public async addTeamMember(teamId: number, userId: number, role: 'host' | 'member' = 'member') {
 		const members = await this.db
 			.insert(teamMemberSchema)
@@ -131,6 +182,16 @@ export class TeamRepository {
 		return members[0].id;
 	}
 
+	/**
+	 * Create a team invitation record
+	 * @param {number} teamId - Team ID
+	 * @param {number} inviterId - Inviter user ID
+	 * @param {string} inviteeEmail - Invitee email
+	 * @param {string} inviteeName - Invitee name
+	 * @param {string} userDefinedRole - Role suggested by inviter
+	 * @param {string} message - Optional message
+	 * @returns {Promise<number>} Created invitation ID
+	 */
 	public async createInvitation(
 		teamId: number,
 		inviterId: number,
@@ -157,6 +218,11 @@ export class TeamRepository {
 		return invitations[0].id;
 	}
 
+	/**
+	 * Get a single invitation by ID with associated team and inviter
+	 * @param {number} id - Invitation ID
+	 * @returns {Promise<TeamInvitation|undefined>} Invitation if found
+	 */
 	public async getInvitation(id: number) {
 		return await this.db.query.teamInvitationSchema.findFirst({
 			where: (invitation, { eq }) => eq(invitation.id, id),
@@ -179,6 +245,11 @@ export class TeamRepository {
 		});
 	}
 
+	/**
+	 * Get invitations for a team ordered by creation date descending
+	 * @param {number} teamId - Team ID
+	 * @returns {Promise<TeamInvitation[]>} List of invitations
+	 */
 	public async getInvitationsByTeam(teamId: number) {
 		return await this.db.query.teamInvitationSchema.findMany({
 			where: (invitation, { eq }) => eq(invitation.team_id, teamId),
@@ -186,6 +257,12 @@ export class TeamRepository {
 		});
 	}
 
+	/**
+	 * Get invitations by invitee email, optionally filtering by status
+	 * @param {string} email - Invitee email
+	 * @param {'pending'|'accepted'|'rejected'} [status] - Optional status filter
+	 * @returns {Promise<TeamInvitation[]>} List of invitations
+	 */
 	public async getInvitationsByEmail(email: string, status?: 'pending' | 'accepted' | 'rejected') {
 		return await this.db.query.teamInvitationSchema.findMany({
 			where: (invitation, { eq, and }) => {
@@ -209,10 +286,21 @@ export class TeamRepository {
 		});
 	}
 
+	/**
+	 * Update the status of an invitation
+	 * @param {number} id - Invitation ID
+	 * @param {'pending'|'accepted'|'rejected'} status - New status
+	 * @returns {Promise<void>}
+	 */
 	public async updateInvitationStatus(id: number, status: 'pending' | 'accepted' | 'rejected') {
 		await this.db.update(teamInvitationSchema).set({ status, updated_at: new Date() }).where(eq(teamInvitationSchema.id, id));
 	}
 
+	/**
+	 * Get teams that a user belongs to, including team info
+	 * @param {number} userId - User ID
+	 * @returns {Promise<TeamMember[]>} Membership records with team info
+	 */
 	public async getTeamByUserId(userId: number) {
 		return await this.db.query.teamMemberSchema.findMany({
 			where: eq(teamMemberSchema.user_id, userId),
@@ -222,6 +310,11 @@ export class TeamRepository {
 		});
 	}
 
+	/**
+	 * Get the team where the user is a host
+	 * @param {number} userId - User ID
+	 * @returns {Promise<TeamMember|undefined>} Team membership where role is host
+	 */
 	public async getTeamByHostId(userId: number) {
 		return await this.db.query.teamMemberSchema.findFirst({
 			where: and(eq(teamMemberSchema.user_id, userId), eq(teamMemberSchema.role, 'host')),
@@ -232,6 +325,12 @@ export class TeamRepository {
 		});
 	}
 
+	/**
+	 * Remove a member from a team (hosts cannot be removed with this method)
+	 * @param {number} teamId - Team ID
+	 * @param {number} userId - User ID
+	 * @returns {Promise<void>}
+	 */
 	public async removeTeamMember(teamId: number, userId: number) {
 		await this.db.delete(teamMemberSchema).where(
 			and(
@@ -242,6 +341,11 @@ export class TeamRepository {
 		);
 	}
 
+	/**
+	 * Delete a team invitation by ID
+	 * @param {number} id - Invitation ID
+	 * @returns {Promise<void>}
+	 */
 	public async deleteInvitation(id: number) {
 		await this.db.delete(teamInvitationSchema).where(eq(teamInvitationSchema.id, id));
 	}
