@@ -1,5 +1,11 @@
 # server
 
+## 0.0.6
+
+### Patch Changes
+
+- ad6ff7d: fix: onboarding
+
 ## 0.0.5
 
 ### Patch Changes
