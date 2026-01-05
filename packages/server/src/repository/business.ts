@@ -28,12 +28,12 @@ export class BusinessRepository {
 		return await this.findById(result[0].id);
 	}
 
+	/**
+	 * Find a business by ID
+	 * @param {number} id - Business ID
+	 * @returns {Promise<typeof businessSchema.$inferSelect|undefined>} Business if found
+	 */
 	async findById(id: number) {
-		/**
-		 * Find a business by ID
-		 * @param {number} id - Business ID
-		 * @returns {Promise<typeof businessSchema.$inferSelect|undefined>} Business if found
-		 */
 		const result = await this.db.select().from(businessSchema).where(eq(businessSchema.id, id)).limit(1);
 		return result[0];
 	}
