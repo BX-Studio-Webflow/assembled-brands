@@ -309,11 +309,6 @@ const initOnboardingStep1Page = () => {
       return;
     }
 
-    if (revenueQualification.value === 'no') {
-      navigateToPath('/onboarding-step-not-fit');
-      return;
-    }
-
     const payload: OnboardingStep3Body = {
       company_type: selectedCompanyType.value as OnboardingStep3Body['company_type'],
       revenue_qualification:
