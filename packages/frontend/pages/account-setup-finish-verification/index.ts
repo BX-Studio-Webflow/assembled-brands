@@ -103,7 +103,7 @@ const initAccountSetupFinishVerificationPage = () => {
       return;
     }
     try {
-      navigateToPath('/onboarding-step-1');
+      navigateToPath('/onboarding-wizard');
       const response = await apiVerifyRegistration({
         token: Number(token),
         id: Number(id),
@@ -117,7 +117,7 @@ const initAccountSetupFinishVerificationPage = () => {
       submitButton.value = 'Great! Your account is now active.';
 
       setTimeout(() => {
-        navigateToPath('/onboarding-step-1');
+        navigateToPath('/onboarding-wizard');
       }, 2000);
     } catch (error) {
       const { message } = error as AxiosError;

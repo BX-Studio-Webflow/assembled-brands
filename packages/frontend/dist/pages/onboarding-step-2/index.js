@@ -2812,7 +2812,7 @@ var initOnboardingStep2Page = () => {
     return;
   }
   backButton.addEventListener("click", () => {
-    navigateToPath("/onboarding-step-1");
+    navigateToPath("/onboarding-wizard");
   });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
