@@ -328,6 +328,11 @@ const initOnboardingStep1Page = () => {
       submitButton.classList.add('is-success');
       submitButton.value = 'Complete!';
 
+      if (revenueQualification.value === 'no') {
+        navigateToPath('/onboarding-step-not-fit');
+        return;
+      }
+
       setTimeout(() => {
         navigateToPath('/finance-company-profile');
       }, 500);

@@ -1,4 +1,4 @@
-import { env } from 'process';
+import { env } from 'cloudflare:workers';
 
 import { logger } from '../lib/logger.ts';
 import type { OnboardingApplication } from '../schema/schema.ts';

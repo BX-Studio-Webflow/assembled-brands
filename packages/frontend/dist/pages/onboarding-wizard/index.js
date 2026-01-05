@@ -3035,6 +3035,10 @@ var initOnboardingStep1Page = () => {
       await apiSaveOnboardingStep3(payload);
       submitButton.classList.add("is-success");
       submitButton.value = "Complete!";
+      if (revenueQualification.value === "no") {
+        navigateToPath("/onboarding-step-not-fit");
+        return;
+      }
       setTimeout(() => {
         navigateToPath("/finance-company-profile");
       }, 500);
