@@ -189,11 +189,11 @@ const initLoginPage = () => {
 
       // Handle onboarding flow
       if (!response.onboardingProgress) {
-        navigateToPath('/onboarding-step-1');
+        navigateToPath('/onboarding-wizard');
         return;
       }
       if (!onboardingIsComplete && currentOnboardingStep === 1) {
-        navigateToPath('/onboarding-step-1');
+        navigateToPath('/onboarding-wizard');
         return;
       }
       if (!onboardingIsComplete && currentOnboardingStep === 2) {

@@ -2899,11 +2899,11 @@ var initLoginPage = () => {
       const currentOnboardingStep = response.onboardingProgress?.current_step;
       const onboardingIsComplete = response.onboardingProgress?.is_complete;
       if (!response.onboardingProgress) {
-        navigateToPath("/onboarding-step-1");
+        navigateToPath("/onboarding-wizard");
         return;
       }
       if (!onboardingIsComplete && currentOnboardingStep === 1) {
-        navigateToPath("/onboarding-step-1");
+        navigateToPath("/onboarding-wizard");
         return;
       }
       if (!onboardingIsComplete && currentOnboardingStep === 2) {

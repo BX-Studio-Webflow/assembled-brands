@@ -2839,7 +2839,7 @@ var initAccountSetupFinishVerificationPage = () => {
       return;
     }
     try {
-      navigateToPath("/onboarding-step-1");
+      navigateToPath("/onboarding-wizard");
       const response = await apiVerifyRegistration({
         token: Number(token),
         id: Number(id),
@@ -2850,7 +2850,7 @@ var initAccountSetupFinishVerificationPage = () => {
       submitButton.classList.add("is-success");
       submitButton.value = "Great! Your account is now active.";
       setTimeout(() => {
-        navigateToPath("/onboarding-step-1");
+        navigateToPath("/onboarding-wizard");
       }, 2e3);
     } catch (error) {
       const { message } = error;
