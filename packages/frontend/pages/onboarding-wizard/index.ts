@@ -31,7 +31,7 @@ const initOnboardingStep1Page = () => {
   const step1Wrapper = queryElement<HTMLElement>('[dev-target="step-1"]', form);
   const step2Wrapper = queryElement<HTMLElement>('[dev-target="step-2"]', form);
   const step3Wrapper = queryElement<HTMLElement>('[dev-target="step-3"]', form);
-  const progressBar = queryElement<HTMLElement>('[dev-target="step-indicator"]', form);
+  const progressBar = queryElement<HTMLElement>('[dev-target="step-indicator"]');
   const stepText = queryElement<HTMLElement>('[dev-target="step-text"]');
 
   // Buttons

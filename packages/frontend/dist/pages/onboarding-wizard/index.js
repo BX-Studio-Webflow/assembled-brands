@@ -2798,7 +2798,7 @@ var initOnboardingStep1Page = () => {
   const step1Wrapper = queryElement('[dev-target="step-1"]', form);
   const step2Wrapper = queryElement('[dev-target="step-2"]', form);
   const step3Wrapper = queryElement('[dev-target="step-3"]', form);
-  const progressBar = queryElement('[dev-target="step-indicator"]', form);
+  const progressBar = queryElement('[dev-target="step-indicator"]');
   const stepText = queryElement('[dev-target="step-text"]');
   const submitButton = queryElement('[dev-target="submit-button"]', form);
   const backButton = queryElement('[dev-target="back-button"]', form);
