@@ -222,11 +222,6 @@ export class FinancialWizardRepository {
 	 * @param {number} userId - ID of the user
 	 * @returns {Promise<Business | undefined>} The business if found
 	 */
-	/**
-	 * Find business by user ID
-	 * @param {number} userId - User ID
-	 * @returns {Promise<Business|undefined>} The business if found
-	 */
 	public async findBusinessByUserId(userId: number) {
 		const result = await this.db.select().from(businessSchema).where(eq(businessSchema.user_id, userId)).limit(1);
 		return result[0];
