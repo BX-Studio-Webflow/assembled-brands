@@ -1,5 +1,11 @@
 # server
 
+## 0.0.7
+
+### Patch Changes
+
+- fix: hubspot
+
 ## 0.0.6
 
 ### Patch Changes

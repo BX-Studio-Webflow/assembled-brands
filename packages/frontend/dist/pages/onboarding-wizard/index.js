@@ -3022,10 +3022,6 @@ var initOnboardingStep1Page = () => {
       submitButton.value = "Revenue qualification is required";
       return;
     }
-    if (revenueQualification.value === "no") {
-      navigateToPath("/onboarding-step-not-fit");
-      return;
-    }
     const payload = {
       company_type: selectedCompanyType.value,
       revenue_qualification: revenueQualification.value,
@@ -3035,6 +3031,10 @@ var initOnboardingStep1Page = () => {
       await apiSaveOnboardingStep3(payload);
       submitButton.classList.add("is-success");
       submitButton.value = "Complete!";
+      if (revenueQualification.value === "no") {
+        navigateToPath("/onboarding-step-not-fit");
+        return;
+      }
       setTimeout(() => {
         navigateToPath("/finance-company-profile");
       }, 500);

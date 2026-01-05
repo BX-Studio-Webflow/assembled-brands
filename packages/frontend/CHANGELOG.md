@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.9
+
+### Patch Changes
+
+- fix: hubspot
+
 ## 0.3.8
 
 ### Patch Changes
