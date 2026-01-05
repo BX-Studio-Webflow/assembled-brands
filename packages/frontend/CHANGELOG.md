@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.8
+
+### Patch Changes
+
+- ad6ff7d: fix: onboarding
+
 ## 0.3.7
 
 ### Patch Changes
