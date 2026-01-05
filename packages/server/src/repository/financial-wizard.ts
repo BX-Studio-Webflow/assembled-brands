@@ -272,7 +272,7 @@ export class FinancialWizardRepository {
 	/**
 	 * Insert multiple Financial Step Folders
 	 * @param {NewFinancialStepFolder[]} records - Array of records to insert
-	 * @returns {Promise<FinancialStepFolder[]>} Array of inserted folders
+	 * @returns {Promise<FinancialStepFolder[]>} Inserted folder records
 	 */
 	public async insertFinancialStepFolders(records: NewFinancialStepFolder[]) {
 		if (!records || records.length === 0) return [];
