@@ -6,7 +6,7 @@ import {
 import { apiGetMyTeams } from 'shared/services/TeamService';
 
 import { isAdmin, logoutUser } from './auth';
-import { queryElement } from './selectors';
+import { queryAllElements, queryElement } from './selectors';
 
 export const isValidEmail = (email: string) => {
   if (!email) {
@@ -31,7 +31,9 @@ export const checkProgressUserAndTeams = async (userId?: string) => {
 
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement<HTMLDivElement>('[dev-target="progress-percentage-fill"]');
-    const progressLabel = queryElement<HTMLDivElement>('[dev-target="progress-percentage-label"]');
+    const progressLabel = queryAllElements<HTMLDivElement>(
+      '[dev-target="progress-percentage-label"]'
+    );
 
     const companyUsername = queryElement<HTMLDivElement>('[dev-target="user-name"]');
     const companyEmail = queryElement<HTMLDivElement>('[dev-target="user-email"]');
@@ -45,7 +47,8 @@ export const checkProgressUserAndTeams = async (userId?: string) => {
     }
 
     progressFill.style.width = `${percentage}%`;
-    progressLabel.textContent = `Progress ${percentage}%`;
+    progressLabel[0].textContent = `Progress ${percentage}%`;
+    progressLabel[1].textContent = `${percentage}%`;
 
     logout.addEventListener('click', () => {
       logoutUser();
@@ -188,7 +191,6 @@ export const constructAdminSelect = async (
     select.addEventListener('change', async (e) => {
       const target = e.target as HTMLSelectElement;
       const { value } = target;
-      console.log(value);
 
       if (onChangeCallback) {
         await onChangeCallback(value);
@@ -208,3 +210,103 @@ export const fileToBase64 = (file: File): Promise<string> =>
     reader.onerror = () => reject(new Error('Failed to read file as base64'));
     reader.readAsDataURL(file);
   });
+
+/**
+ * Initialize collapsible sidebar functionality
+ * Handles sidebar collapse/expand with smooth transitions and content adjustment
+ */
+export const initCollapsibleSidebar = () => {
+  const sidebar = queryElement<HTMLElement>('[dev-target="sidebar-menu"]');
+  const sidebarInner = sidebar?.querySelector<HTMLElement>('.sidebar');
+  const trigger = queryElement<HTMLElement>('[dev-target="collapsible-trigger"]');
+
+  if (!sidebar || !sidebarInner || !trigger) {
+    console.error(
+      'Ensure [dev-target="sidebar-menu"] and [dev-target="collapsible-trigger"] and  [dev-target="sidebar-inner"] are present.'
+    );
+    return;
+  }
+
+  let isCollapsed = false;
+
+  // Toggle sidebar collapse/expand
+  const toggleSidebar = () => {
+    isCollapsed = !isCollapsed;
+    const collapsibleContent = document.querySelectorAll<HTMLElement>(
+      '[sidebar="collapsible-content"], [dev-target="collapsible-content"]'
+    );
+
+    // Get sidebar-related elements for class toggling
+
+    const sidebarlogoTextWrapper = queryElement<HTMLElement>(
+      '[dev-target="sidebar-logo-text-wrapper"]'
+    );
+    const sidebarBottomCollapsed = sidebar.querySelector<HTMLElement>(
+      '[dev-target="sidebar-bottom-collapsed"]'
+    );
+    const sideNavClose = sidebar.querySelector<HTMLElement>('[dev-target="sidenav-close"]');
+    const sidebarBottom = sidebar.querySelector<HTMLElement>('[dev-target="sidebar-bottom"]');
+
+    const userProfile = sidebar.querySelector<HTMLElement>('.user-profile_wrapper');
+    const userProfileInner = userProfile?.querySelector<HTMLElement>(
+      '.flex-horizontal_auth.gap-15'
+    );
+
+    if (isCollapsed) {
+      sidebar.classList.add('collapsed');
+
+      // Add collapsed classes
+      sidebarInner?.classList.add('mobile');
+      sidebarlogoTextWrapper?.classList.add('hide');
+
+      userProfile?.classList.add('image-overlay');
+      userProfileInner?.classList.add('overlay');
+
+      sidebarBottom?.classList.add('hide');
+      sidebarBottomCollapsed?.classList.remove('hide');
+
+      sideNavClose?.classList.add('is-collapsed');
+
+      // Hide collapsible content with fade out
+      collapsibleContent.forEach((el) => {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.2s ease';
+        setTimeout(() => {
+          el.classList.add('hide');
+        }, 200);
+      });
+
+      // Adjust sidebar width
+      sidebar.style.width = '80px';
+      sidebar.style.width = 'auto';
+    } else {
+      sidebar.classList.remove('collapsed');
+
+      // Remove collapsed classes
+      sidebarInner?.classList.remove('mobile');
+      sidebarlogoTextWrapper?.classList.remove('hide');
+
+      userProfile?.classList.remove('image-overlay');
+      userProfileInner?.classList.remove('overlay');
+
+      sidebarBottom?.classList.remove('hide');
+      sidebarBottomCollapsed?.classList.add('hide');
+
+      sideNavClose?.classList.remove('is-collapsed');
+
+      // Show collapsible content with fade in
+      collapsibleContent.forEach((el) => {
+        el.classList.remove('hide');
+        setTimeout(() => {
+          el.style.opacity = '1';
+        }, 10);
+      });
+    }
+  };
+
+  // Add click event to trigger
+  trigger.addEventListener('click', toggleSidebar);
+
+  // Add transition styles to sidebar
+  sidebar.style.transition = 'width 0.3s ease';
+};

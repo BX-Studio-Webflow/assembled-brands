@@ -9,12 +9,14 @@ import {
   checkProgressUserAndTeams,
   constructAdminSelect,
   constructNavBarClasses,
+  initCollapsibleSidebar,
 } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const initFinancialCompanyProfilePage = async () => {
   constructNavBarClasses();
   processMiddleware();
+  initCollapsibleSidebar();
 
   const form = document.querySelector('[dev-target="finance-company-profile"]');
   if (!form) {

@@ -2808,6 +2808,10 @@ var apiGetMyTeams = () => {
 var queryElement = (selector, scope = document) => {
   return scope.querySelector(selector);
 };
+var queryAllElements = (selector, scope = document) => {
+  const elements = scope.querySelectorAll(selector);
+  return [...Array.from(elements)];
+};
 
 // shared/utils/helpers.ts
 var checkProgressUserAndTeams = async (userId) => {
@@ -2819,7 +2823,9 @@ var checkProgressUserAndTeams = async (userId) => {
     ]);
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement('[dev-target="progress-percentage-fill"]');
-    const progressLabel = queryElement('[dev-target="progress-percentage-label"]');
+    const progressLabel = queryAllElements(
+      '[dev-target="progress-percentage-label"]'
+    );
     const companyUsername = queryElement('[dev-target="user-name"]');
     const companyEmail = queryElement('[dev-target="user-email"]');
     const logout = queryElement('[dev-target="logout"]');
@@ -2830,7 +2836,8 @@ var checkProgressUserAndTeams = async (userId) => {
       return;
     }
     progressFill.style.width = `${percentage}%`;
-    progressLabel.textContent = `Progress ${percentage}%`;
+    progressLabel[0].textContent = `Progress ${percentage}%`;
+    progressLabel[1].textContent = `${percentage}%`;
     logout.addEventListener("click", () => {
       logoutUser();
     });
@@ -2944,18 +2951,84 @@ var constructAdminSelect = async (onChangeCallback) => {
     select.addEventListener("change", async (e) => {
       const target = e.target;
       const { value } = target;
-      console.log(value);
       if (onChangeCallback) {
         await onChangeCallback(value);
       }
     });
   }
 };
+var initCollapsibleSidebar = () => {
+  const sidebar = queryElement('[dev-target="sidebar-menu"]');
+  const sidebarInner = sidebar?.querySelector(".sidebar");
+  const trigger = queryElement('[dev-target="collapsible-trigger"]');
+  if (!sidebar || !sidebarInner || !trigger) {
+    console.error(
+      'Ensure [dev-target="sidebar-menu"] and [dev-target="collapsible-trigger"] and  [dev-target="sidebar-inner"] are present.'
+    );
+    return;
+  }
+  let isCollapsed = false;
+  const toggleSidebar = () => {
+    isCollapsed = !isCollapsed;
+    const collapsibleContent = document.querySelectorAll(
+      '[sidebar="collapsible-content"], [dev-target="collapsible-content"]'
+    );
+    const sidebarlogoTextWrapper = queryElement(
+      '[dev-target="sidebar-logo-text-wrapper"]'
+    );
+    const sidebarBottomCollapsed = sidebar.querySelector(
+      '[dev-target="sidebar-bottom-collapsed"]'
+    );
+    const sideNavClose = sidebar.querySelector('[dev-target="sidenav-close"]');
+    const sidebarBottom = sidebar.querySelector('[dev-target="sidebar-bottom"]');
+    const userProfile = sidebar.querySelector(".user-profile_wrapper");
+    const userProfileInner = userProfile?.querySelector(
+      ".flex-horizontal_auth.gap-15"
+    );
+    if (isCollapsed) {
+      sidebar.classList.add("collapsed");
+      sidebarInner?.classList.add("mobile");
+      sidebarlogoTextWrapper?.classList.add("hide");
+      userProfile?.classList.add("image-overlay");
+      userProfileInner?.classList.add("overlay");
+      sidebarBottom?.classList.add("hide");
+      sidebarBottomCollapsed?.classList.remove("hide");
+      sideNavClose?.classList.add("is-collapsed");
+      collapsibleContent.forEach((el) => {
+        el.style.opacity = "0";
+        el.style.transition = "opacity 0.2s ease";
+        setTimeout(() => {
+          el.classList.add("hide");
+        }, 200);
+      });
+      sidebar.style.width = "80px";
+      sidebar.style.width = "auto";
+    } else {
+      sidebar.classList.remove("collapsed");
+      sidebarInner?.classList.remove("mobile");
+      sidebarlogoTextWrapper?.classList.remove("hide");
+      userProfile?.classList.remove("image-overlay");
+      userProfileInner?.classList.remove("overlay");
+      sidebarBottom?.classList.remove("hide");
+      sidebarBottomCollapsed?.classList.add("hide");
+      sideNavClose?.classList.remove("is-collapsed");
+      collapsibleContent.forEach((el) => {
+        el.classList.remove("hide");
+        setTimeout(() => {
+          el.style.opacity = "1";
+        }, 10);
+      });
+    }
+  };
+  trigger.addEventListener("click", toggleSidebar);
+  sidebar.style.transition = "width 0.3s ease";
+};
 
 // pages/financial-financial-overview/index.ts
 var initFinancialOverviewPage = async () => {
   constructNavBarClasses();
   processMiddleware();
+  initCollapsibleSidebar();
   const form = document.querySelector('[dev-target="financial-overview-form"]');
   if (!form) {
     console.error(
