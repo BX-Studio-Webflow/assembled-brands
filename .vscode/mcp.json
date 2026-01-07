@@ -2,7 +2,7 @@
 	"servers": {
     	    "webflow": {
         	"command": "npx",
-            "args": ["mcp-remote", "<https://mcp.webflow.com/sse>"]
+            "args": ["mcp-remote", "https://mcp.webflow.com/sse"]
         }
     }
 }

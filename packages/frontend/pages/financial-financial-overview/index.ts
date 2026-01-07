@@ -11,12 +11,14 @@ import {
   checkProgressUserAndTeams,
   constructAdminSelect,
   constructNavBarClasses,
+  initCollapsibleSidebar,
 } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const initFinancialOverviewPage = async () => {
   constructNavBarClasses();
   processMiddleware();
+  initCollapsibleSidebar();
 
   const form = document.querySelector('[dev-target="financial-overview-form"]');
   if (!form) {

@@ -2928,6 +2928,21 @@ var constructNavBarClasses = () => {
       link.classList.remove("is-active-financial");
     });
   }
+  const collapsileTrigger = queryElement('[dev-target="collapsible-trigger"]');
+  if (!collapsileTrigger) {
+    console.error('Ensure [dev-target="collapsible-trigger"] is present.');
+    return;
+  }
+  collapsileTrigger.addEventListener("click", () => {
+    sidebarMenu.classList.toggle("is-collapsed");
+    Object.assign(sidebarMenu.style, {
+      width: sidebarMenu.classList.contains("is-collapsed") ? "60px" : "auto"
+    });
+    const collapsibleContents = document.querySelectorAll('[sidebar="collapsible-content"]');
+    collapsibleContents.forEach((element) => {
+      element.style.display = "none";
+    });
+  });
 };
 var constructAdminSelect = async (onChangeCallback) => {
   const admin = isAdmin();
@@ -2970,11 +2985,135 @@ var fileToBase64 = (file) => new Promise((resolve, reject) => {
   reader.onerror = () => reject(new Error("Failed to read file as base64"));
   reader.readAsDataURL(file);
 });
+var initCollapsibleSidebar = () => {
+  const sidebar = queryElement('[dev-target="sidebar-menu"]');
+  const trigger = queryElement('[dev-target="collapsible-trigger"]');
+  const mainContent = document.querySelector(".main-content");
+  if (!sidebar || !trigger) {
+    console.error(
+      'Ensure [dev-target="sidebar-menu"] and [dev-target="collapsible-trigger"] are present.'
+    );
+    return;
+  }
+  let isCollapsed = false;
+  const toggleSidebar = () => {
+    isCollapsed = !isCollapsed;
+    const collapsibleContent = document.querySelectorAll(
+      '[sidebar="collapsible-content"], [dev-target="collapsible-content"]'
+    );
+    const sidebarInner = sidebar.querySelector(".sidebar");
+    const sidebarLogo = queryElement('[dev-target="sidebar-logo"]');
+    const sidebarlogoTextWrapper = queryElement(
+      '[dev-target="sidebar-logo-text-wrapper"]'
+    );
+    const sidebarBottomCollapsed = sidebar.querySelector(
+      '[dev-target="sidebar-bottom-collapsed"]'
+    );
+    const sidebarBottom = sidebar.querySelector('[dev-target="sidebar-bottom"]');
+    const sidenavClose = sidebar.querySelector(".sidenav-close");
+    const userProfile = sidebar.querySelector(".user-profile_wrapper");
+    const userProfileInner = userProfile?.querySelector(
+      ".flex-horizontal_auth.gap-15"
+    );
+    if (isCollapsed) {
+      sidebar.classList.add("collapsed");
+      sidebarInner?.classList.add("mobile");
+      sidebarLogo?.classList.add("is-collapse");
+      sidebarlogoTextWrapper?.classList.add("is-collapse");
+      sidenavClose?.classList.add("is-collapse");
+      userProfile?.classList.add("image-overlay");
+      userProfileInner?.classList.add("overlay");
+      sidebarBottom?.classList.add("hide");
+      sidebarBottomCollapsed?.classList.remove("hide");
+      collapsibleContent.forEach((el) => {
+        el.style.opacity = "0";
+        el.style.transition = "opacity 0.2s ease";
+        setTimeout(() => {
+          el.style.display = "none";
+        }, 200);
+      });
+      sidebar.style.width = "80px";
+      if (mainContent) {
+        mainContent.style.marginLeft = "80px";
+        mainContent.style.width = "calc(100% - 80px)";
+      }
+    } else {
+      sidebar.classList.remove("collapsed");
+      sidebarInner?.classList.remove("mobile");
+      sidebarLogo?.classList.remove("is-collapse");
+      sidebarlogoTextWrapper?.classList.remove("is-collapse");
+      sidenavClose?.classList.remove("is-collapse");
+      userProfile?.classList.remove("image-overlay");
+      userProfileInner?.classList.remove("overlay");
+      sidebarBottom?.classList.remove("hide");
+      sidebarBottomCollapsed?.classList.add("hide");
+      collapsibleContent.forEach((el) => {
+        el.style.display = "";
+        setTimeout(() => {
+          el.style.opacity = "1";
+        }, 10);
+      });
+      if (mainContent) {
+        mainContent.style.marginLeft = "280px";
+        mainContent.style.width = "calc(100% - 280px)";
+      }
+    }
+  };
+  trigger.addEventListener("click", toggleSidebar);
+  const navItems = document.querySelectorAll('[dev-target="sidebar-nav"]');
+  navItems.forEach((nav) => {
+    const header = nav.querySelector(".is-sidebar-nav");
+    const submenu = nav.querySelector(".is-submenu");
+    const arrowWrapper = nav.querySelector(".sidebar-accordion_icon_wrapper");
+    if (header && submenu) {
+      header.style.cursor = "pointer";
+      header.addEventListener("click", () => {
+        if (!isCollapsed) {
+          const isOpen = submenu.classList.contains("open");
+          navItems.forEach((otherNav) => {
+            const otherSubmenu = otherNav.querySelector(".is-submenu");
+            const otherArrow = otherNav.querySelector(
+              ".sidebar-accordion_icon_wrapper"
+            );
+            if (otherSubmenu && otherSubmenu !== submenu) {
+              otherSubmenu.classList.remove("open");
+              if (otherArrow) {
+                otherArrow.style.transform = "rotate(0deg)";
+              }
+            }
+          });
+          if (isOpen) {
+            submenu.classList.remove("open");
+            if (arrowWrapper) {
+              arrowWrapper.style.transform = "rotate(0deg)";
+            }
+          } else {
+            submenu.classList.add("open");
+            submenu.style.maxHeight = "500px";
+            if (arrowWrapper) {
+              arrowWrapper.style.transform = "rotate(180deg)";
+            }
+          }
+        }
+      });
+      submenu.style.overflow = "hidden";
+      submenu.style.transition = "max-height 0.3s ease";
+      if (arrowWrapper) {
+        arrowWrapper.style.transition = "transform 0.3s ease";
+      }
+    }
+  });
+  sidebar.style.transition = "width 0.3s ease";
+  if (mainContent) {
+    mainContent.style.transition = "margin-left 0.3s ease, width 0.3s ease";
+  }
+};
 
 // pages/finance-docs-accounts-inventory/index.ts
 var initFinanceDocsAccountsInventoryPage = async () => {
   constructNavBarClasses();
   processMiddleware();
+  initCollapsibleSidebar();
   const ALLOWED_FILE_TYPES = [
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

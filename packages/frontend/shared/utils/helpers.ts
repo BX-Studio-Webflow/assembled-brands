@@ -155,6 +155,24 @@ export const constructNavBarClasses = () => {
       link.classList.remove('is-active-financial');
     });
   }
+
+  //collapsible navbar functionality
+  const collapsileTrigger = queryElement<HTMLElement>('[dev-target="collapsible-trigger"]');
+  if (!collapsileTrigger) {
+    console.error('Ensure [dev-target="collapsible-trigger"] is present.');
+    return;
+  }
+  collapsileTrigger.addEventListener('click', () => {
+    sidebarMenu.classList.toggle('is-collapsed');
+    Object.assign(sidebarMenu.style, {
+      width: sidebarMenu.classList.contains('is-collapsed') ? '60px' : 'auto',
+    });
+    //hide all elements with sidebar="collapsible-content"
+    const collapsibleContents = document.querySelectorAll('[sidebar="collapsible-content"]');
+    collapsibleContents.forEach((element) => {
+      (element as HTMLElement).style.display = 'none';
+    });
+  });
 };
 
 export const constructAdminSelect = async (
@@ -208,3 +226,178 @@ export const fileToBase64 = (file: File): Promise<string> =>
     reader.onerror = () => reject(new Error('Failed to read file as base64'));
     reader.readAsDataURL(file);
   });
+
+/**
+ * Initialize collapsible sidebar functionality
+ * Handles sidebar collapse/expand with smooth transitions and content adjustment
+ */
+export const initCollapsibleSidebar = () => {
+  const sidebar = queryElement<HTMLElement>('[dev-target="sidebar-menu"]');
+  const trigger = queryElement<HTMLElement>('[dev-target="collapsible-trigger"]');
+  const mainContent = document.querySelector<HTMLElement>('.main-content');
+
+  if (!sidebar || !trigger) {
+    console.error(
+      'Ensure [dev-target="sidebar-menu"] and [dev-target="collapsible-trigger"] are present.'
+    );
+    return;
+  }
+
+  let isCollapsed = false;
+
+  // Toggle sidebar collapse/expand
+  const toggleSidebar = () => {
+    isCollapsed = !isCollapsed;
+    const collapsibleContent = document.querySelectorAll<HTMLElement>(
+      '[sidebar="collapsible-content"], [dev-target="collapsible-content"]'
+    );
+
+    // Get sidebar-related elements for class toggling
+    const sidebarInner = sidebar.querySelector<HTMLElement>('.sidebar');
+    const sidebarLogo = queryElement<HTMLElement>('[dev-target="sidebar-logo"]');
+    const sidebarlogoTextWrapper = queryElement<HTMLElement>(
+      '[dev-target="sidebar-logo-text-wrapper"]'
+    );
+    const sidebarBottomCollapsed = sidebar.querySelector<HTMLElement>(
+      '[dev-target="sidebar-bottom-collapsed"]'
+    );
+    const sidebarBottom = sidebar.querySelector<HTMLElement>('[dev-target="sidebar-bottom"]');
+
+    const sidenavClose = sidebar.querySelector<HTMLElement>('.sidenav-close');
+    const userProfile = sidebar.querySelector<HTMLElement>('.user-profile_wrapper');
+    const userProfileInner = userProfile?.querySelector<HTMLElement>(
+      '.flex-horizontal_auth.gap-15'
+    );
+
+    if (isCollapsed) {
+      sidebar.classList.add('collapsed');
+
+      // Add collapsed classes
+      sidebarInner?.classList.add('mobile');
+      sidebarLogo?.classList.add('is-collapse');
+      sidebarlogoTextWrapper?.classList.add('is-collapse');
+      sidenavClose?.classList.add('is-collapse');
+      userProfile?.classList.add('image-overlay');
+      userProfileInner?.classList.add('overlay');
+
+      sidebarBottom?.classList.add('hide');
+      sidebarBottomCollapsed?.classList.remove('hide');
+
+      // Hide collapsible content with fade out
+      collapsibleContent.forEach((el) => {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.2s ease';
+        setTimeout(() => {
+          el.style.display = 'none';
+        }, 200);
+      });
+
+      // Adjust sidebar width
+      sidebar.style.width = '80px';
+
+      // Adjust main content margin if it exists
+      if (mainContent) {
+        mainContent.style.marginLeft = '80px';
+        mainContent.style.width = 'calc(100% - 80px)';
+      }
+    } else {
+      sidebar.classList.remove('collapsed');
+
+      // Remove collapsed classes
+      sidebarInner?.classList.remove('mobile');
+      sidebarLogo?.classList.remove('is-collapse');
+      sidebarlogoTextWrapper?.classList.remove('is-collapse');
+      sidenavClose?.classList.remove('is-collapse');
+      userProfile?.classList.remove('image-overlay');
+      userProfileInner?.classList.remove('overlay');
+
+      sidebarBottom?.classList.remove('hide');
+      sidebarBottomCollapsed?.classList.add('hide');
+
+      // Show collapsible content with fade in
+      collapsibleContent.forEach((el) => {
+        el.style.display = '';
+        setTimeout(() => {
+          el.style.opacity = '1';
+        }, 10);
+      });
+
+      // Adjust sidebar width
+      //sidebar.style.width = '280px';
+
+      // Adjust main content margin if it exists
+      if (mainContent) {
+        mainContent.style.marginLeft = '280px';
+        mainContent.style.width = 'calc(100% - 280px)';
+      }
+    }
+  };
+
+  // Add click event to trigger
+  trigger.addEventListener('click', toggleSidebar);
+
+  // Handle accordion submenu toggles
+  const navItems = document.querySelectorAll('[dev-target="sidebar-nav"]');
+  navItems.forEach((nav) => {
+    const header = nav.querySelector<HTMLElement>('.is-sidebar-nav');
+    const submenu = nav.querySelector<HTMLElement>('.is-submenu');
+    const arrowWrapper = nav.querySelector<HTMLElement>('.sidebar-accordion_icon_wrapper');
+
+    if (header && submenu) {
+      header.style.cursor = 'pointer';
+
+      header.addEventListener('click', () => {
+        // Only allow accordion when sidebar is expanded
+        if (!isCollapsed) {
+          const isOpen = submenu.classList.contains('open');
+
+          // Close all other submenus
+          navItems.forEach((otherNav) => {
+            const otherSubmenu = otherNav.querySelector<HTMLElement>('.is-submenu');
+            const otherArrow = otherNav.querySelector<HTMLElement>(
+              '.sidebar-accordion_icon_wrapper'
+            );
+            if (otherSubmenu && otherSubmenu !== submenu) {
+              otherSubmenu.classList.remove('open');
+              //otherSubmenu.style.maxHeight = '0';
+              if (otherArrow) {
+                otherArrow.style.transform = 'rotate(0deg)';
+              }
+            }
+          });
+
+          // Toggle current submenu
+          if (isOpen) {
+            submenu.classList.remove('open');
+            //submenu.style.maxHeight = '0';
+            if (arrowWrapper) {
+              arrowWrapper.style.transform = 'rotate(0deg)';
+            }
+          } else {
+            submenu.classList.add('open');
+            submenu.style.maxHeight = '500px';
+            if (arrowWrapper) {
+              arrowWrapper.style.transform = 'rotate(180deg)';
+            }
+          }
+        }
+      });
+
+      // Initialize styles
+      //submenu.style.maxHeight = '0';
+      submenu.style.overflow = 'hidden';
+      submenu.style.transition = 'max-height 0.3s ease';
+
+      if (arrowWrapper) {
+        arrowWrapper.style.transition = 'transform 0.3s ease';
+      }
+    }
+  });
+
+  // Add transition styles to sidebar
+  sidebar.style.transition = 'width 0.3s ease';
+
+  if (mainContent) {
+    mainContent.style.transition = 'margin-left 0.3s ease, width 0.3s ease';
+  }
+};

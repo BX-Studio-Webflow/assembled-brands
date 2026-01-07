@@ -14,12 +14,14 @@ import {
   constructAdminSelect,
   constructNavBarClasses,
   fileToBase64,
+  initCollapsibleSidebar,
 } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const initFinanceReportsPage = async () => {
   constructNavBarClasses();
   processMiddleware();
+  initCollapsibleSidebar();
 
   //ONLY SHEET AND XLSX ALLOWED
   const ALLOWED_FILE_TYPES = [
