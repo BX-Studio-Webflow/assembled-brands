@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.12
+
+### Patch Changes
+
+- fix: dev qa
+
 ## 0.3.11
 
 ### Patch Changes
