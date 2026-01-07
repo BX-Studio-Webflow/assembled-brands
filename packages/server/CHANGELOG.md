@@ -1,5 +1,17 @@
 # server
 
+## 0.0.10
+
+### Patch Changes
+
+- fix: dev qa
+
+## 0.0.9
+
+### Patch Changes
+
+- 88b3b32: fix: patch
+
 ## 0.0.8
 
 ### Patch Changes

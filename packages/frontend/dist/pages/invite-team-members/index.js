@@ -2667,15 +2667,6 @@ var logoutUser = () => {
   localStorage.removeItem("x-team-id");
   navigateToPath("/login?error=logged-out");
 };
-var getUserRole = () => {
-  const admin = localStorage.getItem("user");
-  const user = admin && JSON.parse(admin);
-  return user && user?.role;
-};
-var isAdmin = () => {
-  const role = getUserRole();
-  return role === "admin";
-};
 
 // shared/services/axios/AxiosRequestIntrceptorConfigCallback.ts
 var AxiosRequestIntrceptorConfigCallback = (config) => {
@@ -2796,16 +2787,11 @@ async function apiGetUserMe() {
 }
 
 // shared/services/FinancialWizardService.ts
-var apiGetFinancialProgress = () => {
+var apiGetFinancialProgress = (userId) => {
   return ApiService_default.fetchDataWithAxios({
     url: "/financial-wizard/progress",
-    method: "get"
-  });
-};
-var apiAdminGetApplications = () => {
-  return ApiService_default.fetchDataWithAxios({
-    url: `/financial-wizard/applications`,
-    method: "get"
+    method: "get",
+    params: userId ? { user_id: userId } : void 0
   });
 };
 
@@ -2815,14 +2801,13 @@ var queryElement = (selector, scope = document) => {
 };
 
 // shared/utils/helpers.ts
-var checkProgressUserAndTeams = async () => {
+var checkProgressUserAndTeams = async (userId) => {
   try {
-    const [financialProgress, person, teams] = await Promise.all([
-      apiGetFinancialProgress(),
+    const [financialProgress, user, teams] = await Promise.all([
+      apiGetFinancialProgress(userId),
       apiGetUserMe(),
       apiGetMyTeams()
     ]);
-    console.table(teams);
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement('[dev-target="progress-percentage-fill"]');
     const progressLabel = queryElement('[dev-target="progress-percentage-label"]');
@@ -2840,39 +2825,11 @@ var checkProgressUserAndTeams = async () => {
     logout.addEventListener("click", () => {
       logoutUser();
     });
-    companyUsername.innerText = financialProgress.business?.legal_name || (person.first_name || "Full") + " " + (person.last_name || "Name");
-    companyEmail.innerText = financialProgress.business?.email || person.email || "hello@company.com";
-    return financialProgress;
+    companyUsername.innerText = financialProgress.business?.legal_name || (user.first_name || "Full") + " " + (user.last_name || "Name");
+    companyEmail.innerText = financialProgress.business?.email || user.email || "hello@company.com";
+    return { financialProgress, user, teams };
   } catch (error) {
     console.error("Failed to load financial wizard progress:", error);
-  }
-};
-var constructAdminSelect = async () => {
-  const admin = isAdmin();
-  if (admin) {
-    const selectWrapper = queryElement('[dev-target="admin-select-wrapper"]');
-    const select = queryElement('[dev-target="admin-select"]');
-    selectWrapper?.classList.remove("hide");
-    if (!selectWrapper || !select) {
-      console.error(
-        'Ensure [dev-target="admin-select"] and  [dev-target="admin-select-wrapper"] is present.'
-      );
-      return;
-    }
-    const applications = await apiAdminGetApplications();
-    select.innerHTML = "";
-    applications.forEach((app) => {
-      const name = app.first_name || "" + app.last_name || "";
-      const option = document.createElement("option");
-      option.value = app.id.toString();
-      option.textContent = `${name || app.email}`;
-      select.appendChild(option);
-    });
-    select.addEventListener("change", (e) => {
-      const target = e.target;
-      const { value } = target;
-      console.log(value);
-    });
   }
 };
 
@@ -2880,7 +2837,6 @@ var constructAdminSelect = async () => {
 var initInviteTeamMembersPage = async () => {
   processMiddleware();
   checkProgressUserAndTeams();
-  constructAdminSelect();
   const form = document.querySelector('[dev-target="add-team-member-form"]');
   if (!form) {
     console.error(

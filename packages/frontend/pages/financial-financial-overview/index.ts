@@ -1,6 +1,9 @@
 import type { AxiosError } from 'axios';
 import { apiSaveFinancialOverview } from 'shared/services/FinancialWizardService';
-import type { FinancialOverviewBody } from 'shared/types/financial-wizard';
+import type {
+  FinancialOverviewBody,
+  FinancialWizardProgressResponse,
+} from 'shared/types/financial-wizard';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
@@ -14,9 +17,7 @@ import { queryElement } from '$utils/selectors';
 const initFinancialOverviewPage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  constructAdminSelect();
 
-  const result = await checkProgressUserAndTeams();
   const form = document.querySelector('[dev-target="financial-overview-form"]');
   if (!form) {
     console.error(
@@ -59,6 +60,30 @@ const initFinancialOverviewPage = async () => {
     console.error('Ensure [dev-target="submit-button"] is present.');
     return;
   }
+
+  // Function to update form fields based on financial progress
+  const updateFormFields = (progress: FinancialWizardProgressResponse | undefined) => {
+    if (progress?.financial_overview) {
+      companyRevenue.value = progress.financial_overview.revenue_last_12_months || '';
+      companyNetIncome.value = progress.financial_overview.net_income_last_12_months || '';
+      companyProjectedRevenue.value =
+        progress.financial_overview.projected_revenue_next_12_months || '';
+    } else {
+      companyRevenue.value = '';
+      companyNetIncome.value = '';
+      companyProjectedRevenue.value = '';
+    }
+  };
+
+  let financialProgress: FinancialWizardProgressResponse | undefined;
+  const loadFinancialProgress = async (userId?: string) => {
+    const result = await checkProgressUserAndTeams(userId);
+    financialProgress = result?.financialProgress;
+    updateFormFields(financialProgress);
+  };
+
+  await loadFinancialProgress();
+  constructAdminSelect(loadFinancialProgress);
 
   backButton.addEventListener('click', () => {
     navigateToPath('/dashboard');
@@ -109,14 +134,6 @@ const initFinancialOverviewPage = async () => {
       submitButton.value = message || 'There was a problem saving your information';
     }
   });
-
-  //preset the values if they are available
-  if (result?.financial_overview) {
-    companyRevenue.value = result.financial_overview.revenue_last_12_months || '';
-    companyNetIncome.value = result.financial_overview.net_income_last_12_months || '';
-    companyProjectedRevenue.value =
-      result.financial_overview.projected_revenue_next_12_months || '';
-  }
 };
 
 window.Webflow ||= [];

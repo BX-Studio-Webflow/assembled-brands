@@ -29,10 +29,11 @@ export const apiUploadFinancialDocument = (data: FinancialDocumentBody) => {
   });
 };
 
-export const apiGetFinancialProgress = () => {
+export const apiGetFinancialProgress = (userId?: string) => {
   return ApiService.fetchDataWithAxios<FinancialWizardProgressResponse>({
     url: '/financial-wizard/progress',
     method: 'get',
+    params: userId ? { user_id: userId } : undefined,
   });
 };
 

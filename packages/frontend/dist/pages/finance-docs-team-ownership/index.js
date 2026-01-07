@@ -2783,10 +2783,11 @@ var apiUploadFinancialDocument = (data) => {
     data
   });
 };
-var apiGetFinancialProgress = () => {
+var apiGetFinancialProgress = (userId) => {
   return ApiService_default.fetchDataWithAxios({
     url: "/financial-wizard/progress",
-    method: "get"
+    method: "get",
+    params: userId ? { user_id: userId } : void 0
   });
 };
 var apiAdminGetApplications = () => {
@@ -2818,14 +2819,13 @@ var queryElement = (selector, scope = document) => {
 };
 
 // shared/utils/helpers.ts
-var checkProgressUserAndTeams = async () => {
+var checkProgressUserAndTeams = async (userId) => {
   try {
-    const [financialProgress, person, teams] = await Promise.all([
-      apiGetFinancialProgress(),
+    const [financialProgress, user, teams] = await Promise.all([
+      apiGetFinancialProgress(userId),
       apiGetUserMe(),
       apiGetMyTeams()
     ]);
-    console.table(teams);
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement('[dev-target="progress-percentage-fill"]');
     const progressLabel = queryElement('[dev-target="progress-percentage-label"]');
@@ -2843,9 +2843,9 @@ var checkProgressUserAndTeams = async () => {
     logout.addEventListener("click", () => {
       logoutUser();
     });
-    companyUsername.innerText = financialProgress.business?.legal_name || (person.first_name || "Full") + " " + (person.last_name || "Name");
-    companyEmail.innerText = financialProgress.business?.email || person.email || "hello@company.com";
-    return financialProgress;
+    companyUsername.innerText = financialProgress.business?.legal_name || (user.first_name || "Full") + " " + (user.last_name || "Name");
+    companyEmail.innerText = financialProgress.business?.email || user.email || "hello@company.com";
+    return { financialProgress, user, teams };
   } catch (error) {
     console.error("Failed to load financial wizard progress:", error);
   }
@@ -2905,11 +2905,15 @@ var constructNavBarClasses = () => {
     "/finance-docs-team-and-ownership": {
       nav_attr: "nav-team-ownership-link",
       nav_class: "is-active-financial"
+    },
+    "/team-members": {
+      nav_attr: "nav-team-ownership-link",
+      nav_class: "is-active-financial"
     }
   };
   const activeTarget = routeMap[currentPath];
+  const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
   if (activeTarget) {
-    const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
     allNavLinks.forEach((link) => {
       link.classList.remove("is-active");
       link.classList.remove("is-active-financial");
@@ -2918,9 +2922,14 @@ var constructNavBarClasses = () => {
     if (activeLink) {
       activeLink.classList.add(activeTarget.nav_class);
     }
+  } else {
+    allNavLinks.forEach((link) => {
+      link.classList.remove("is-active");
+      link.classList.remove("is-active-financial");
+    });
   }
 };
-var constructAdminSelect = async () => {
+var constructAdminSelect = async (onChangeCallback) => {
   const admin = isAdmin();
   if (admin) {
     const selectWrapper = queryElement('[dev-target="admin-select-wrapper"]');
@@ -2941,10 +2950,13 @@ var constructAdminSelect = async () => {
       option.textContent = `${name || app.email}`;
       select.appendChild(option);
     });
-    select.addEventListener("change", (e) => {
+    select.addEventListener("change", async (e) => {
       const target = e.target;
       const { value } = target;
       console.log(value);
+      if (onChangeCallback) {
+        await onChangeCallback(value);
+      }
     });
   }
 };
@@ -2963,8 +2975,6 @@ var fileToBase64 = (file) => new Promise((resolve, reject) => {
 var initTeamOwnershipPage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  constructAdminSelect();
-  const result = await checkProgressUserAndTeams();
   const ALLOWED_FILE_TYPES = [
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -3035,6 +3045,46 @@ var initTeamOwnershipPage = async () => {
     console.error('Ensure [dev-target="submit-button"] is present.');
     return;
   }
+  const updateHelperTexts = (progress) => {
+    if (progress?.team_ownership) {
+      const managementBios = progress.team_ownership.find(
+        (document2) => document2.document_type === "management_bios"
+      );
+      if (managementBios) {
+        managementBiosHelpText.textContent = managementBios.asset_name || "";
+      } else {
+        managementBiosHelpText.textContent = "";
+      }
+      const investorDeck = progress.team_ownership.find(
+        (document2) => document2.document_type === "investor_deck"
+      );
+      if (investorDeck) {
+        investorDeckHelpText.textContent = investorDeck.asset_name || "";
+      } else {
+        investorDeckHelpText.textContent = "";
+      }
+      const capTable = progress.team_ownership.find(
+        (document2) => document2.document_type === "cap_table"
+      );
+      if (capTable) {
+        capitalisationTableHelpText.textContent = capTable.asset_name || "";
+      } else {
+        capitalisationTableHelpText.textContent = "";
+      }
+    } else {
+      managementBiosHelpText.textContent = "";
+      investorDeckHelpText.textContent = "";
+      capitalisationTableHelpText.textContent = "";
+    }
+  };
+  let financialProgress;
+  const loadFinancialProgress = async (userId) => {
+    const result = await checkProgressUserAndTeams(userId);
+    financialProgress = result?.financialProgress;
+    updateHelperTexts(financialProgress);
+  };
+  await loadFinancialProgress();
+  constructAdminSelect(loadFinancialProgress);
   const updateHelperText = (input, helperText) => {
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
@@ -3266,26 +3316,6 @@ var initTeamOwnershipPage = async () => {
       submitButton.disabled = false;
     }
   });
-  if (result?.team_ownership) {
-    const managementBios = result.team_ownership.find(
-      (document2) => document2.document_type === "management_bios"
-    );
-    if (managementBios) {
-      managementBiosHelpText.textContent = managementBios.asset_name || "";
-    }
-    const investorDeck = result.team_ownership.find(
-      (document2) => document2.document_type === "investor_deck"
-    );
-    if (investorDeck) {
-      investorDeckHelpText.textContent = investorDeck.asset_name || "";
-    }
-    const capTable = result.team_ownership.find(
-      (document2) => document2.document_type === "cap_table"
-    );
-    if (capTable) {
-      capitalisationTableHelpText.textContent = capTable.asset_name || "";
-    }
-  }
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {

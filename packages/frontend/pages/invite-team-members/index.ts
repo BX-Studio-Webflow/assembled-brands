@@ -3,13 +3,12 @@ import { apiGetMyTeams, apiInviteTeamMember } from 'shared/services/TeamService'
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
-import { checkProgressUserAndTeams, constructAdminSelect } from '$utils/helpers';
+import { checkProgressUserAndTeams } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const initInviteTeamMembersPage = async () => {
   processMiddleware();
   checkProgressUserAndTeams();
-  constructAdminSelect();
 
   const form = document.querySelector('[dev-target="add-team-member-form"]');
   if (!form) {

@@ -1,6 +1,7 @@
 import type { AxiosError } from 'axios';
 import { apiUpdateBusiness } from 'shared/services/BusinessService';
 import type { UpdateBusinessRequest } from 'shared/types/business';
+import type { FinancialWizardProgressResponse } from 'shared/types/financial-wizard';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
@@ -14,9 +15,7 @@ import { queryElement } from '$utils/selectors';
 const initFinancialCompanyProfilePage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  constructAdminSelect();
 
-  const result = await checkProgressUserAndTeams();
   const form = document.querySelector('[dev-target="finance-company-profile"]');
   if (!form) {
     console.error(
@@ -96,28 +95,54 @@ const initFinancialCompanyProfilePage = async () => {
 
   accountingSoftwareInput.addEventListener('change', handleAccountingSoftwareChange);
 
-  //Preset the values if they are available
-  if (result?.company_profile) {
-    if (result.company_profile.legal_name) {
-      companyLegalNameInput.value = result.company_profile.legal_name;
+  // Function to update form fields based on financial progress
+  const updateFormFields = (progress: FinancialWizardProgressResponse | undefined) => {
+    if (progress?.company_profile) {
+      if (progress.company_profile.legal_name) {
+        companyLegalNameInput.value = progress.company_profile.legal_name;
+      } else {
+        companyLegalNameInput.value = '';
+      }
+      if (progress.company_profile.headquarters) {
+        companyHeadquartersInput.value = progress.company_profile.headquarters;
+        companyHeadquartersInput.dispatchEvent(new Event('change', { bubbles: true }));
+      } else {
+        companyHeadquartersInput.value = '';
+      }
+      if (progress.company_profile.year_formed) {
+        companyYear.value = progress.company_profile.year_formed;
+      } else {
+        companyYear.value = '';
+      }
+      if (progress.company_profile.accounting_software) {
+        accountingSoftwareInput.value = progress.company_profile.accounting_software;
+        accountingSoftwareInput.dispatchEvent(new Event('change', { bubbles: true }));
+      } else {
+        accountingSoftwareInput.value = '';
+      }
+      if (progress.company_profile.other_accounting_software) {
+        accountingSoftwareOther.value = progress.company_profile.other_accounting_software;
+      } else {
+        accountingSoftwareOther.value = '';
+      }
+    } else {
+      companyLegalNameInput.value = '';
+      companyHeadquartersInput.value = '';
+      companyYear.value = '';
+      accountingSoftwareInput.value = '';
+      accountingSoftwareOther.value = '';
     }
-    if (result.company_profile.headquarters) {
-      companyHeadquartersInput.value = result.company_profile.headquarters;
-      // Trigger change event to ensure select is properly updated
-      companyHeadquartersInput.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-    if (result.company_profile.year_formed) {
-      companyYear.value = result.company_profile.year_formed;
-    }
-    if (result.company_profile.accounting_software) {
-      accountingSoftwareInput.value = result.company_profile.accounting_software;
-      // Trigger change event to ensure select is properly updated and wrapper visibility is set
-      accountingSoftwareInput.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-    if (result.company_profile.other_accounting_software) {
-      accountingSoftwareOther.value = result.company_profile.other_accounting_software;
-    }
-  }
+  };
+
+  let financialProgress: FinancialWizardProgressResponse | undefined;
+  const loadFinancialProgress = async (userId?: string) => {
+    const result = await checkProgressUserAndTeams(userId);
+    financialProgress = result?.financialProgress;
+    updateFormFields(financialProgress);
+  };
+
+  await loadFinancialProgress();
+  constructAdminSelect(loadFinancialProgress);
 
   backButton.addEventListener('click', () => {
     navigateToPath('/dashboard');

@@ -2781,10 +2781,11 @@ async function apiGetUserMe() {
 }
 
 // shared/services/FinancialWizardService.ts
-var apiGetFinancialProgress = () => {
+var apiGetFinancialProgress = (userId) => {
   return ApiService_default.fetchDataWithAxios({
     url: "/financial-wizard/progress",
-    method: "get"
+    method: "get",
+    params: userId ? { user_id: userId } : void 0
   });
 };
 
@@ -2794,14 +2795,13 @@ var queryElement = (selector, scope = document) => {
 };
 
 // shared/utils/helpers.ts
-var checkProgressUserAndTeams = async () => {
+var checkProgressUserAndTeams = async (userId) => {
   try {
-    const [financialProgress, person, teams] = await Promise.all([
-      apiGetFinancialProgress(),
+    const [financialProgress, user, teams] = await Promise.all([
+      apiGetFinancialProgress(userId),
       apiGetUserMe(),
       apiGetMyTeams()
     ]);
-    console.table(teams);
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement('[dev-target="progress-percentage-fill"]');
     const progressLabel = queryElement('[dev-target="progress-percentage-label"]');
@@ -2819,18 +2819,99 @@ var checkProgressUserAndTeams = async () => {
     logout.addEventListener("click", () => {
       logoutUser();
     });
-    companyUsername.innerText = financialProgress.business?.legal_name || (person.first_name || "Full") + " " + (person.last_name || "Name");
-    companyEmail.innerText = financialProgress.business?.email || person.email || "hello@company.com";
-    return financialProgress;
+    companyUsername.innerText = financialProgress.business?.legal_name || (user.first_name || "Full") + " " + (user.last_name || "Name");
+    companyEmail.innerText = financialProgress.business?.email || user.email || "hello@company.com";
+    return { financialProgress, user, teams };
   } catch (error) {
     console.error("Failed to load financial wizard progress:", error);
+  }
+};
+var constructNavBarClasses = () => {
+  const sidebarMenu = queryElement('[dev-target="sidebar-menu"]');
+  if (!sidebarMenu) {
+    console.error('Ensure [dev-target="sidebar-menu"] is present.');
+    return;
+  }
+  const currentPath = window.location.pathname;
+  const routeMap = {
+    "/dev/finance-company-profile": {
+      nav_attr: "nav-company-profile-link",
+      nav_class: "is-active"
+    },
+    "/finance-company-profile": {
+      nav_attr: "nav-company-profile-link",
+      nav_class: "is-active"
+    },
+    "/dev/finance-financial-overview": {
+      nav_attr: "nav-financial-overview-link",
+      nav_class: "is-active"
+    },
+    "/finance-financial-overview": {
+      nav_attr: "nav-financial-overview-link",
+      nav_class: "is-active"
+    },
+    "/dev/finance-docs-financial-reports": {
+      nav_attr: "nav-financial-reports-link",
+      nav_class: "is-active-financial"
+    },
+    "/finance-docs-financial-reports": {
+      nav_attr: "nav-financial-reports-link",
+      nav_class: "is-active-financial"
+    },
+    "/dev/finance-docs-accounts-and-inventory": {
+      nav_attr: "nav-accounts-inventory-link",
+      nav_class: "is-active-financial"
+    },
+    "/finance-docs-accounts-and-inventory": {
+      nav_attr: "nav-accounts-inventory-link",
+      nav_class: "is-active-financial"
+    },
+    "/dev/finance-docs-ecommerce-performance": {
+      nav_attr: "nav-eccomerce-performance-link",
+      nav_class: "is-active-financial"
+    },
+    "/finance-docs-ecommerce-performance": {
+      nav_attr: "nav-eccomerce-performance-link",
+      nav_class: "is-active-financial"
+    },
+    "/dev/finance-docs-team-and-ownership": {
+      nav_attr: "nav-team-ownership-link",
+      nav_class: "is-active-financial"
+    },
+    "/finance-docs-team-and-ownership": {
+      nav_attr: "nav-team-ownership-link",
+      nav_class: "is-active-financial"
+    },
+    "/team-members": {
+      nav_attr: "nav-team-ownership-link",
+      nav_class: "is-active-financial"
+    }
+  };
+  const activeTarget = routeMap[currentPath];
+  const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
+  if (activeTarget) {
+    allNavLinks.forEach((link) => {
+      link.classList.remove("is-active");
+      link.classList.remove("is-active-financial");
+    });
+    const activeLink = queryElement(`[dev-target="${activeTarget.nav_attr}"]`);
+    if (activeLink) {
+      activeLink.classList.add(activeTarget.nav_class);
+    }
+  } else {
+    allNavLinks.forEach((link) => {
+      link.classList.remove("is-active");
+      link.classList.remove("is-active-financial");
+    });
   }
 };
 
 // pages/team-members/index.ts
 var TeamMembersPage = async () => {
+  constructNavBarClasses();
   processMiddleware();
   checkProgressUserAndTeams();
+  await checkProgressUserAndTeams();
   const table = document.querySelector('[fs-table-element="table"]');
   const tableBody = table?.querySelector(".fs-table_body");
   const templateRow = tableBody?.querySelector('[dev-target="table-row"]');

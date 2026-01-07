@@ -2784,10 +2784,11 @@ async function apiGetUserMe() {
 }
 
 // shared/services/FinancialWizardService.ts
-var apiGetFinancialProgress = () => {
+var apiGetFinancialProgress = (userId) => {
   return ApiService_default.fetchDataWithAxios({
     url: "/financial-wizard/progress",
-    method: "get"
+    method: "get",
+    params: userId ? { user_id: userId } : void 0
   });
 };
 var apiAdminGetApplications = () => {
@@ -2811,14 +2812,13 @@ var queryElement = (selector, scope = document) => {
 };
 
 // shared/utils/helpers.ts
-var checkProgressUserAndTeams = async () => {
+var checkProgressUserAndTeams = async (userId) => {
   try {
-    const [financialProgress, person, teams] = await Promise.all([
-      apiGetFinancialProgress(),
+    const [financialProgress, user, teams] = await Promise.all([
+      apiGetFinancialProgress(userId),
       apiGetUserMe(),
       apiGetMyTeams()
     ]);
-    console.table(teams);
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement('[dev-target="progress-percentage-fill"]');
     const progressLabel = queryElement('[dev-target="progress-percentage-label"]');
@@ -2836,9 +2836,9 @@ var checkProgressUserAndTeams = async () => {
     logout.addEventListener("click", () => {
       logoutUser();
     });
-    companyUsername.innerText = financialProgress.business?.legal_name || (person.first_name || "Full") + " " + (person.last_name || "Name");
-    companyEmail.innerText = financialProgress.business?.email || person.email || "hello@company.com";
-    return financialProgress;
+    companyUsername.innerText = financialProgress.business?.legal_name || (user.first_name || "Full") + " " + (user.last_name || "Name");
+    companyEmail.innerText = financialProgress.business?.email || user.email || "hello@company.com";
+    return { financialProgress, user, teams };
   } catch (error) {
     console.error("Failed to load financial wizard progress:", error);
   }
@@ -2898,11 +2898,15 @@ var constructNavBarClasses = () => {
     "/finance-docs-team-and-ownership": {
       nav_attr: "nav-team-ownership-link",
       nav_class: "is-active-financial"
+    },
+    "/team-members": {
+      nav_attr: "nav-team-ownership-link",
+      nav_class: "is-active-financial"
     }
   };
   const activeTarget = routeMap[currentPath];
+  const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
   if (activeTarget) {
-    const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
     allNavLinks.forEach((link) => {
       link.classList.remove("is-active");
       link.classList.remove("is-active-financial");
@@ -2911,9 +2915,14 @@ var constructNavBarClasses = () => {
     if (activeLink) {
       activeLink.classList.add(activeTarget.nav_class);
     }
+  } else {
+    allNavLinks.forEach((link) => {
+      link.classList.remove("is-active");
+      link.classList.remove("is-active-financial");
+    });
   }
 };
-var constructAdminSelect = async () => {
+var constructAdminSelect = async (onChangeCallback) => {
   const admin = isAdmin();
   if (admin) {
     const selectWrapper = queryElement('[dev-target="admin-select-wrapper"]');
@@ -2934,10 +2943,13 @@ var constructAdminSelect = async () => {
       option.textContent = `${name || app.email}`;
       select.appendChild(option);
     });
-    select.addEventListener("change", (e) => {
+    select.addEventListener("change", async (e) => {
       const target = e.target;
       const { value } = target;
       console.log(value);
+      if (onChangeCallback) {
+        await onChangeCallback(value);
+      }
     });
   }
 };
@@ -2946,8 +2958,6 @@ var constructAdminSelect = async () => {
 var initFinancialCompanyProfilePage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  constructAdminSelect();
-  const result = await checkProgressUserAndTeams();
   const form = document.querySelector('[dev-target="finance-company-profile"]');
   if (!form) {
     console.error(
@@ -3019,25 +3029,51 @@ var initFinancialCompanyProfilePage = async () => {
     }
   };
   accountingSoftwareInput.addEventListener("change", handleAccountingSoftwareChange);
-  if (result?.company_profile) {
-    if (result.company_profile.legal_name) {
-      companyLegalNameInput.value = result.company_profile.legal_name;
+  const updateFormFields = (progress) => {
+    if (progress?.company_profile) {
+      if (progress.company_profile.legal_name) {
+        companyLegalNameInput.value = progress.company_profile.legal_name;
+      } else {
+        companyLegalNameInput.value = "";
+      }
+      if (progress.company_profile.headquarters) {
+        companyHeadquartersInput.value = progress.company_profile.headquarters;
+        companyHeadquartersInput.dispatchEvent(new Event("change", { bubbles: true }));
+      } else {
+        companyHeadquartersInput.value = "";
+      }
+      if (progress.company_profile.year_formed) {
+        companyYear.value = progress.company_profile.year_formed;
+      } else {
+        companyYear.value = "";
+      }
+      if (progress.company_profile.accounting_software) {
+        accountingSoftwareInput.value = progress.company_profile.accounting_software;
+        accountingSoftwareInput.dispatchEvent(new Event("change", { bubbles: true }));
+      } else {
+        accountingSoftwareInput.value = "";
+      }
+      if (progress.company_profile.other_accounting_software) {
+        accountingSoftwareOther.value = progress.company_profile.other_accounting_software;
+      } else {
+        accountingSoftwareOther.value = "";
+      }
+    } else {
+      companyLegalNameInput.value = "";
+      companyHeadquartersInput.value = "";
+      companyYear.value = "";
+      accountingSoftwareInput.value = "";
+      accountingSoftwareOther.value = "";
     }
-    if (result.company_profile.headquarters) {
-      companyHeadquartersInput.value = result.company_profile.headquarters;
-      companyHeadquartersInput.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-    if (result.company_profile.year_formed) {
-      companyYear.value = result.company_profile.year_formed;
-    }
-    if (result.company_profile.accounting_software) {
-      accountingSoftwareInput.value = result.company_profile.accounting_software;
-      accountingSoftwareInput.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-    if (result.company_profile.other_accounting_software) {
-      accountingSoftwareOther.value = result.company_profile.other_accounting_software;
-    }
-  }
+  };
+  let financialProgress;
+  const loadFinancialProgress = async (userId) => {
+    const result = await checkProgressUserAndTeams(userId);
+    financialProgress = result?.financialProgress;
+    updateFormFields(financialProgress);
+  };
+  await loadFinancialProgress();
+  constructAdminSelect(loadFinancialProgress);
   backButton.addEventListener("click", () => {
     navigateToPath("/dashboard");
   });

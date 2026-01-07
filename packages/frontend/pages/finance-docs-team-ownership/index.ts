@@ -2,7 +2,10 @@ import type { AxiosError } from 'axios';
 import { apiCreateAssetPresignedUrl } from 'shared/services/AssetService';
 import { apiUploadFinancialDocument } from 'shared/services/FinancialWizardService';
 import type { CreateAssetBody } from 'shared/types/asset';
-import type { FinancialDocumentBody } from 'shared/types/financial-wizard';
+import type {
+  FinancialDocumentBody,
+  FinancialWizardProgressResponse,
+} from 'shared/types/financial-wizard';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
@@ -17,9 +20,6 @@ import { queryElement } from '$utils/selectors';
 const initTeamOwnershipPage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  constructAdminSelect();
-
-  const result = await checkProgressUserAndTeams();
 
   //ONLY SHEET AND XLSX ALLOWED
   const ALLOWED_FILE_TYPES = [
@@ -98,6 +98,50 @@ const initTeamOwnershipPage = async () => {
     console.error('Ensure [dev-target="submit-button"] is present.');
     return;
   }
+
+  // Function to update helper texts based on financial progress
+  const updateHelperTexts = (progress: FinancialWizardProgressResponse | undefined) => {
+    if (progress?.team_ownership) {
+      const managementBios = progress.team_ownership.find(
+        (document) => document.document_type === 'management_bios'
+      );
+      if (managementBios) {
+        managementBiosHelpText.textContent = managementBios.asset_name || '';
+      } else {
+        managementBiosHelpText.textContent = '';
+      }
+      const investorDeck = progress.team_ownership.find(
+        (document) => document.document_type === 'investor_deck'
+      );
+      if (investorDeck) {
+        investorDeckHelpText.textContent = investorDeck.asset_name || '';
+      } else {
+        investorDeckHelpText.textContent = '';
+      }
+      const capTable = progress.team_ownership.find(
+        (document) => document.document_type === 'cap_table'
+      );
+      if (capTable) {
+        capitalisationTableHelpText.textContent = capTable.asset_name || '';
+      } else {
+        capitalisationTableHelpText.textContent = '';
+      }
+    } else {
+      managementBiosHelpText.textContent = '';
+      investorDeckHelpText.textContent = '';
+      capitalisationTableHelpText.textContent = '';
+    }
+  };
+
+  let financialProgress: FinancialWizardProgressResponse | undefined;
+  const loadFinancialProgress = async (userId?: string) => {
+    const result = await checkProgressUserAndTeams(userId);
+    financialProgress = result?.financialProgress;
+    updateHelperTexts(financialProgress);
+  };
+
+  await loadFinancialProgress();
+  constructAdminSelect(loadFinancialProgress);
 
   // Helper function to update helper text with file name and validate file type
   const updateHelperText = (input: HTMLInputElement, helperText: HTMLElement) => {
@@ -405,28 +449,6 @@ const initTeamOwnershipPage = async () => {
       submitButton.disabled = false;
     }
   });
-
-  // Prefill helper text if documents are already uploaded
-  if (result?.team_ownership) {
-    const managementBios = result.team_ownership.find(
-      (document) => document.document_type === 'management_bios'
-    );
-    if (managementBios) {
-      managementBiosHelpText.textContent = managementBios.asset_name || '';
-    }
-    const investorDeck = result.team_ownership.find(
-      (document) => document.document_type === 'investor_deck'
-    );
-    if (investorDeck) {
-      investorDeckHelpText.textContent = investorDeck.asset_name || '';
-    }
-    const capTable = result.team_ownership.find(
-      (document) => document.document_type === 'cap_table'
-    );
-    if (capTable) {
-      capitalisationTableHelpText.textContent = capTable.asset_name || '';
-    }
-  }
 };
 
 window.Webflow ||= [];

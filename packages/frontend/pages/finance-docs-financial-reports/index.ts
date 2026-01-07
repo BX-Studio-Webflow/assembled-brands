@@ -2,7 +2,10 @@ import type { AxiosError } from 'axios';
 import { apiCreateAssetPresignedUrl } from 'shared/services/AssetService';
 import { apiUploadFinancialDocument } from 'shared/services/FinancialWizardService';
 import type { CreateAssetBody } from 'shared/types/asset';
-import type { FinancialDocumentBody } from 'shared/types/financial-wizard';
+import type {
+  FinancialDocumentBody,
+  FinancialWizardProgressResponse,
+} from 'shared/types/financial-wizard';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
@@ -17,9 +20,7 @@ import { queryElement } from '$utils/selectors';
 const initFinanceReportsPage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  constructAdminSelect();
 
-  const result = await checkProgressUserAndTeams();
   //ONLY SHEET AND XLSX ALLOWED
   const ALLOWED_FILE_TYPES = [
     'application/vnd.ms-excel',
@@ -97,6 +98,50 @@ const initFinanceReportsPage = async () => {
     console.error('Ensure [dev-target="submit-button"] is present.');
     return;
   }
+
+  // Function to update helper texts based on financial progress
+  const updateHelperTexts = (progress: FinancialWizardProgressResponse | undefined) => {
+    if (progress?.financial_reports) {
+      const balanceSheet = progress.financial_reports.find(
+        (document) => document.document_type === 'monthly_balance_sheet'
+      );
+      if (balanceSheet) {
+        balaceSheetHelpText.textContent = balanceSheet.asset_name || '';
+      } else {
+        balaceSheetHelpText.textContent = '';
+      }
+      const incomeStatement = progress.financial_reports.find(
+        (document) => document.document_type === 'monthly_income_statement'
+      );
+      if (incomeStatement) {
+        incomeStatementHelpText.textContent = incomeStatement.asset_name || '';
+      } else {
+        incomeStatementHelpText.textContent = '';
+      }
+      const incomeForecast = progress.financial_reports.find(
+        (document) => document.document_type === 'monthly_income_forecast'
+      );
+      if (incomeForecast) {
+        incomeForecastHelpText.textContent = incomeForecast.asset_name || '';
+      } else {
+        incomeForecastHelpText.textContent = '';
+      }
+    } else {
+      balaceSheetHelpText.textContent = '';
+      incomeStatementHelpText.textContent = '';
+      incomeForecastHelpText.textContent = '';
+    }
+  };
+
+  let financialProgress: FinancialWizardProgressResponse | undefined;
+  const loadFinancialProgress = async (userId?: string) => {
+    const result = await checkProgressUserAndTeams(userId);
+    financialProgress = result?.financialProgress;
+    updateHelperTexts(financialProgress);
+  };
+
+  await loadFinancialProgress();
+  constructAdminSelect(loadFinancialProgress);
 
   // Helper function to update helper text with file name
   const updateHelperText = (input: HTMLInputElement, helperText: HTMLElement) => {
@@ -360,28 +405,6 @@ const initFinanceReportsPage = async () => {
       submitButton.disabled = false;
     }
   });
-
-  //prefill helper text if documents are already uploaded
-  if (result?.financial_reports) {
-    const balanceSheet = result.financial_reports.find(
-      (document) => document.document_type === 'monthly_balance_sheet'
-    );
-    if (balanceSheet) {
-      balaceSheetHelpText.textContent = balanceSheet.asset_name || '';
-    }
-    const incomeStatement = result.financial_reports.find(
-      (document) => document.document_type === 'monthly_income_statement'
-    );
-    if (incomeStatement) {
-      incomeStatementHelpText.textContent = incomeStatement.asset_name || '';
-    }
-    const incomeForecast = result.financial_reports.find(
-      (document) => document.document_type === 'monthly_income_forecast'
-    );
-    if (incomeForecast) {
-      incomeForecastHelpText.textContent = incomeForecast.asset_name || '';
-    }
-  }
 };
 
 window.Webflow ||= [];

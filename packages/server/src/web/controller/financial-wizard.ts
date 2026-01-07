@@ -144,7 +144,9 @@ export class FinancialWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const effectiveUserId = this.getEffectiveUserId(c, user);
+			const userId = c.req.query('user_id') as string | undefined;
+
+			const effectiveUserId = userId ? Number(userId) : this.getEffectiveUserId(c, user);
 			const [progress, business] = await Promise.all([
 				this.service.getProgress(effectiveUserId),
 				this.businessService.getBusinessByUserId(effectiveUserId),

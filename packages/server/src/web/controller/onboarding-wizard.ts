@@ -145,8 +145,10 @@ export class OnboardingWizardController {
 			if (!user) {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
+			const userId = c.req.query('user_id') as string | undefined;
 
-			const effectiveUserId = this.getEffectiveUserId(c, user);
+			const effectiveUserId = userId ? Number(userId) : this.getEffectiveUserId(c, user);
+
 			const application = await this.service.getProgress(effectiveUserId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
