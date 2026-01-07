@@ -2783,10 +2783,11 @@ var apiUploadFinancialDocument = (data) => {
     data
   });
 };
-var apiGetFinancialProgress = () => {
+var apiGetFinancialProgress = (userId) => {
   return ApiService_default.fetchDataWithAxios({
     url: "/financial-wizard/progress",
-    method: "get"
+    method: "get",
+    params: userId ? { user_id: userId } : void 0
   });
 };
 var apiAdminGetApplications = () => {
@@ -2818,14 +2819,13 @@ var queryElement = (selector, scope = document) => {
 };
 
 // shared/utils/helpers.ts
-var checkProgressUserAndTeams = async () => {
+var checkProgressUserAndTeams = async (userId) => {
   try {
-    const [financialProgress, person, teams] = await Promise.all([
-      apiGetFinancialProgress(),
+    const [financialProgress, user, teams] = await Promise.all([
+      apiGetFinancialProgress(userId),
       apiGetUserMe(),
       apiGetMyTeams()
     ]);
-    console.table(teams);
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement('[dev-target="progress-percentage-fill"]');
     const progressLabel = queryElement('[dev-target="progress-percentage-label"]');
@@ -2843,9 +2843,9 @@ var checkProgressUserAndTeams = async () => {
     logout.addEventListener("click", () => {
       logoutUser();
     });
-    companyUsername.innerText = financialProgress.business?.legal_name || (person.first_name || "Full") + " " + (person.last_name || "Name");
-    companyEmail.innerText = financialProgress.business?.email || person.email || "hello@company.com";
-    return financialProgress;
+    companyUsername.innerText = financialProgress.business?.legal_name || (user.first_name || "Full") + " " + (user.last_name || "Name");
+    companyEmail.innerText = financialProgress.business?.email || user.email || "hello@company.com";
+    return { financialProgress, user, teams };
   } catch (error) {
     console.error("Failed to load financial wizard progress:", error);
   }
@@ -2929,7 +2929,7 @@ var constructNavBarClasses = () => {
     });
   }
 };
-var constructAdminSelect = async () => {
+var constructAdminSelect = async (onChangeCallback) => {
   const admin = isAdmin();
   if (admin) {
     const selectWrapper = queryElement('[dev-target="admin-select-wrapper"]');
@@ -2950,10 +2950,13 @@ var constructAdminSelect = async () => {
       option.textContent = `${name || app.email}`;
       select.appendChild(option);
     });
-    select.addEventListener("change", (e) => {
+    select.addEventListener("change", async (e) => {
       const target = e.target;
       const { value } = target;
       console.log(value);
+      if (onChangeCallback) {
+        await onChangeCallback(value);
+      }
     });
   }
 };
@@ -2972,8 +2975,6 @@ var fileToBase64 = (file) => new Promise((resolve, reject) => {
 var initEcommercePerformancePage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  constructAdminSelect();
-  const result = await checkProgressUserAndTeams();
   const ALLOWED_FILE_TYPES = [
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -3026,6 +3027,37 @@ var initEcommercePerformancePage = async () => {
     console.error('Ensure [dev-target="submit-button"] is present.');
     return;
   }
+  const updateHelperTexts = (progress) => {
+    if (progress?.ecommerce_performance) {
+      const shopifyRepeat = progress.ecommerce_performance.find(
+        (document2) => document2.document_type === "shopify_repeat_customers"
+      );
+      if (shopifyRepeat) {
+        shopifyRepeatHelpText.textContent = shopifyRepeat.asset_name || "";
+      } else {
+        shopifyRepeatHelpText.textContent = "";
+      }
+      const shopifyMonthly = progress.ecommerce_performance.find(
+        (document2) => document2.document_type === "shopify_monthly_sales"
+      );
+      if (shopifyMonthly) {
+        shopifyMonthlyHelpText.textContent = shopifyMonthly.asset_name || "";
+      } else {
+        shopifyMonthlyHelpText.textContent = "";
+      }
+    } else {
+      shopifyRepeatHelpText.textContent = "";
+      shopifyMonthlyHelpText.textContent = "";
+    }
+  };
+  let financialProgress;
+  const loadFinancialProgress = async (userId) => {
+    const result = await checkProgressUserAndTeams(userId);
+    financialProgress = result?.financialProgress;
+    updateHelperTexts(financialProgress);
+  };
+  await loadFinancialProgress();
+  constructAdminSelect(loadFinancialProgress);
   const updateHelperText = (input, helperText) => {
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
@@ -3216,20 +3248,6 @@ var initEcommercePerformancePage = async () => {
       submitButton.disabled = false;
     }
   });
-  if (result?.ecommerce_performance) {
-    const shopifyRepeat = result.ecommerce_performance.find(
-      (document2) => document2.document_type === "shopify_repeat_customers"
-    );
-    if (shopifyRepeat) {
-      shopifyRepeatHelpText.textContent = shopifyRepeat.asset_name || "";
-    }
-    const shopifyMonthly = result.ecommerce_performance.find(
-      (document2) => document2.document_type === "shopify_monthly_sales"
-    );
-    if (shopifyMonthly) {
-      shopifyMonthlyHelpText.textContent = shopifyMonthly.asset_name || "";
-    }
-  }
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {

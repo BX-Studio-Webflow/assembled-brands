@@ -2,7 +2,10 @@ import type { AxiosError } from 'axios';
 import { apiCreateAssetPresignedUrl } from 'shared/services/AssetService';
 import { apiUploadFinancialDocument } from 'shared/services/FinancialWizardService';
 import type { CreateAssetBody } from 'shared/types/asset';
-import type { FinancialDocumentBody } from 'shared/types/financial-wizard';
+import type {
+  FinancialDocumentBody,
+  FinancialWizardProgressResponse,
+} from 'shared/types/financial-wizard';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
@@ -17,9 +20,6 @@ import { queryElement } from '$utils/selectors';
 const initFinanceDocsAccountsInventoryPage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  constructAdminSelect();
-
-  const result = await checkProgressUserAndTeams();
 
   //ONLY SHEET AND XLSX ALLOWED
   const ALLOWED_FILE_TYPES = [
@@ -98,6 +98,50 @@ const initFinanceDocsAccountsInventoryPage = async () => {
     console.error('Ensure [dev-target="submit-button"] is present.');
     return;
   }
+
+  // Function to update helper texts based on financial progress
+  const updateHelperTexts = (progress: FinancialWizardProgressResponse | undefined) => {
+    if (progress?.accounts_inventory) {
+      const monthlyInventory = progress.accounts_inventory.find(
+        (document) => document.document_type === 'monthly_inventory_report'
+      );
+      if (monthlyInventory) {
+        monthlyInventoryHelpText.textContent = monthlyInventory.asset_name || '';
+      } else {
+        monthlyInventoryHelpText.textContent = '';
+      }
+      const accountsReceivable = progress.accounts_inventory.find(
+        (document) => document.document_type === 'accounts_receivable_aging'
+      );
+      if (accountsReceivable) {
+        accountsReceivableHelpText.textContent = accountsReceivable.asset_name || '';
+      } else {
+        accountsReceivableHelpText.textContent = '';
+      }
+      const accountsPayable = progress.accounts_inventory.find(
+        (document) => document.document_type === 'accounts_payable_aging'
+      );
+      if (accountsPayable) {
+        accountsPayableHelpText.textContent = accountsPayable.asset_name || '';
+      } else {
+        accountsPayableHelpText.textContent = '';
+      }
+    } else {
+      monthlyInventoryHelpText.textContent = '';
+      accountsReceivableHelpText.textContent = '';
+      accountsPayableHelpText.textContent = '';
+    }
+  };
+
+  let financialProgress: FinancialWizardProgressResponse | undefined;
+  const loadFinancialProgress = async (userId?: string) => {
+    const result = await checkProgressUserAndTeams(userId);
+    financialProgress = result?.financialProgress;
+    updateHelperTexts(financialProgress);
+  };
+
+  await loadFinancialProgress();
+  constructAdminSelect(loadFinancialProgress);
 
   // Helper function to update helper text with file name and validate file type
   const updateHelperText = (input: HTMLInputElement, helperText: HTMLElement) => {
@@ -407,28 +451,6 @@ const initFinanceDocsAccountsInventoryPage = async () => {
       submitButton.disabled = false;
     }
   });
-
-  // Prefill helper text if documents are already uploaded
-  if (result?.accounts_inventory) {
-    const monthlyInventory = result.accounts_inventory.find(
-      (document) => document.document_type === 'monthly_inventory_report'
-    );
-    if (monthlyInventory) {
-      monthlyInventoryHelpText.textContent = monthlyInventory.asset_name || '';
-    }
-    const accountsReceivable = result.accounts_inventory.find(
-      (document) => document.document_type === 'accounts_receivable_aging'
-    );
-    if (accountsReceivable) {
-      accountsReceivableHelpText.textContent = accountsReceivable.asset_name || '';
-    }
-    const accountsPayable = result.accounts_inventory.find(
-      (document) => document.document_type === 'accounts_payable_aging'
-    );
-    if (accountsPayable) {
-      accountsPayableHelpText.textContent = accountsPayable.asset_name || '';
-    }
-  }
 };
 
 window.Webflow ||= [];

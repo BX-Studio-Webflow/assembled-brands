@@ -20,16 +20,14 @@ export const isValidEmail = (email: string) => {
   return true;
 };
 
-export const checkProgressUserAndTeams = async () => {
+export const checkProgressUserAndTeams = async (userId?: string) => {
   try {
     //get progress percentage
-    const [financialProgress, person, teams] = await Promise.all([
-      apiGetFinancialProgress(),
+    const [financialProgress, user, teams] = await Promise.all([
+      apiGetFinancialProgress(userId),
       apiGetUserMe(),
       apiGetMyTeams(),
     ]);
-
-    console.table(teams);
 
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement<HTMLDivElement>('[dev-target="progress-percentage-fill"]');
@@ -55,11 +53,10 @@ export const checkProgressUserAndTeams = async () => {
 
     companyUsername.innerText =
       financialProgress.business?.legal_name ||
-      (person.first_name || 'Full') + ' ' + (person.last_name || 'Name');
-    companyEmail.innerText =
-      financialProgress.business?.email || person.email || 'hello@company.com';
+      (user.first_name || 'Full') + ' ' + (user.last_name || 'Name');
+    companyEmail.innerText = financialProgress.business?.email || user.email || 'hello@company.com';
 
-    return financialProgress;
+    return { financialProgress, user, teams };
   } catch (error) {
     console.error('Failed to load financial wizard progress:', error);
   }
@@ -160,7 +157,9 @@ export const constructNavBarClasses = () => {
   }
 };
 
-export const constructAdminSelect = async () => {
+export const constructAdminSelect = async (
+  onChangeCallback?: (userId: string) => void | Promise<void>
+) => {
   const admin = isAdmin();
 
   if (admin) {
@@ -186,10 +185,14 @@ export const constructAdminSelect = async () => {
       select.appendChild(option);
     });
 
-    select.addEventListener('change', (e) => {
+    select.addEventListener('change', async (e) => {
       const target = e.target as HTMLSelectElement;
       const { value } = target;
       console.log(value);
+
+      if (onChangeCallback) {
+        await onChangeCallback(value);
+      }
     });
   }
 };

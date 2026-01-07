@@ -2,7 +2,10 @@ import type { AxiosError } from 'axios';
 import { apiCreateAssetPresignedUrl } from 'shared/services/AssetService';
 import { apiUploadFinancialDocument } from 'shared/services/FinancialWizardService';
 import type { CreateAssetBody } from 'shared/types/asset';
-import type { FinancialDocumentBody } from 'shared/types/financial-wizard';
+import type {
+  FinancialDocumentBody,
+  FinancialWizardProgressResponse,
+} from 'shared/types/financial-wizard';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
@@ -17,9 +20,6 @@ import { queryElement } from '$utils/selectors';
 const initEcommercePerformancePage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  constructAdminSelect();
-
-  const result = await checkProgressUserAndTeams();
 
   //ONLY SHEET AND XLSX ALLOWED
   const ALLOWED_FILE_TYPES = [
@@ -79,6 +79,41 @@ const initEcommercePerformancePage = async () => {
     console.error('Ensure [dev-target="submit-button"] is present.');
     return;
   }
+
+  // Function to update helper texts based on financial progress
+  const updateHelperTexts = (progress: FinancialWizardProgressResponse | undefined) => {
+    if (progress?.ecommerce_performance) {
+      const shopifyRepeat = progress.ecommerce_performance.find(
+        (document) => document.document_type === 'shopify_repeat_customers'
+      );
+      if (shopifyRepeat) {
+        shopifyRepeatHelpText.textContent = shopifyRepeat.asset_name || '';
+      } else {
+        shopifyRepeatHelpText.textContent = '';
+      }
+      const shopifyMonthly = progress.ecommerce_performance.find(
+        (document) => document.document_type === 'shopify_monthly_sales'
+      );
+      if (shopifyMonthly) {
+        shopifyMonthlyHelpText.textContent = shopifyMonthly.asset_name || '';
+      } else {
+        shopifyMonthlyHelpText.textContent = '';
+      }
+    } else {
+      shopifyRepeatHelpText.textContent = '';
+      shopifyMonthlyHelpText.textContent = '';
+    }
+  };
+
+  let financialProgress: FinancialWizardProgressResponse | undefined;
+  const loadFinancialProgress = async (userId?: string) => {
+    const result = await checkProgressUserAndTeams(userId);
+    financialProgress = result?.financialProgress;
+    updateHelperTexts(financialProgress);
+  };
+
+  await loadFinancialProgress();
+  constructAdminSelect(loadFinancialProgress);
 
   // Helper function to update helper text with file name and validate file type
   const updateHelperText = (input: HTMLInputElement, helperText: HTMLElement) => {
@@ -336,22 +371,6 @@ const initEcommercePerformancePage = async () => {
       submitButton.disabled = false;
     }
   });
-
-  // Prefill helper text if documents are already uploaded
-  if (result?.ecommerce_performance) {
-    const shopifyRepeat = result.ecommerce_performance.find(
-      (document) => document.document_type === 'shopify_repeat_customers'
-    );
-    if (shopifyRepeat) {
-      shopifyRepeatHelpText.textContent = shopifyRepeat.asset_name || '';
-    }
-    const shopifyMonthly = result.ecommerce_performance.find(
-      (document) => document.document_type === 'shopify_monthly_sales'
-    );
-    if (shopifyMonthly) {
-      shopifyMonthlyHelpText.textContent = shopifyMonthly.asset_name || '';
-    }
-  }
 };
 
 window.Webflow ||= [];

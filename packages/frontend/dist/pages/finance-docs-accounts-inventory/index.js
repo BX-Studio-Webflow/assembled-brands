@@ -2783,10 +2783,11 @@ var apiUploadFinancialDocument = (data) => {
     data
   });
 };
-var apiGetFinancialProgress = () => {
+var apiGetFinancialProgress = (userId) => {
   return ApiService_default.fetchDataWithAxios({
     url: "/financial-wizard/progress",
-    method: "get"
+    method: "get",
+    params: userId ? { user_id: userId } : void 0
   });
 };
 var apiAdminGetApplications = () => {
@@ -2818,14 +2819,13 @@ var queryElement = (selector, scope = document) => {
 };
 
 // shared/utils/helpers.ts
-var checkProgressUserAndTeams = async () => {
+var checkProgressUserAndTeams = async (userId) => {
   try {
-    const [financialProgress, person, teams] = await Promise.all([
-      apiGetFinancialProgress(),
+    const [financialProgress, user, teams] = await Promise.all([
+      apiGetFinancialProgress(userId),
       apiGetUserMe(),
       apiGetMyTeams()
     ]);
-    console.table(teams);
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement('[dev-target="progress-percentage-fill"]');
     const progressLabel = queryElement('[dev-target="progress-percentage-label"]');
@@ -2843,9 +2843,9 @@ var checkProgressUserAndTeams = async () => {
     logout.addEventListener("click", () => {
       logoutUser();
     });
-    companyUsername.innerText = financialProgress.business?.legal_name || (person.first_name || "Full") + " " + (person.last_name || "Name");
-    companyEmail.innerText = financialProgress.business?.email || person.email || "hello@company.com";
-    return financialProgress;
+    companyUsername.innerText = financialProgress.business?.legal_name || (user.first_name || "Full") + " " + (user.last_name || "Name");
+    companyEmail.innerText = financialProgress.business?.email || user.email || "hello@company.com";
+    return { financialProgress, user, teams };
   } catch (error) {
     console.error("Failed to load financial wizard progress:", error);
   }
@@ -2929,7 +2929,7 @@ var constructNavBarClasses = () => {
     });
   }
 };
-var constructAdminSelect = async () => {
+var constructAdminSelect = async (onChangeCallback) => {
   const admin = isAdmin();
   if (admin) {
     const selectWrapper = queryElement('[dev-target="admin-select-wrapper"]');
@@ -2950,10 +2950,13 @@ var constructAdminSelect = async () => {
       option.textContent = `${name || app.email}`;
       select.appendChild(option);
     });
-    select.addEventListener("change", (e) => {
+    select.addEventListener("change", async (e) => {
       const target = e.target;
       const { value } = target;
       console.log(value);
+      if (onChangeCallback) {
+        await onChangeCallback(value);
+      }
     });
   }
 };
@@ -2972,8 +2975,6 @@ var fileToBase64 = (file) => new Promise((resolve, reject) => {
 var initFinanceDocsAccountsInventoryPage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  constructAdminSelect();
-  const result = await checkProgressUserAndTeams();
   const ALLOWED_FILE_TYPES = [
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -3044,6 +3045,46 @@ var initFinanceDocsAccountsInventoryPage = async () => {
     console.error('Ensure [dev-target="submit-button"] is present.');
     return;
   }
+  const updateHelperTexts = (progress) => {
+    if (progress?.accounts_inventory) {
+      const monthlyInventory = progress.accounts_inventory.find(
+        (document2) => document2.document_type === "monthly_inventory_report"
+      );
+      if (monthlyInventory) {
+        monthlyInventoryHelpText.textContent = monthlyInventory.asset_name || "";
+      } else {
+        monthlyInventoryHelpText.textContent = "";
+      }
+      const accountsReceivable = progress.accounts_inventory.find(
+        (document2) => document2.document_type === "accounts_receivable_aging"
+      );
+      if (accountsReceivable) {
+        accountsReceivableHelpText.textContent = accountsReceivable.asset_name || "";
+      } else {
+        accountsReceivableHelpText.textContent = "";
+      }
+      const accountsPayable = progress.accounts_inventory.find(
+        (document2) => document2.document_type === "accounts_payable_aging"
+      );
+      if (accountsPayable) {
+        accountsPayableHelpText.textContent = accountsPayable.asset_name || "";
+      } else {
+        accountsPayableHelpText.textContent = "";
+      }
+    } else {
+      monthlyInventoryHelpText.textContent = "";
+      accountsReceivableHelpText.textContent = "";
+      accountsPayableHelpText.textContent = "";
+    }
+  };
+  let financialProgress;
+  const loadFinancialProgress = async (userId) => {
+    const result = await checkProgressUserAndTeams(userId);
+    financialProgress = result?.financialProgress;
+    updateHelperTexts(financialProgress);
+  };
+  await loadFinancialProgress();
+  constructAdminSelect(loadFinancialProgress);
   const updateHelperText = (input, helperText) => {
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
@@ -3275,26 +3316,6 @@ var initFinanceDocsAccountsInventoryPage = async () => {
       submitButton.disabled = false;
     }
   });
-  if (result?.accounts_inventory) {
-    const monthlyInventory = result.accounts_inventory.find(
-      (document2) => document2.document_type === "monthly_inventory_report"
-    );
-    if (monthlyInventory) {
-      monthlyInventoryHelpText.textContent = monthlyInventory.asset_name || "";
-    }
-    const accountsReceivable = result.accounts_inventory.find(
-      (document2) => document2.document_type === "accounts_receivable_aging"
-    );
-    if (accountsReceivable) {
-      accountsReceivableHelpText.textContent = accountsReceivable.asset_name || "";
-    }
-    const accountsPayable = result.accounts_inventory.find(
-      (document2) => document2.document_type === "accounts_payable_aging"
-    );
-    if (accountsPayable) {
-      accountsPayableHelpText.textContent = accountsPayable.asset_name || "";
-    }
-  }
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {

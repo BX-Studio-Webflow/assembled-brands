@@ -2787,10 +2787,11 @@ async function apiGetUserMe() {
 }
 
 // shared/services/FinancialWizardService.ts
-var apiGetFinancialProgress = () => {
+var apiGetFinancialProgress = (userId) => {
   return ApiService_default.fetchDataWithAxios({
     url: "/financial-wizard/progress",
-    method: "get"
+    method: "get",
+    params: userId ? { user_id: userId } : void 0
   });
 };
 
@@ -2800,14 +2801,13 @@ var queryElement = (selector, scope = document) => {
 };
 
 // shared/utils/helpers.ts
-var checkProgressUserAndTeams = async () => {
+var checkProgressUserAndTeams = async (userId) => {
   try {
-    const [financialProgress, person, teams] = await Promise.all([
-      apiGetFinancialProgress(),
+    const [financialProgress, user, teams] = await Promise.all([
+      apiGetFinancialProgress(userId),
       apiGetUserMe(),
       apiGetMyTeams()
     ]);
-    console.table(teams);
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement('[dev-target="progress-percentage-fill"]');
     const progressLabel = queryElement('[dev-target="progress-percentage-label"]');
@@ -2825,9 +2825,9 @@ var checkProgressUserAndTeams = async () => {
     logout.addEventListener("click", () => {
       logoutUser();
     });
-    companyUsername.innerText = financialProgress.business?.legal_name || (person.first_name || "Full") + " " + (person.last_name || "Name");
-    companyEmail.innerText = financialProgress.business?.email || person.email || "hello@company.com";
-    return financialProgress;
+    companyUsername.innerText = financialProgress.business?.legal_name || (user.first_name || "Full") + " " + (user.last_name || "Name");
+    companyEmail.innerText = financialProgress.business?.email || user.email || "hello@company.com";
+    return { financialProgress, user, teams };
   } catch (error) {
     console.error("Failed to load financial wizard progress:", error);
   }
