@@ -2904,21 +2904,6 @@ var constructNavBarClasses = () => {
       link.classList.remove("is-active-financial");
     });
   }
-  const collapsileTrigger = queryElement('[dev-target="collapsible-trigger"]');
-  if (!collapsileTrigger) {
-    console.error('Ensure [dev-target="collapsible-trigger"] is present.');
-    return;
-  }
-  collapsileTrigger.addEventListener("click", () => {
-    sidebarMenu.classList.toggle("is-collapsed");
-    Object.assign(sidebarMenu.style, {
-      width: sidebarMenu.classList.contains("is-collapsed") ? "60px" : "auto"
-    });
-    const collapsibleContents = document.querySelectorAll('[sidebar="collapsible-content"]');
-    collapsibleContents.forEach((element) => {
-      element.style.display = "none";
-    });
-  });
 };
 
 // pages/team-members/index.ts
