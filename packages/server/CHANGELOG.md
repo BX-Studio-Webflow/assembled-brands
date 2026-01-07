@@ -1,5 +1,11 @@
 # server
 
+## 0.0.8
+
+### Patch Changes
+
+- fix: logout bug
+
 ## 0.0.7
 
 ### Patch Changes

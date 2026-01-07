@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.10
+
+### Patch Changes
+
+- fix: logout bug
+
 ## 0.3.9
 
 ### Patch Changes

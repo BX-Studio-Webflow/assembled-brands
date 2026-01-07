@@ -103,7 +103,6 @@ const initAccountSetupFinishVerificationPage = () => {
       return;
     }
     try {
-      navigateToPath('/onboarding-wizard');
       const response = await apiVerifyRegistration({
         token: Number(token),
         id: Number(id),
@@ -118,7 +117,7 @@ const initAccountSetupFinishVerificationPage = () => {
 
       setTimeout(() => {
         navigateToPath('/onboarding-wizard');
-      }, 2000);
+      }, 600);
     } catch (error) {
       const { message } = error as AxiosError;
       const { code } = (error as AxiosError).response?.data as { code: string };
