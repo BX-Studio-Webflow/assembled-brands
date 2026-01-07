@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.13
+
+### Patch Changes
+
+- fix: navbar
+
 ## 0.3.12
 
 ### Patch Changes
