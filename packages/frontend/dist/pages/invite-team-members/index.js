@@ -2667,15 +2667,6 @@ var logoutUser = () => {
   localStorage.removeItem("x-team-id");
   navigateToPath("/login?error=logged-out");
 };
-var getUserRole = () => {
-  const admin = localStorage.getItem("user");
-  const user = admin && JSON.parse(admin);
-  return user && user?.role;
-};
-var isAdmin = () => {
-  const role = getUserRole();
-  return role === "admin";
-};
 
 // shared/services/axios/AxiosRequestIntrceptorConfigCallback.ts
 var AxiosRequestIntrceptorConfigCallback = (config) => {
@@ -2802,12 +2793,6 @@ var apiGetFinancialProgress = () => {
     method: "get"
   });
 };
-var apiAdminGetApplications = () => {
-  return ApiService_default.fetchDataWithAxios({
-    url: `/financial-wizard/applications`,
-    method: "get"
-  });
-};
 
 // shared/utils/selectors.ts
 var queryElement = (selector, scope = document) => {
@@ -2847,40 +2832,11 @@ var checkProgressUserAndTeams = async () => {
     console.error("Failed to load financial wizard progress:", error);
   }
 };
-var constructAdminSelect = async () => {
-  const admin = isAdmin();
-  if (admin) {
-    const selectWrapper = queryElement('[dev-target="admin-select-wrapper"]');
-    const select = queryElement('[dev-target="admin-select"]');
-    selectWrapper?.classList.remove("hide");
-    if (!selectWrapper || !select) {
-      console.error(
-        'Ensure [dev-target="admin-select"] and  [dev-target="admin-select-wrapper"] is present.'
-      );
-      return;
-    }
-    const applications = await apiAdminGetApplications();
-    select.innerHTML = "";
-    applications.forEach((app) => {
-      const name = app.first_name || "" + app.last_name || "";
-      const option = document.createElement("option");
-      option.value = app.id.toString();
-      option.textContent = `${name || app.email}`;
-      select.appendChild(option);
-    });
-    select.addEventListener("change", (e) => {
-      const target = e.target;
-      const { value } = target;
-      console.log(value);
-    });
-  }
-};
 
 // pages/invite-team-members/index.ts
 var initInviteTeamMembersPage = async () => {
   processMiddleware();
   checkProgressUserAndTeams();
-  constructAdminSelect();
   const form = document.querySelector('[dev-target="add-team-member-form"]');
   if (!form) {
     console.error(

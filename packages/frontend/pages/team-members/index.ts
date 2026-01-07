@@ -2,12 +2,14 @@ import { apiGetTeamInvitations } from 'shared/services/TeamService';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
-import { checkProgressUserAndTeams } from '$utils/helpers';
+import { checkProgressUserAndTeams, constructNavBarClasses } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const TeamMembersPage = async () => {
+  constructNavBarClasses();
   processMiddleware();
   checkProgressUserAndTeams();
+  await checkProgressUserAndTeams();
 
   // Find the table and template row
   const table = document.querySelector('[fs-table-element="table"]');

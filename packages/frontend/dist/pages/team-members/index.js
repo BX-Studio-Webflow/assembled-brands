@@ -2826,11 +2826,92 @@ var checkProgressUserAndTeams = async () => {
     console.error("Failed to load financial wizard progress:", error);
   }
 };
+var constructNavBarClasses = () => {
+  const sidebarMenu = queryElement('[dev-target="sidebar-menu"]');
+  if (!sidebarMenu) {
+    console.error('Ensure [dev-target="sidebar-menu"] is present.');
+    return;
+  }
+  const currentPath = window.location.pathname;
+  const routeMap = {
+    "/dev/finance-company-profile": {
+      nav_attr: "nav-company-profile-link",
+      nav_class: "is-active"
+    },
+    "/finance-company-profile": {
+      nav_attr: "nav-company-profile-link",
+      nav_class: "is-active"
+    },
+    "/dev/finance-financial-overview": {
+      nav_attr: "nav-financial-overview-link",
+      nav_class: "is-active"
+    },
+    "/finance-financial-overview": {
+      nav_attr: "nav-financial-overview-link",
+      nav_class: "is-active"
+    },
+    "/dev/finance-docs-financial-reports": {
+      nav_attr: "nav-financial-reports-link",
+      nav_class: "is-active-financial"
+    },
+    "/finance-docs-financial-reports": {
+      nav_attr: "nav-financial-reports-link",
+      nav_class: "is-active-financial"
+    },
+    "/dev/finance-docs-accounts-and-inventory": {
+      nav_attr: "nav-accounts-inventory-link",
+      nav_class: "is-active-financial"
+    },
+    "/finance-docs-accounts-and-inventory": {
+      nav_attr: "nav-accounts-inventory-link",
+      nav_class: "is-active-financial"
+    },
+    "/dev/finance-docs-ecommerce-performance": {
+      nav_attr: "nav-eccomerce-performance-link",
+      nav_class: "is-active-financial"
+    },
+    "/finance-docs-ecommerce-performance": {
+      nav_attr: "nav-eccomerce-performance-link",
+      nav_class: "is-active-financial"
+    },
+    "/dev/finance-docs-team-and-ownership": {
+      nav_attr: "nav-team-ownership-link",
+      nav_class: "is-active-financial"
+    },
+    "/finance-docs-team-and-ownership": {
+      nav_attr: "nav-team-ownership-link",
+      nav_class: "is-active-financial"
+    },
+    "/team-members": {
+      nav_attr: "nav-team-ownership-link",
+      nav_class: "is-active-financial"
+    }
+  };
+  const activeTarget = routeMap[currentPath];
+  const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
+  if (activeTarget) {
+    allNavLinks.forEach((link) => {
+      link.classList.remove("is-active");
+      link.classList.remove("is-active-financial");
+    });
+    const activeLink = queryElement(`[dev-target="${activeTarget.nav_attr}"]`);
+    if (activeLink) {
+      activeLink.classList.add(activeTarget.nav_class);
+    }
+  } else {
+    allNavLinks.forEach((link) => {
+      link.classList.remove("is-active");
+      link.classList.remove("is-active-financial");
+    });
+  }
+};
 
 // pages/team-members/index.ts
 var TeamMembersPage = async () => {
+  constructNavBarClasses();
   processMiddleware();
   checkProgressUserAndTeams();
+  await checkProgressUserAndTeams();
   const table = document.querySelector('[fs-table-element="table"]');
   const tableBody = table?.querySelector(".fs-table_body");
   const templateRow = tableBody?.querySelector('[dev-target="table-row"]');

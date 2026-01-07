@@ -131,14 +131,17 @@ export const constructNavBarClasses = () => {
       nav_attr: 'nav-team-ownership-link',
       nav_class: 'is-active-financial',
     },
+    '/team-members': {
+      nav_attr: 'nav-team-ownership-link',
+      nav_class: 'is-active-financial',
+    },
   };
 
   // Find the matching dev-target for current route
   const activeTarget = routeMap[currentPath];
+  const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
 
   if (activeTarget) {
-    // Remove is-active class from all nav links
-    const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
     allNavLinks.forEach((link) => {
       link.classList.remove('is-active');
       link.classList.remove('is-active-financial');
@@ -149,11 +152,17 @@ export const constructNavBarClasses = () => {
     if (activeLink) {
       activeLink.classList.add(activeTarget.nav_class);
     }
+  } else {
+    allNavLinks.forEach((link) => {
+      link.classList.remove('is-active');
+      link.classList.remove('is-active-financial');
+    });
   }
 };
 
 export const constructAdminSelect = async () => {
   const admin = isAdmin();
+
   if (admin) {
     const selectWrapper = queryElement<HTMLElement>('[dev-target="admin-select-wrapper"]');
     const select = queryElement<HTMLElement>('[dev-target="admin-select"]');

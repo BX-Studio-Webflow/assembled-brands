@@ -2905,11 +2905,15 @@ var constructNavBarClasses = () => {
     "/finance-docs-team-and-ownership": {
       nav_attr: "nav-team-ownership-link",
       nav_class: "is-active-financial"
+    },
+    "/team-members": {
+      nav_attr: "nav-team-ownership-link",
+      nav_class: "is-active-financial"
     }
   };
   const activeTarget = routeMap[currentPath];
+  const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
   if (activeTarget) {
-    const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
     allNavLinks.forEach((link) => {
       link.classList.remove("is-active");
       link.classList.remove("is-active-financial");
@@ -2918,6 +2922,11 @@ var constructNavBarClasses = () => {
     if (activeLink) {
       activeLink.classList.add(activeTarget.nav_class);
     }
+  } else {
+    allNavLinks.forEach((link) => {
+      link.classList.remove("is-active");
+      link.classList.remove("is-active-financial");
+    });
   }
 };
 var constructAdminSelect = async () => {
