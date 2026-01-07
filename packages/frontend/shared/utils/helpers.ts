@@ -6,7 +6,7 @@ import {
 import { apiGetMyTeams } from 'shared/services/TeamService';
 
 import { isAdmin, logoutUser } from './auth';
-import { queryElement } from './selectors';
+import { queryAllElements, queryElement } from './selectors';
 
 export const isValidEmail = (email: string) => {
   if (!email) {
@@ -31,7 +31,9 @@ export const checkProgressUserAndTeams = async (userId?: string) => {
 
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement<HTMLDivElement>('[dev-target="progress-percentage-fill"]');
-    const progressLabel = queryElement<HTMLDivElement>('[dev-target="progress-percentage-label"]');
+    const progressLabel = queryAllElements<HTMLDivElement>(
+      '[dev-target="progress-percentage-label"]'
+    );
 
     const companyUsername = queryElement<HTMLDivElement>('[dev-target="user-name"]');
     const companyEmail = queryElement<HTMLDivElement>('[dev-target="user-email"]');
@@ -45,7 +47,8 @@ export const checkProgressUserAndTeams = async (userId?: string) => {
     }
 
     progressFill.style.width = `${percentage}%`;
-    progressLabel.textContent = `Progress ${percentage}%`;
+    progressLabel[0].textContent = `Progress ${percentage}%`;
+    progressLabel[1].textContent = `${percentage}%`;
 
     logout.addEventListener('click', () => {
       logoutUser();
@@ -288,6 +291,8 @@ export const initCollapsibleSidebar = () => {
 
       sidebarBottom?.classList.remove('hide');
       sidebarBottomCollapsed?.classList.add('hide');
+
+      sideNavClose?.classList.remove('is-collapsed');
 
       // Show collapsible content with fade in
       collapsibleContent.forEach((el) => {

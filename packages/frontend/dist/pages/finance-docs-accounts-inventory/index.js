@@ -2817,6 +2817,10 @@ var apiGetMyTeams = () => {
 var queryElement = (selector, scope = document) => {
   return scope.querySelector(selector);
 };
+var queryAllElements = (selector, scope = document) => {
+  const elements = scope.querySelectorAll(selector);
+  return [...Array.from(elements)];
+};
 
 // shared/utils/helpers.ts
 var checkProgressUserAndTeams = async (userId) => {
@@ -2828,7 +2832,9 @@ var checkProgressUserAndTeams = async (userId) => {
     ]);
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement('[dev-target="progress-percentage-fill"]');
-    const progressLabel = queryElement('[dev-target="progress-percentage-label"]');
+    const progressLabel = queryAllElements(
+      '[dev-target="progress-percentage-label"]'
+    );
     const companyUsername = queryElement('[dev-target="user-name"]');
     const companyEmail = queryElement('[dev-target="user-email"]');
     const logout = queryElement('[dev-target="logout"]');
@@ -2839,7 +2845,8 @@ var checkProgressUserAndTeams = async (userId) => {
       return;
     }
     progressFill.style.width = `${percentage}%`;
-    progressLabel.textContent = `Progress ${percentage}%`;
+    progressLabel[0].textContent = `Progress ${percentage}%`;
+    progressLabel[1].textContent = `${percentage}%`;
     logout.addEventListener("click", () => {
       logoutUser();
     });
@@ -3023,6 +3030,7 @@ var initCollapsibleSidebar = () => {
       userProfileInner?.classList.remove("overlay");
       sidebarBottom?.classList.remove("hide");
       sidebarBottomCollapsed?.classList.add("hide");
+      sideNavClose?.classList.remove("is-collapsed");
       collapsibleContent.forEach((el) => {
         el.classList.remove("hide");
         setTimeout(() => {
