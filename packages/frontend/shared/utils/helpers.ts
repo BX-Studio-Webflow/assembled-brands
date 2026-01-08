@@ -3,6 +3,7 @@ import {
   apiAdminGetApplications,
   apiGetFinancialProgress,
 } from 'shared/services/FinancialWizardService';
+import { apiGetOnboardingProgress } from 'shared/services/OnboardingService';
 import { apiGetMyTeams } from 'shared/services/TeamService';
 
 import { isAdmin, logoutUser } from './auth';
@@ -20,14 +21,21 @@ export const isValidEmail = (email: string) => {
   return true;
 };
 
+export const fetchProgressData = async (userId?: string) => {
+  const [financialProgress, user, teams, onboardingProgress] = await Promise.all([
+    apiGetFinancialProgress(userId),
+    apiGetUserMe(),
+    apiGetMyTeams(),
+    apiGetOnboardingProgress(),
+  ]);
+
+  return { financialProgress, user, teams, onboardingProgress };
+};
+
 export const checkProgressUserAndTeams = async (userId?: string) => {
   try {
     //get progress percentage
-    const [financialProgress, user, teams] = await Promise.all([
-      apiGetFinancialProgress(userId),
-      apiGetUserMe(),
-      apiGetMyTeams(),
-    ]);
+    const { financialProgress, user, teams, onboardingProgress } = await fetchProgressData(userId);
 
     const percentage = financialProgress?.percentage || 0;
     const progressFill = queryElement<HTMLDivElement>('[dev-target="progress-percentage-fill"]');
@@ -59,7 +67,7 @@ export const checkProgressUserAndTeams = async (userId?: string) => {
       (user.first_name || 'Full') + ' ' + (user.last_name || 'Name');
     companyEmail.innerText = financialProgress.business?.email || user.email || 'hello@company.com';
 
-    return { financialProgress, user, teams };
+    return { financialProgress, user, teams, onboardingProgress };
   } catch (error) {
     console.error('Failed to load financial wizard progress:', error);
   }

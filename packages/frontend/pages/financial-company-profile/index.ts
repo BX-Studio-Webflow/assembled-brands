@@ -147,7 +147,7 @@ const initFinancialCompanyProfilePage = async () => {
   constructAdminSelect(loadFinancialProgress);
 
   backButton.addEventListener('click', () => {
-    navigateToPath('/dashboard');
+    navigateToPath('/onboarding-wizard?step=3');
   });
 
   form.addEventListener('submit', async (event) => {

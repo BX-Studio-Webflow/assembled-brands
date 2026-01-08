@@ -5,6 +5,7 @@ import {
   apiSaveOnboardingStep3,
 } from 'shared/services/OnboardingService';
 import type {
+  OnboardingProgressResponse,
   OnboardingStep1Body,
   OnboardingStep2Body,
   OnboardingStep3Body,
@@ -12,9 +13,10 @@ import type {
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
+import { fetchProgressData } from '$utils/helpers';
 import { queryAllElements, queryElement } from '$utils/selectors';
 
-const initOnboardingStep1Page = () => {
+const initOnboardingStep1Page = async () => {
   processMiddleware();
 
   const form = document.querySelector('[dev-target="onboarding-step1-form"]');
@@ -84,6 +86,21 @@ const initOnboardingStep1Page = () => {
     console.error('Step text element not found');
     return;
   }
+  //validate all inputs exist
+  if (
+    !legalName ||
+    employeeCountInputs.length === 0 ||
+    !website ||
+    !yearsInBusiness ||
+    assetTypeInputs.length === 0 ||
+    !desiredLoanAmount ||
+    companyTypeInputs.length === 0 ||
+    !revenueQualification ||
+    !companyTypeOther
+  ) {
+    console.error('One or more form inputs not found');
+    return;
+  }
 
   // Show/hide company type other field
   companyTypeInputs.forEach((radio) => {
@@ -123,8 +140,100 @@ const initOnboardingStep1Page = () => {
     currentStep = step;
   };
 
-  // Initialize on step 1
-  showStep(1);
+  //if onboarding step is specified in URL, go to that step
+  const urlParams = new URLSearchParams(window.location.search);
+  const stepParam = urlParams.get('step');
+  if (stepParam) {
+    const stepNumber = parseInt(stepParam, 10);
+    if (stepNumber >= 1 && stepNumber <= 3) {
+      showStep(stepNumber);
+    }
+  } else {
+    showStep(1);
+  }
+
+  // Load and prefill onboarding progress
+  const loadOnboardingProgress = async () => {
+    try {
+      const result = await fetchProgressData();
+      if (!result) {
+        console.error('No result from fetchProgressData');
+        return;
+      }
+      const data = result.onboardingProgress;
+      if (!data || !data.progress) {
+        console.error('No onboarding progress data found');
+        return;
+      }
+
+      prefillFormFields(data.progress);
+    } catch (error) {
+      console.error('Failed to load onboarding progress:', error);
+    }
+  };
+
+  // Prefill form fields with saved data
+  const prefillFormFields = (progress: OnboardingProgressResponse) => {
+    // Step 1 fields
+    if (progress.step1) {
+      if (progress.step1.legal_name) {
+        legalName.value = progress.step1.legal_name;
+      }
+      if (progress.step1.employee_count) {
+        const matchingEmployeeInput = employeeCountInputs.find(
+          (input) => input.value === progress.step1.employee_count
+        );
+        if (matchingEmployeeInput) {
+          matchingEmployeeInput.checked = true;
+        }
+      }
+      if (progress.step1.website) {
+        website.value = progress.step1.website;
+      }
+    }
+
+    // Step 2 fields
+    if (progress.step2) {
+      if (progress.step2.years_in_business) {
+        yearsInBusiness.value = progress.step2.years_in_business;
+      }
+      if (progress.step2.asset_type) {
+        const matchingAssetInput = assetTypeInputs.find(
+          (input) => input.value === progress.step2.asset_type
+        );
+        if (matchingAssetInput) {
+          matchingAssetInput.checked = true;
+        }
+      }
+      if (progress.step2.desired_loan_amount) {
+        desiredLoanAmount.value = progress.step2.desired_loan_amount;
+      }
+    }
+
+    // Step 3 fields
+    if (progress.step3) {
+      if (progress.step3.company_type) {
+        const matchingCompanyTypeInput = companyTypeInputs.find(
+          (input) => input.value === progress.step3.company_type
+        );
+        if (matchingCompanyTypeInput) {
+          matchingCompanyTypeInput.checked = true;
+          // Show other input if needed
+          if (progress.step3.company_type === 'other') {
+            companyTypeOtherWrapper?.classList.remove('hide');
+          }
+        }
+      }
+      if (progress.step3.company_type_other) {
+        companyTypeOther.value = progress.step3.company_type_other;
+      }
+      if (progress.step3.revenue_qualification) {
+        revenueQualification.value = progress.step3.revenue_qualification;
+      }
+    }
+  };
+
+  await loadOnboardingProgress();
 
   // Back button handler
   backButton.addEventListener('click', (event) => {
@@ -341,9 +450,9 @@ const initOnboardingStep1Page = () => {
 };
 
 window.Webflow ||= [];
-window.Webflow.push(() => {
+window.Webflow.push(async () => {
   try {
-    initOnboardingStep1Page();
+    await initOnboardingStep1Page();
   } catch (error) {
     console.error(error);
   }

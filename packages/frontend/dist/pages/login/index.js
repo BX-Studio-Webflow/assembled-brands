@@ -2899,7 +2899,7 @@ var initLoginPage = () => {
       const currentOnboardingStep = response.onboardingProgress?.current_step;
       const onboardingIsComplete = response.onboardingProgress?.is_complete;
       if (!response.onboardingProgress) {
-        navigateToPath("/onboarding-wizard");
+        navigateToPath("/onboarding-wizard?step=start");
         return;
       }
       if (!onboardingIsComplete && currentOnboardingStep === 1) {
@@ -2907,11 +2907,11 @@ var initLoginPage = () => {
         return;
       }
       if (!onboardingIsComplete && currentOnboardingStep === 2) {
-        navigateToPath("/onboarding-step-2");
+        navigateToPath("/onboarding-wizard?step=2");
         return;
       }
       if (!onboardingIsComplete && currentOnboardingStep === 3) {
-        navigateToPath("/onboarding-step-3");
+        navigateToPath("/onboarding-wizard?step=step-3");
         return;
       }
       const nextFinancialWizardStep = getNextFinancialWizardStep(response.financialWizardProgress);

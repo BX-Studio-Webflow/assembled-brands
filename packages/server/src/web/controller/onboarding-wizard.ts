@@ -183,7 +183,7 @@ export class OnboardingWizardController {
 				},
 			};
 
-			return serveData(c, {
+			return c.json({
 				progress,
 			});
 		} catch (error) {
