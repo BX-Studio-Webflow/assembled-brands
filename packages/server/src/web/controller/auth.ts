@@ -409,7 +409,7 @@ export class AuthController {
 				subject: 'Reset your password',
 				title: 'Reset your password',
 				subtitle: `${token}`,
-				name: user.first_name || 'Dear User',
+				name: user.first_name || 'User',
 				body: `Please click this link to reset your password: ${env.FRONTEND_URL}/reset-password?token=${token}&email=${user.email}`,
 				buttonText: 'Reset password now',
 				buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/reset-password?token=${token}&email=${user.email}`,
@@ -466,7 +466,7 @@ export class AuthController {
 			const hashedPassword = encrypt(body.password);
 			await this.service.update(user.id, { password: hashedPassword, reset_token: null });
 
-			await sendTemplateEmail(user.email, user.first_name || 'Dear User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
+			await sendTemplateEmail(user.email, user.first_name || 'User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 				subject: 'Password reset',
 				title: 'Password reset',
 				subtitle: `Your password has been reset successfully`,

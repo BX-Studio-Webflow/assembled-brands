@@ -8,7 +8,7 @@ const initOnboardingNotFitPage = () => {
   }
 
   homeCTA.addEventListener('click', async () => {
-    navigateToPath('/onboarding-wizard?step=1');
+    navigateToPath('/onboarding-wizard?step=3');
   });
 };
 

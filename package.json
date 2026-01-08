@@ -25,7 +25,7 @@
     "dev:server": "pnpm --filter server dev",
     "build:server": "pnpm --filter server build",
     "deploy:frontend": "pnpm --filter @assembled-brands/frontend run deploy",
-    "deploy:server": "pnpm --filter server deploy",
+    "deploy:server": "pnpm --filter server deploy:development",
     "lint": "concurrently \"pnpm -r lint\" \"prettier --check ./packages --ignore-path .prettierignore\"",
     "lint:fix": "concurrently \"pnpm -r lint:fix\" \"prettier --write ./packages --ignore-path .prettierignore\"",
     "check": "pnpm --filter @assembled-brands/frontend check && pnpm --filter server check && tsc --noEmit",

@@ -3013,6 +3013,7 @@ var initOnboardingStep1Page = async () => {
       }
       if (progress.step3.revenue_qualification) {
         revenueQualification.value = progress.step3.revenue_qualification;
+        revenueQualification.dispatchEvent(new Event("change", { bubbles: true }));
       }
     }
   };
