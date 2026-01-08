@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.15
+
+### Patch Changes
+
+- fix: FE
+
 ## 0.3.14
 
 ### Patch Changes
