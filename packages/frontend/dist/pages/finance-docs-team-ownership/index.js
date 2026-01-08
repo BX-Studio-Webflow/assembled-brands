@@ -3137,30 +3137,30 @@ var initTeamOwnershipPage = async () => {
         (document2) => document2.document_type === "management_bios"
       );
       if (managementBios) {
-        managementBiosHelpText.textContent = managementBios.asset_name || "";
+        managementBiosHelpText.textContent = managementBios.asset_name || "Supported formats: sheets. xcel";
       } else {
-        managementBiosHelpText.textContent = "";
+        managementBiosHelpText.textContent = "Supported formats: sheets. xcel";
       }
       const investorDeck = progress.team_ownership.find(
         (document2) => document2.document_type === "investor_deck"
       );
       if (investorDeck) {
-        investorDeckHelpText.textContent = investorDeck.asset_name || "";
+        investorDeckHelpText.textContent = investorDeck.asset_name || "Supported formats: sheets. xcel";
       } else {
-        investorDeckHelpText.textContent = "";
+        investorDeckHelpText.textContent = "Supported formats: sheets. xcel";
       }
       const capTable = progress.team_ownership.find(
         (document2) => document2.document_type === "cap_table"
       );
       if (capTable) {
-        capitalisationTableHelpText.textContent = capTable.asset_name || "";
+        capitalisationTableHelpText.textContent = capTable.asset_name || "Supported formats: sheets. xcel";
       } else {
-        capitalisationTableHelpText.textContent = "";
+        capitalisationTableHelpText.textContent = "Supported formats: sheets. xcel";
       }
     } else {
-      managementBiosHelpText.textContent = "";
-      investorDeckHelpText.textContent = "";
-      capitalisationTableHelpText.textContent = "";
+      managementBiosHelpText.textContent = "Supported formats: sheets. xcel";
+      investorDeckHelpText.textContent = "Supported formats: sheets. xcel";
+      capitalisationTableHelpText.textContent = "Supported formats: sheets. xcel";
     }
   };
   let financialProgress;

@@ -3180,10 +3180,10 @@ var initFinanceDocsAccountsInventoryPage = async () => {
         helperText.classList.add("is-error");
         return;
       }
-      helperText.textContent = file.name;
+      helperText.textContent = file.name || "Supported formats: sheets. xcel";
       helperText.classList.remove("is-error");
     } else {
-      helperText.textContent = "";
+      helperText.textContent = "Supported formats: sheets. xcel";
       helperText.classList.remove("is-error");
     }
   };

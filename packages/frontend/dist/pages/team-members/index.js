@@ -2771,6 +2771,19 @@ var apiGetMyTeams = () => {
     method: "get"
   });
 };
+var apiInviteTeamMember = (name, user_defined_role, email, teamId, message) => {
+  return ApiService_default.fetchDataWithAxios({
+    url: "/team/invite",
+    method: "post",
+    data: {
+      invitee_name: name,
+      invitee_email: email,
+      team_id: teamId,
+      user_defined_role,
+      message
+    }
+  });
+};
 
 // shared/services/AuthService.ts
 async function apiGetUserMe() {
@@ -2925,21 +2938,140 @@ var constructNavBarClasses = () => {
     });
   }
 };
+var initCollapsibleSidebar = () => {
+  const sidebar = queryElement('[dev-target="sidebar-menu"]');
+  const sidebarInner = sidebar?.querySelector(".sidebar");
+  const trigger = queryElement('[dev-target="collapsible-trigger"]');
+  if (!sidebar || !sidebarInner || !trigger) {
+    console.error(
+      'Ensure [dev-target="sidebar-menu"] and [dev-target="collapsible-trigger"] and  [dev-target="sidebar-inner"] are present.'
+    );
+    return;
+  }
+  let isCollapsed = false;
+  const toggleSidebar = () => {
+    isCollapsed = !isCollapsed;
+    const collapsibleContent = document.querySelectorAll(
+      '[sidebar="collapsible-content"], [dev-target="collapsible-content"]'
+    );
+    const sidebarlogoTextWrapper = queryElement(
+      '[dev-target="sidebar-logo-text-wrapper"]'
+    );
+    const sidebarBottomCollapsed = sidebar.querySelector(
+      '[dev-target="sidebar-bottom-collapsed"]'
+    );
+    const sideNavClose = sidebar.querySelector('[dev-target="sidenav-close"]');
+    const sidebarBottom = sidebar.querySelector('[dev-target="sidebar-bottom"]');
+    const userProfile = sidebar.querySelector(".user-profile_wrapper");
+    const userProfileInner = userProfile?.querySelector(
+      ".flex-horizontal_auth.gap-15"
+    );
+    if (isCollapsed) {
+      sidebar.classList.add("collapsed");
+      sidebarInner?.classList.add("mobile");
+      sidebarlogoTextWrapper?.classList.add("hide");
+      userProfile?.classList.add("image-overlay");
+      userProfileInner?.classList.add("overlay");
+      sidebarBottom?.classList.add("hide");
+      sidebarBottomCollapsed?.classList.remove("hide");
+      sideNavClose?.classList.add("is-collapsed");
+      collapsibleContent.forEach((el) => {
+        el.style.opacity = "0";
+        el.style.transition = "opacity 0.2s ease";
+        setTimeout(() => {
+          el.classList.add("hide");
+        }, 200);
+      });
+      sidebar.style.width = "80px";
+      sidebar.style.width = "auto";
+    } else {
+      sidebar.classList.remove("collapsed");
+      sidebarInner?.classList.remove("mobile");
+      sidebarlogoTextWrapper?.classList.remove("hide");
+      userProfile?.classList.remove("image-overlay");
+      userProfileInner?.classList.remove("overlay");
+      sidebarBottom?.classList.remove("hide");
+      sidebarBottomCollapsed?.classList.add("hide");
+      sideNavClose?.classList.remove("is-collapsed");
+      collapsibleContent.forEach((el) => {
+        el.classList.remove("hide");
+        setTimeout(() => {
+          el.style.opacity = "1";
+        }, 10);
+      });
+    }
+  };
+  trigger.addEventListener("click", toggleSidebar);
+  sidebar.style.transition = "width 0.3s ease";
+};
 
 // pages/team-members/index.ts
 var TeamMembersPage = async () => {
   constructNavBarClasses();
   processMiddleware();
   checkProgressUserAndTeams();
+  initCollapsibleSidebar();
   await checkProgressUserAndTeams();
+  const teamTableWrapper = document.querySelector('[dev-target="member-table-wrapper"]');
+  const teamFormWrapper = document.querySelector('[dev-target="member-form-wrapper"]');
+  if (!teamTableWrapper || !teamFormWrapper) {
+    console.error(
+      'Team members table or form wrapper not found. Elements: [dev-target="member-table-wrapper"] or [dev-target="member-form-wrapper"] not found'
+    );
+    return;
+  }
   const table = document.querySelector('[fs-table-element="table"]');
   const tableBody = table?.querySelector(".fs-table_body");
   const templateRow = tableBody?.querySelector('[dev-target="table-row"]');
-  const addAnotherMemberLink = queryElement(
+  const addAnotherMemberTableLink = queryElement(
     '[dev-target="invite-another-member"]'
   );
-  if (!addAnotherMemberLink) {
+  const form = document.querySelector('[dev-target="add-team-member-form"]');
+  if (!form) {
+    console.error(
+      'Add team member form not found. Element: [dev-target="add-team-member-form"] not found'
+    );
+    return;
+  }
+  const nameInput = queryElement('[dev-target="name-input"]');
+  const emailInput = queryElement('[dev-target="email-input"]');
+  const roleInput = queryElement('[dev-target="role-input"]');
+  const inviteMessageInput = queryElement('[dev-target="invite-message"]');
+  const addAnotherMemberFormLink = queryElement(
+    '[dev-target="add-another-member-form"]'
+  );
+  const submitButton = queryElement('[dev-target="submit-button"]');
+  if (!nameInput) {
+    console.error('Ensure [dev-target="name"] is present.');
+    return;
+  }
+  if (!emailInput) {
+    console.error('Ensure [dev-target="email"] is present.');
+    return;
+  }
+  if (!roleInput) {
+    console.error('Ensure [dev-target="role"] is present.');
+    return;
+  }
+  if (!inviteMessageInput) {
+    console.error('Ensure [dev-target="invite-message"] is present.');
+    return;
+  }
+  if (!submitButton) {
+    console.error('Ensure [dev-target="submit-button"] is present.');
+    return;
+  }
+  let teamId = null;
+  const teams = await apiGetMyTeams();
+  if (teams && teams.length > 0) {
+    teamId = teams[0].team_id;
+  }
+  if (!addAnotherMemberTableLink) {
     console.error("Add another member link not found");
+    return;
+  }
+  if (!addAnotherMemberFormLink) {
+    console.error("Add another member form link not found");
     return;
   }
   if (!tableBody) {
@@ -2950,49 +3082,181 @@ var TeamMembersPage = async () => {
     console.error("Template row not found");
     return;
   }
-  addAnotherMemberLink.addEventListener("click", () => {
-    navigateToPath("/invite-team-members");
-  });
-  try {
-    const invites = await apiGetTeamInvitations();
-    if (invites?.length === 0) {
-      templateRow.style.display = "none";
+  const loadTeamInvitations = async () => {
+    try {
+      const invites = await apiGetTeamInvitations();
+      const hasInvites = invites && invites.length > 0;
+      teamFormWrapper.classList.toggle("hide", hasInvites);
+      teamTableWrapper.classList.toggle("hide", !hasInvites);
+      if (invites?.length === 0) {
+        templateRow.style.display = "none";
+        return;
+      }
+      const usernameCell = queryElement(
+        '[dev-target="username"]',
+        templateRow
+      );
+      const emailCell = queryElement('[dev-target="email"]', templateRow);
+      const roleCell = queryElement('[dev-target="role"]', templateRow);
+      const statusCell = queryElement('[dev-target="status"]', templateRow);
+      if (usernameCell && emailCell && roleCell && statusCell) {
+        usernameCell.textContent = invites[0].invitee_name || "Unknown";
+        emailCell.textContent = invites[0].invitee_email || "Unknown";
+        roleCell.textContent = invites[0].user_defined_role || "Unknown";
+        statusCell.textContent = invites[0].status.trim() || "Unknown";
+      }
+      for (let i = 1; i < invites.length; i++) {
+        const clonedRow = templateRow.cloneNode(true);
+        const clonedUsernameCell = queryElement(
+          '[dev-target="username"]',
+          clonedRow
+        );
+        const clonedEmailCell = queryElement(
+          '[dev-target="email"]',
+          clonedRow
+        );
+        const clonedRoleCell = queryElement('[dev-target="role"]', clonedRow);
+        const clonedStatusCell = queryElement(
+          '[dev-target="status"]',
+          clonedRow
+        );
+        if (clonedUsernameCell && clonedEmailCell && clonedRoleCell && clonedStatusCell) {
+          clonedUsernameCell.textContent = invites[i].invitee_name.trim() || "Unknown";
+          clonedEmailCell.textContent = invites[i].invitee_email.trim() || "Unknown";
+          clonedRoleCell.textContent = invites[i].user_defined_role.trim() || "Unknown";
+          clonedStatusCell.textContent = invites[i].status.trim() || "Unknown";
+        }
+        tableBody.appendChild(clonedRow);
+      }
+    } catch (error) {
+      console.error("Failed to load team members:", error);
+    }
+  };
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const resetErrors = () => {
+      nameInput.classList.remove("is-error");
+      emailInput.classList.remove("is-error");
+      roleInput.classList.remove("is-error");
+      inviteMessageInput.classList.remove("is-error");
+      submitButton.classList.remove("is-error");
+      submitButton.value = "SEND INVITE";
+    };
+    nameInput.addEventListener("input", resetErrors, { once: true });
+    emailInput.addEventListener("input", resetErrors, { once: true });
+    roleInput.addEventListener("input", resetErrors, { once: true });
+    inviteMessageInput.addEventListener("input", resetErrors, { once: true });
+    if (!emailInput.value || !emailInput.value.trim()) {
+      emailInput.classList.add("is-error");
+      submitButton.classList.add("is-error");
+      submitButton.value = "Email is required";
       return;
     }
-    templateRow.style.display = "";
-    const usernameCell = queryElement('[dev-target="username"]', templateRow);
-    const emailCell = queryElement('[dev-target="email"]', templateRow);
-    const roleCell = queryElement('[dev-target="role"]', templateRow);
-    const statusCell = queryElement('[dev-target="status"]', templateRow);
-    if (usernameCell && emailCell && roleCell && statusCell) {
-      usernameCell.textContent = invites[0].invitee_name || "Unknown";
-      emailCell.textContent = invites[0].invitee_email || "Unknown";
-      roleCell.textContent = invites[0].user_defined_role || "Unknown";
-      statusCell.textContent = invites[0].status.trim() || "Unknown";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailInput.value.trim())) {
+      emailInput.classList.add("is-error");
+      submitButton.classList.add("is-error");
+      submitButton.value = "Please enter a valid email address";
+      return;
     }
-    for (let i = 1; i < invites.length; i++) {
-      const clonedRow = templateRow.cloneNode(true);
-      const clonedUsernameCell = queryElement(
-        '[dev-target="username"]',
-        clonedRow
-      );
-      const clonedEmailCell = queryElement('[dev-target="email"]', clonedRow);
-      const clonedRoleCell = queryElement('[dev-target="role"]', clonedRow);
-      const clonedStatusCell = queryElement(
-        '[dev-target="status"]',
-        clonedRow
-      );
-      if (clonedUsernameCell && clonedEmailCell && clonedRoleCell && clonedStatusCell) {
-        clonedUsernameCell.textContent = invites[i].invitee_name.trim() || "Unknown";
-        clonedEmailCell.textContent = invites[i].invitee_email.trim() || "Unknown";
-        clonedRoleCell.textContent = invites[i].user_defined_role.trim() || "Unknown";
-        clonedStatusCell.textContent = invites[i].status.trim() || "Unknown";
+    if (!teamId) {
+      submitButton.classList.add("is-error");
+      submitButton.value = "No team found. Please create a team first.";
+      return;
+    }
+    const inputGroupWrapper = queryElement(
+      '[dev-target="input-group-wrapper"]',
+      form
+    );
+    const memberGroups = inputGroupWrapper ? Array.from(inputGroupWrapper.querySelectorAll(".flex-vertical_auth.gap-20")) : [];
+    const emails = [];
+    const errors = [];
+    memberGroups.forEach((group) => {
+      if (group instanceof HTMLElement) {
+        const groupEmailInput = queryElement('[dev-target="email-input"]', group);
+        if (groupEmailInput && groupEmailInput.value.trim()) {
+          const email = groupEmailInput.value.trim();
+          if (emailRegex.test(email)) {
+            emails.push(email);
+          } else {
+            errors.push("Please enter a valid email address");
+            groupEmailInput.classList.add("is-error");
+          }
+        }
       }
-      tableBody.appendChild(clonedRow);
+    });
+    if (errors.length > 0) {
+      submitButton.classList.add("is-error");
+      const [error] = errors;
+      submitButton.value = error;
+      return;
     }
-  } catch (error) {
-    console.error("Failed to load team members:", error);
-  }
+    if (emails.length === 0) {
+      submitButton.classList.add("is-error");
+      submitButton.value = "Please provide at least one email";
+      return;
+    }
+    submitButton.classList.remove("is-error");
+    submitButton.value = "Sending invites...";
+    try {
+      const invitePromises = emails.map(
+        (email) => apiInviteTeamMember(
+          nameInput.value.trim(),
+          roleInput.value.trim(),
+          email,
+          teamId,
+          inviteMessageInput.value.trim()
+        )
+      );
+      await Promise.all(invitePromises);
+      submitButton.classList.add("is-success");
+      submitButton.value = "Invites sent successfully!";
+      nameInput.value = "";
+      emailInput.value = "";
+      roleInput.value = "";
+      inviteMessageInput.value = "";
+      const clonedGroups = document.querySelectorAll('[dev-target="is-cloned"]');
+      clonedGroups.forEach((group) => group.remove());
+      await loadTeamInvitations();
+      setTimeout(() => {
+        submitButton.classList.remove("is-success");
+        submitButton.value = "SEND INVITE";
+      }, 2e3);
+    } catch (error) {
+      const { message } = error;
+      console.error(message);
+      submitButton.classList.add("is-error");
+      submitButton.value = message || "Failed to send invites. Please try again.";
+    }
+  });
+  addAnotherMemberFormLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const inputGroupWrapper = queryElement('[dev-target="input-group-wrapper"]');
+    if (!inputGroupWrapper) {
+      console.error("Input group wrapper not found");
+      return;
+    }
+    const firstGroup = inputGroupWrapper.querySelector('[dev-target="clone-template"]');
+    if (firstGroup && firstGroup instanceof HTMLElement) {
+      const clonedGroup = firstGroup.cloneNode(true);
+      clonedGroup.setAttribute("dev-target", "is-cloned");
+      clonedGroup.classList.add("is-cloned");
+      const inputs = clonedGroup.querySelectorAll("input");
+      inputs.forEach((input) => {
+        input.value = "";
+      });
+      inputGroupWrapper.appendChild(clonedGroup);
+    }
+  });
+  addAnotherMemberTableLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    teamTableWrapper.classList.add("hide");
+    teamFormWrapper.classList.remove("hide");
+  });
+  await loadTeamInvitations();
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {
