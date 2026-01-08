@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.18
+
+### Patch Changes
+
+- fix: docs
+
 ## 0.3.17
 
 ### Patch Changes

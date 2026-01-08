@@ -89,21 +89,23 @@ const initEcommercePerformancePage = async () => {
         (document) => document.document_type === 'shopify_repeat_customers'
       );
       if (shopifyRepeat) {
-        shopifyRepeatHelpText.textContent = shopifyRepeat.asset_name || '';
+        shopifyRepeatHelpText.textContent =
+          shopifyRepeat.asset_name || 'Supported formats: sheets. xcel';
       } else {
-        shopifyRepeatHelpText.textContent = '';
+        shopifyRepeatHelpText.textContent = 'Supported formats: sheets. xcel';
       }
       const shopifyMonthly = progress.ecommerce_performance.find(
         (document) => document.document_type === 'shopify_monthly_sales'
       );
       if (shopifyMonthly) {
-        shopifyMonthlyHelpText.textContent = shopifyMonthly.asset_name || '';
+        shopifyMonthlyHelpText.textContent =
+          shopifyMonthly.asset_name || 'Supported formats: sheets. xcel';
       } else {
-        shopifyMonthlyHelpText.textContent = '';
+        shopifyMonthlyHelpText.textContent = 'Supported formats: sheets. xcel';
       }
     } else {
-      shopifyRepeatHelpText.textContent = '';
-      shopifyMonthlyHelpText.textContent = '';
+      shopifyRepeatHelpText.textContent = 'Supported formats: sheets. xcel';
+      shopifyMonthlyHelpText.textContent = 'Supported formats: sheets. xcel';
     }
   };
 

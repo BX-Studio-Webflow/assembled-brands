@@ -161,10 +161,10 @@ const initFinanceDocsAccountsInventoryPage = async () => {
       }
 
       // Valid file - show file name
-      helperText.textContent = file.name;
+      helperText.textContent = file.name || 'Supported formats: sheets. xcel';
       helperText.classList.remove('is-error');
     } else {
-      helperText.textContent = '';
+      helperText.textContent = 'Supported formats: sheets. xcel';
       helperText.classList.remove('is-error');
     }
   };

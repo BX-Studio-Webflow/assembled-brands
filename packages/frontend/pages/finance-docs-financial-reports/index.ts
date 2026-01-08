@@ -110,28 +110,30 @@ const initFinanceReportsPage = async () => {
       if (balanceSheet) {
         balaceSheetHelpText.textContent = balanceSheet.asset_name || '';
       } else {
-        balaceSheetHelpText.textContent = '';
+        balaceSheetHelpText.textContent = 'Supported formats: sheets. xcel';
       }
       const incomeStatement = progress.financial_reports.find(
         (document) => document.document_type === 'monthly_income_statement'
       );
       if (incomeStatement) {
-        incomeStatementHelpText.textContent = incomeStatement.asset_name || '';
+        incomeStatementHelpText.textContent =
+          incomeStatement.asset_name || 'Supported formats: sheets. xcel';
       } else {
-        incomeStatementHelpText.textContent = '';
+        incomeStatementHelpText.textContent = 'Supported formats: sheets. xcel';
       }
       const incomeForecast = progress.financial_reports.find(
         (document) => document.document_type === 'monthly_income_forecast'
       );
       if (incomeForecast) {
-        incomeForecastHelpText.textContent = incomeForecast.asset_name || '';
+        incomeForecastHelpText.textContent =
+          incomeForecast.asset_name || 'Supported formats: sheets. xcel';
       } else {
-        incomeForecastHelpText.textContent = '';
+        incomeForecastHelpText.textContent = 'Supported formats: sheets. xcel';
       }
     } else {
-      balaceSheetHelpText.textContent = '';
-      incomeStatementHelpText.textContent = '';
-      incomeForecastHelpText.textContent = '';
+      balaceSheetHelpText.textContent = 'Supported formats: sheets. xcel';
+      incomeStatementHelpText.textContent = 'Supported formats: sheets. xcel';
+      incomeForecastHelpText.textContent = 'Supported formats: sheets. xcel';
     }
   };
 
