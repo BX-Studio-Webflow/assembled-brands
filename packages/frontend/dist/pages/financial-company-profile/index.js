@@ -3119,37 +3119,21 @@ var initFinancialCompanyProfilePage = async () => {
     if (progress?.company_profile) {
       if (progress.company_profile.legal_name) {
         companyLegalNameInput.value = progress.company_profile.legal_name;
-      } else {
-        companyLegalNameInput.value = "";
       }
       if (progress.company_profile.headquarters) {
         companyHeadquartersInput.value = progress.company_profile.headquarters;
         companyHeadquartersInput.dispatchEvent(new Event("change", { bubbles: true }));
-      } else {
-        companyHeadquartersInput.value = "";
       }
       if (progress.company_profile.year_formed) {
         companyYear.value = progress.company_profile.year_formed;
-      } else {
-        companyYear.value = "";
       }
       if (progress.company_profile.accounting_software) {
         accountingSoftwareInput.value = progress.company_profile.accounting_software;
         accountingSoftwareInput.dispatchEvent(new Event("change", { bubbles: true }));
-      } else {
-        accountingSoftwareInput.value = "";
       }
       if (progress.company_profile.other_accounting_software) {
         accountingSoftwareOther.value = progress.company_profile.other_accounting_software;
-      } else {
-        accountingSoftwareOther.value = "";
       }
-    } else {
-      companyLegalNameInput.value = "";
-      companyHeadquartersInput.value = "";
-      companyYear.value = "";
-      accountingSoftwareInput.value = "";
-      accountingSoftwareOther.value = "";
     }
   };
   let financialProgress;

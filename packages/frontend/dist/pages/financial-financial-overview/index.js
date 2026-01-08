@@ -3085,10 +3085,6 @@ var initFinancialOverviewPage = async () => {
       companyRevenue.value = progress.financial_overview.revenue_last_12_months || "";
       companyNetIncome.value = progress.financial_overview.net_income_last_12_months || "";
       companyProjectedRevenue.value = progress.financial_overview.projected_revenue_next_12_months || "";
-    } else {
-      companyRevenue.value = "";
-      companyNetIncome.value = "";
-      companyProjectedRevenue.value = "";
     }
   };
   let financialProgress;
