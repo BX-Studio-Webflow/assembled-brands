@@ -3009,9 +3009,13 @@ var initCollapsibleSidebar = () => {
 var TeamMembersPage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  checkProgressUserAndTeams();
   initCollapsibleSidebar();
-  await checkProgressUserAndTeams();
+  const progressData = await checkProgressUserAndTeams();
+  const teams = progressData?.teams || [];
+  let teamId = null;
+  if (teams && teams.length > 0) {
+    teamId = teams[0].team_id;
+  }
   const teamTableWrapper = document.querySelector('[dev-target="member-table-wrapper"]');
   const teamFormWrapper = document.querySelector('[dev-target="member-form-wrapper"]');
   if (!teamTableWrapper || !teamFormWrapper) {
@@ -3061,11 +3065,6 @@ var TeamMembersPage = async () => {
     console.error('Ensure [dev-target="submit-button"] is present.');
     return;
   }
-  let teamId = null;
-  const teams = await apiGetMyTeams();
-  if (teams && teams.length > 0) {
-    teamId = teams[0].team_id;
-  }
   if (!addAnotherMemberTableLink) {
     console.error("Add another member link not found");
     return;
@@ -3088,10 +3087,13 @@ var TeamMembersPage = async () => {
       const hasInvites = invites && invites.length > 0;
       teamFormWrapper.classList.toggle("hide", hasInvites);
       teamTableWrapper.classList.toggle("hide", !hasInvites);
-      if (invites?.length === 0) {
+      const existingRows = Array.from(tableBody.children).slice(1);
+      existingRows.forEach((row) => row.remove());
+      if (!invites || invites.length === 0) {
         templateRow.style.display = "none";
         return;
       }
+      templateRow.style.display = "";
       const usernameCell = queryElement(
         '[dev-target="username"]',
         templateRow
@@ -3105,6 +3107,7 @@ var TeamMembersPage = async () => {
         roleCell.textContent = invites[0].user_defined_role || "Unknown";
         statusCell.textContent = invites[0].status.trim() || "Unknown";
       }
+      const fragment = document.createDocumentFragment();
       for (let i = 1; i < invites.length; i++) {
         const clonedRow = templateRow.cloneNode(true);
         const clonedUsernameCell = queryElement(
@@ -3126,8 +3129,9 @@ var TeamMembersPage = async () => {
           clonedRoleCell.textContent = invites[i].user_defined_role.trim() || "Unknown";
           clonedStatusCell.textContent = invites[i].status.trim() || "Unknown";
         }
-        tableBody.appendChild(clonedRow);
+        fragment.appendChild(clonedRow);
       }
+      tableBody.appendChild(fragment);
     } catch (error) {
       console.error("Failed to load team members:", error);
     }
