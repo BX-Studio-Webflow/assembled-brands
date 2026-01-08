@@ -2774,6 +2774,37 @@ var apiSaveOnboardingStep3 = (data) => {
     data
   });
 };
+var apiGetOnboardingProgress = () => {
+  return ApiService_default.fetchDataWithAxios({
+    url: "/onboarding-wizard/progress",
+    method: "get"
+  });
+};
+
+// shared/services/AuthService.ts
+async function apiGetUserMe() {
+  return ApiService_default.fetchDataWithAxios({
+    url: "/user/me",
+    method: "get"
+  });
+}
+
+// shared/services/FinancialWizardService.ts
+var apiGetFinancialProgress = (userId) => {
+  return ApiService_default.fetchDataWithAxios({
+    url: "/financial-wizard/progress",
+    method: "get",
+    params: userId ? { user_id: userId } : void 0
+  });
+};
+
+// shared/services/TeamService.ts
+var apiGetMyTeams = () => {
+  return ApiService_default.fetchDataWithAxios({
+    url: "/team/my-teams",
+    method: "get"
+  });
+};
 
 // shared/utils/selectors.ts
 var queryElement = (selector, scope = document) => {
@@ -2784,8 +2815,19 @@ var queryAllElements = (selector, scope = document) => {
   return [...Array.from(elements)];
 };
 
+// shared/utils/helpers.ts
+var fetchProgressData = async (userId) => {
+  const [financialProgress, user, teams, onboardingProgress] = await Promise.all([
+    apiGetFinancialProgress(userId),
+    apiGetUserMe(),
+    apiGetMyTeams(),
+    apiGetOnboardingProgress()
+  ]);
+  return { financialProgress, user, teams, onboardingProgress };
+};
+
 // pages/onboarding-wizard/index.ts
-var initOnboardingStep1Page = () => {
+var initOnboardingStep1Page = async () => {
   processMiddleware();
   const form = document.querySelector('[dev-target="onboarding-step1-form"]');
   if (!form) {
@@ -2842,6 +2884,10 @@ var initOnboardingStep1Page = () => {
     console.error("Step text element not found");
     return;
   }
+  if (!legalName || employeeCountInputs.length === 0 || !website || !yearsInBusiness || assetTypeInputs.length === 0 || !desiredLoanAmount || companyTypeInputs.length === 0 || !revenueQualification || !companyTypeOther) {
+    console.error("One or more form inputs not found");
+    return;
+  }
   companyTypeInputs.forEach((radio) => {
     radio.addEventListener("change", () => {
       if (radio.value === "other") {
@@ -2868,7 +2914,87 @@ var initOnboardingStep1Page = () => {
     submitButton.value = step === 3 ? "FINISH" : "NEXT";
     currentStep = step;
   };
-  showStep(1);
+  const urlParams = new URLSearchParams(window.location.search);
+  const stepParam = urlParams.get("step");
+  if (stepParam) {
+    const stepNumber = parseInt(stepParam, 10);
+    if (stepNumber >= 1 && stepNumber <= 3) {
+      showStep(stepNumber);
+    }
+  } else {
+    showStep(1);
+  }
+  const loadOnboardingProgress = async () => {
+    try {
+      const result = await fetchProgressData();
+      if (!result) {
+        console.error("No result from fetchProgressData");
+        return;
+      }
+      const data = result.onboardingProgress;
+      if (!data || !data.progress) {
+        console.error("No onboarding progress data found");
+        return;
+      }
+      prefillFormFields(data.progress);
+    } catch (error) {
+      console.error("Failed to load onboarding progress:", error);
+    }
+  };
+  const prefillFormFields = (progress) => {
+    if (progress.step1) {
+      if (progress.step1.legal_name) {
+        legalName.value = progress.step1.legal_name;
+      }
+      if (progress.step1.employee_count) {
+        const matchingEmployeeInput = employeeCountInputs.find(
+          (input) => input.value === progress.step1.employee_count
+        );
+        if (matchingEmployeeInput) {
+          matchingEmployeeInput.checked = true;
+        }
+      }
+      if (progress.step1.website) {
+        website.value = progress.step1.website;
+      }
+    }
+    if (progress.step2) {
+      if (progress.step2.years_in_business) {
+        yearsInBusiness.value = progress.step2.years_in_business;
+      }
+      if (progress.step2.asset_type) {
+        const matchingAssetInput = assetTypeInputs.find(
+          (input) => input.value === progress.step2.asset_type
+        );
+        if (matchingAssetInput) {
+          matchingAssetInput.checked = true;
+        }
+      }
+      if (progress.step2.desired_loan_amount) {
+        desiredLoanAmount.value = progress.step2.desired_loan_amount;
+      }
+    }
+    if (progress.step3) {
+      if (progress.step3.company_type) {
+        const matchingCompanyTypeInput = companyTypeInputs.find(
+          (input) => input.value === progress.step3.company_type
+        );
+        if (matchingCompanyTypeInput) {
+          matchingCompanyTypeInput.checked = true;
+          if (progress.step3.company_type === "other") {
+            companyTypeOtherWrapper?.classList.remove("hide");
+          }
+        }
+      }
+      if (progress.step3.company_type_other) {
+        companyTypeOther.value = progress.step3.company_type_other;
+      }
+      if (progress.step3.revenue_qualification) {
+        revenueQualification.value = progress.step3.revenue_qualification;
+      }
+    }
+  };
+  await loadOnboardingProgress();
   backButton.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -3047,9 +3173,9 @@ var initOnboardingStep1Page = () => {
   };
 };
 window.Webflow ||= [];
-window.Webflow.push(() => {
+window.Webflow.push(async () => {
   try {
-    initOnboardingStep1Page();
+    await initOnboardingStep1Page();
   } catch (error) {
     console.error(error);
   }

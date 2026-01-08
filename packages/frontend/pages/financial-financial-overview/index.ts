@@ -88,7 +88,7 @@ const initFinancialOverviewPage = async () => {
   constructAdminSelect(loadFinancialProgress);
 
   backButton.addEventListener('click', () => {
-    navigateToPath('/dashboard');
+    navigateToPath('/finance-company-profile');
   });
 
   form.addEventListener('submit', async (event) => {
