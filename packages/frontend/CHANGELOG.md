@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.17
+
+### Patch Changes
+
+- eab38cd: fix: patch
+
 ## 0.3.16
 
 ### Patch Changes
