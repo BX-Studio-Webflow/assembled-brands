@@ -1,5 +1,11 @@
 # server
 
+## 0.0.15
+
+### Patch Changes
+
+- eab38cd: fix: patch
+
 ## 0.0.14
 
 ### Patch Changes
