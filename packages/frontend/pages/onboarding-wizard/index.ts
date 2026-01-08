@@ -256,6 +256,8 @@ const initOnboardingStep1Page = async () => {
       }
       if (progress.step3.revenue_qualification) {
         revenueQualification.value = progress.step3.revenue_qualification;
+        // Trigger change event to update Webflow custom select visual state
+        revenueQualification.dispatchEvent(new Event('change', { bubbles: true }));
       }
     }
   };

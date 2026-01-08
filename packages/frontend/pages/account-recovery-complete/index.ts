@@ -1,6 +1,7 @@
 import type { AxiosError } from 'axios';
 import { apiResetPassword } from 'shared/services/AuthService';
 
+import { navigateToPath } from '$utils/config';
 import { queryElement } from '$utils/selectors';
 
 const initAccountRecoveryCompletePage = () => {
@@ -13,11 +14,12 @@ const initAccountRecoveryCompletePage = () => {
   const password = queryElement<HTMLInputElement>('[dev-target="password"]', form);
   const confirmPassword = queryElement<HTMLInputElement>('[dev-target="confirm-password"]', form);
 
-  //grab token and email fom url params
+  //grab token and email from url params
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
-  const email = urlParams.get('email');
-
+  // Manually decode email to preserve + characters
+  const params = new URLSearchParams(window.location.search);
+  const email = params.get('email')?.replace(' ', '+');
   if (!token || !email) {
     console.error('Token or email not found');
     return;
@@ -108,6 +110,7 @@ const initAccountRecoveryCompletePage = () => {
 
       submitButton.classList.add('is-success');
       submitButton.value = 'Great! Your password has been reset';
+      navigateToPath('/login?action=password-reset-success');
     } catch (error) {
       const { message } = error as AxiosError;
       const { code } = (error as AxiosError).response?.data as { code: string };

@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.16
+
+### Patch Changes
+
+- fix: patedsgf
+
 ## 0.3.15
 
 ### Patch Changes

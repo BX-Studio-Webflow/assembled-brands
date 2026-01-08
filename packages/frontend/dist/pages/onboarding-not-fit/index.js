@@ -23,7 +23,7 @@ var initOnboardingNotFitPage = () => {
     return;
   }
   homeCTA.addEventListener("click", async () => {
-    navigateToPath("/onboarding-wizard?step=1");
+    navigateToPath("/onboarding-wizard?step=3");
   });
 };
 window.Webflow ||= [];

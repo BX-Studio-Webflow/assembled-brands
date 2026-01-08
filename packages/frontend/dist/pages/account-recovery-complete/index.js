@@ -2770,7 +2770,8 @@ var initAccountRecoveryCompletePage = () => {
   const confirmPassword = queryElement('[dev-target="confirm-password"]', form);
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get("token");
-  const email = urlParams.get("email");
+  const params = new URLSearchParams(window.location.search);
+  const email = params.get("email")?.replace(" ", "+");
   if (!token || !email) {
     console.error("Token or email not found");
     return;
@@ -2845,6 +2846,7 @@ var initAccountRecoveryCompletePage = () => {
       });
       submitButton.classList.add("is-success");
       submitButton.value = "Great! Your password has been reset";
+      navigateToPath("/login?action=password-reset-success");
     } catch (error) {
       const { message } = error;
       const { code } = error.response?.data;
