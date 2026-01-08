@@ -113,6 +113,26 @@ const initOnboardingStep1Page = async () => {
     });
   });
 
+  // Trigger clicks on radio labels for visual state updates
+  const triggerRadioLabelClicks = (step: number) => {
+    if (step === 1) {
+      const checkedEmployeeInput = employeeCountInputs.find((input) => input.checked);
+      if (checkedEmployeeInput?.nextSibling) {
+        (checkedEmployeeInput.nextSibling as HTMLElement).click();
+      }
+    } else if (step === 2) {
+      const checkedAssetInput = assetTypeInputs.find((input) => input.checked);
+      if (checkedAssetInput?.nextSibling) {
+        (checkedAssetInput.nextSibling as HTMLElement).click();
+      }
+    } else if (step === 3) {
+      const checkedCompanyTypeInput = companyTypeInputs.find((input) => input.checked);
+      if (checkedCompanyTypeInput?.nextSibling) {
+        (checkedCompanyTypeInput.nextSibling as HTMLElement).click();
+      }
+    }
+  };
+
   // Show specific step
   const showStep = (step: number) => {
     step1Wrapper.classList.remove('is-active');
@@ -138,6 +158,9 @@ const initOnboardingStep1Page = async () => {
     submitButton.value = step === 3 ? 'FINISH' : 'NEXT';
 
     currentStep = step;
+
+    // Trigger radio label clicks for visual state updates
+    triggerRadioLabelClicks(step);
   };
 
   //if onboarding step is specified in URL, go to that step
@@ -185,6 +208,7 @@ const initOnboardingStep1Page = async () => {
         );
         if (matchingEmployeeInput) {
           matchingEmployeeInput.checked = true;
+          triggerRadioLabelClicks(1);
         }
       }
       if (progress.step1.website) {
@@ -203,6 +227,7 @@ const initOnboardingStep1Page = async () => {
         );
         if (matchingAssetInput) {
           matchingAssetInput.checked = true;
+          triggerRadioLabelClicks(2);
         }
       }
       if (progress.step2.desired_loan_amount) {
@@ -222,6 +247,8 @@ const initOnboardingStep1Page = async () => {
           if (progress.step3.company_type === 'other') {
             companyTypeOtherWrapper?.classList.remove('hide');
           }
+
+          triggerRadioLabelClicks(3);
         }
       }
       if (progress.step3.company_type_other) {

@@ -2897,6 +2897,24 @@ var initOnboardingStep1Page = async () => {
       }
     });
   });
+  const triggerRadioLabelClicks = (step) => {
+    if (step === 1) {
+      const checkedEmployeeInput = employeeCountInputs.find((input) => input.checked);
+      if (checkedEmployeeInput?.nextSibling) {
+        checkedEmployeeInput.nextSibling.click();
+      }
+    } else if (step === 2) {
+      const checkedAssetInput = assetTypeInputs.find((input) => input.checked);
+      if (checkedAssetInput?.nextSibling) {
+        checkedAssetInput.nextSibling.click();
+      }
+    } else if (step === 3) {
+      const checkedCompanyTypeInput = companyTypeInputs.find((input) => input.checked);
+      if (checkedCompanyTypeInput?.nextSibling) {
+        checkedCompanyTypeInput.nextSibling.click();
+      }
+    }
+  };
   const showStep = (step) => {
     step1Wrapper.classList.remove("is-active");
     step2Wrapper.classList.remove("is-active");
@@ -2913,6 +2931,7 @@ var initOnboardingStep1Page = async () => {
     }
     submitButton.value = step === 3 ? "FINISH" : "NEXT";
     currentStep = step;
+    triggerRadioLabelClicks(step);
   };
   const urlParams = new URLSearchParams(window.location.search);
   const stepParam = urlParams.get("step");
@@ -2952,6 +2971,7 @@ var initOnboardingStep1Page = async () => {
         );
         if (matchingEmployeeInput) {
           matchingEmployeeInput.checked = true;
+          triggerRadioLabelClicks(1);
         }
       }
       if (progress.step1.website) {
@@ -2968,6 +2988,7 @@ var initOnboardingStep1Page = async () => {
         );
         if (matchingAssetInput) {
           matchingAssetInput.checked = true;
+          triggerRadioLabelClicks(2);
         }
       }
       if (progress.step2.desired_loan_amount) {
@@ -2984,6 +3005,7 @@ var initOnboardingStep1Page = async () => {
           if (progress.step3.company_type === "other") {
             companyTypeOtherWrapper?.classList.remove("hide");
           }
+          triggerRadioLabelClicks(3);
         }
       }
       if (progress.step3.company_type_other) {
