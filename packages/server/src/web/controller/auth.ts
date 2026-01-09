@@ -72,7 +72,7 @@ export class AuthController {
 					{
 						success: false,
 						message: 'Invalid email, please try again',
-						code: 'AUTH_INVALID_CREDENTIALS',
+						code: 'AUTH_INVALID_EMAIL',
 					},
 					401,
 				);
@@ -83,7 +83,7 @@ export class AuthController {
 					{
 						success: false,
 						message: 'Invalid password, please try again',
-						code: 'AUTH_INVALID_CREDENTIALS',
+						code: 'AUTH_INVALID_PASSWORD',
 					},
 					401,
 				);

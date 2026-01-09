@@ -2912,6 +2912,10 @@ var initLoginPage = () => {
       });
       setCookie("accessToken", response.token, 10);
       localStorage.setItem("user", JSON.stringify(response.user));
+      const team = response.teams?.[0];
+      if (team) {
+        localStorage.setItem("x-team-id", team.team_id.toString());
+      }
       const currentOnboardingStep = response.onboardingProgress?.current_step;
       const onboardingIsComplete = response.onboardingProgress?.is_complete;
       if (!response.onboardingProgress) {
@@ -2934,13 +2938,14 @@ var initLoginPage = () => {
       if (nextFinancialWizardStep) {
         navigateToPath(nextFinancialWizardStep);
       } else {
-        navigateToPath("/team-members");
+        navigateToPath("/invite-team-members");
         return;
       }
     } catch (error) {
       const { message } = error;
       const { code } = error.response?.data;
-      if (code === "AUTH_INVALID_CREDENTIALS") {
+      if (code === "AUTH_INVALID_PASSWORD") {
+        password.classList.add("is-error");
         submitButton.classList.add("is-error");
         submitButton.value = message;
         const recoverAccountDiv = queryElement(
@@ -2954,6 +2959,10 @@ var initLoginPage = () => {
           return;
         }
         recoverAccountDiv.classList.remove("hide");
+      } else if (code === "AUTH_INVALID_EMAIL") {
+        email.classList.add("is-error");
+        submitButton.classList.add("is-error");
+        submitButton.value = message;
       }
     }
   });

@@ -139,14 +139,19 @@ export const constructNavBarClasses = () => {
       nav_attr: 'nav-team-ownership-link',
       nav_class: 'is-active-financial',
     },
-    '/team-members': {
-      nav_attr: 'nav-team-ownership-link',
+    '/invite-team-members': {
+      nav_attr: 'nav-team-member-link',
+      nav_class: 'is-active-financial',
+    },
+    '/dev/invite-team-members': {
+      nav_attr: 'nav-team-member-link',
       nav_class: 'is-active-financial',
     },
   };
 
   // Find the matching dev-target for current route
   const activeTarget = routeMap[currentPath];
+
   const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
 
   if (activeTarget) {
@@ -157,6 +162,7 @@ export const constructNavBarClasses = () => {
 
     // Add is-active class to the current route's link
     const activeLink = queryElement<HTMLElement>(`[dev-target="${activeTarget.nav_attr}"]`);
+
     if (activeLink) {
       activeLink.classList.add(activeTarget.nav_class);
     }

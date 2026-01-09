@@ -1,5 +1,17 @@
 # server
 
+## 0.0.18
+
+### Patch Changes
+
+- fix: teams
+
+## 0.0.17
+
+### Patch Changes
+
+- fix: patcefgfesd
+
 ## 0.0.16
 
 ### Patch Changes
