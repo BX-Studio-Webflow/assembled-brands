@@ -2786,16 +2786,23 @@ var initColdLeadRegisterPage = () => {
     );
     return;
   }
+  email.addEventListener("change", () => {
+    email.classList.remove("is-error");
+    submitButton.classList.remove("is-error");
+    submitButton.value = "CONTINUE";
+    if (email.value && !isValidEmail(email.value)) {
+      email.classList.add("is-error");
+      submitButton.classList.add("is-error");
+      submitButton.value = "Please enter a valid email";
+    }
+  });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     event.stopPropagation();
-    email.addEventListener("input", () => {
-      email.classList.remove("is-error");
-      submitButton.classList.remove("is-error");
-      submitButton.value = "CONTINUE";
-    });
     if (!email.value) {
-      console.error("Invalid email");
+      console.error("Email is required");
+      submitButton.value = "Email is required";
+      email.classList.add("is-error");
       return;
     }
     if (!isValidEmail(email.value)) {

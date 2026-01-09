@@ -2770,7 +2770,8 @@ var initAccountSetupFinishVerificationPage = () => {
   const confirmPassword = queryElement('[dev-target="confirm-password"]', form);
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get("token");
-  const email = urlParams.get("email");
+  const params = new URLSearchParams(window.location.search);
+  const email = params.get("email")?.replace(" ", "+");
   const id = urlParams.get("id");
   if (!token || !email || !id) {
     console.error("Token or email or id not found");
@@ -2808,33 +2809,52 @@ var initAccountSetupFinishVerificationPage = () => {
       eyeIconConfirmPassword.innerHTML = confirmPassword.type === "password" ? EYE_OPEN_SVG : EYE_CLOSED_SVG;
     });
   }
+  password.addEventListener("change", () => {
+    password.classList.remove("is-error");
+    confirmPassword.classList.remove("is-error");
+    submitButton.classList.remove("is-error");
+    submitButton.value = "SUBMIT";
+    if (password.value && password.value.length < 6) {
+      password.classList.add("is-error");
+      submitButton.classList.add("is-error");
+      submitButton.value = "Password must be at least 6 characters long";
+    }
+  });
+  confirmPassword.addEventListener("change", () => {
+    password.classList.remove("is-error");
+    confirmPassword.classList.remove("is-error");
+    submitButton.classList.remove("is-error");
+    submitButton.value = "SUBMIT";
+    if (confirmPassword.value && password.value !== confirmPassword.value) {
+      confirmPassword.classList.add("is-error");
+      submitButton.classList.add("is-error");
+      submitButton.value = "Passwords do not match";
+    }
+  });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     event.stopPropagation();
-    password.addEventListener("input", () => {
-      password.classList.remove("is-error");
-      confirmPassword.classList.remove("is-error");
-      submitButton.classList.remove("is-error");
-      submitButton.value = "SUBMIT";
-    });
-    confirmPassword.addEventListener("input", () => {
-      password.classList.remove("is-error");
-      confirmPassword.classList.remove("is-error");
-      submitButton.classList.remove("is-error");
-      submitButton.value = "SUBMIT";
-    });
     if (!password.value) {
-      submitButton.value = "Invalid password";
+      submitButton.value = "Password cannot be empty";
+      password.classList.add("is-error");
+      submitButton.classList.add("is-error");
+      return;
+    }
+    if (password.value.length < 8) {
+      submitButton.value = "Password must be at least 8 characters long";
+      password.classList.add("is-error");
       submitButton.classList.add("is-error");
       return;
     }
     if (!confirmPassword.value) {
-      submitButton.value = "Invalid confirm password";
+      submitButton.value = "Please confirm your password";
+      confirmPassword.classList.add("is-error");
       submitButton.classList.add("is-error");
       return;
     }
     if (password.value !== confirmPassword.value) {
-      submitButton.value = "Password and confirm password do not match";
+      submitButton.value = "Passwords do not match";
+      confirmPassword.classList.add("is-error");
       submitButton.classList.add("is-error");
       return;
     }
