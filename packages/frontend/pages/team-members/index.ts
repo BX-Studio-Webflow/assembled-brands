@@ -48,6 +48,9 @@ const TeamMembersPage = async () => {
   const nameInput = queryElement<HTMLInputElement>('[dev-target="name-input"]');
   const emailInput = queryElement<HTMLInputElement>('[dev-target="email-input"]');
   const roleInput = queryElement<HTMLInputElement>('[dev-target="role-input"]');
+  const limitedPrivilegeWrapper = queryElement<HTMLDivElement>(
+    '[dev-target="limited-priviledge-wrapper"]'
+  );
   const inviteMessageInput = queryElement<HTMLInputElement>('[dev-target="invite-message"]');
   const addAnotherMemberFormLink = queryElement<HTMLAnchorElement>(
     '[dev-target="add-another-member-form"]'
@@ -76,21 +79,32 @@ const TeamMembersPage = async () => {
   }
 
   if (!addAnotherMemberTableLink) {
-    console.error('Add another member link not found');
+    console.error(
+      'Add another member link not found. Ensure [dev-target="invite-another-member"] is present.'
+    );
     return;
   }
 
   if (!addAnotherMemberFormLink) {
-    console.error('Add another member form link not found');
+    console.error(
+      'Add another member form link not found. Ensure [dev-target="add-another-member-form"] is present.'
+    );
+    return;
+  }
+
+  if (!limitedPrivilegeWrapper) {
+    console.error(
+      'Limited privilege wrapper not found. Ensure [dev-target="limited-priviledge-wrapper"] is present.'
+    );
     return;
   }
 
   if (!tableBody) {
-    console.error('Table body not found');
+    console.error('Table body not found. Ensure .fs-table_body is present.');
     return;
   }
   if (!templateRow) {
-    console.error('Template row not found');
+    console.error('Template row not found. Ensure [dev-target="table-row"] is present.');
     return;
   }
 
@@ -163,6 +177,12 @@ const TeamMembersPage = async () => {
       tableBody.appendChild(fragment);
     } catch (error) {
       console.error('Failed to load team members:', error);
+      const { message } = error as AxiosError;
+      if (message === 'You are not a host of any team') {
+        limitedPrivilegeWrapper.classList.remove('hide');
+        teamFormWrapper.classList.add('hide');
+        teamTableWrapper.classList.add('hide');
+      }
     }
   };
 
