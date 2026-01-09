@@ -1,5 +1,17 @@
 # @assembled-brands/frontend
 
+## 0.3.21
+
+### Patch Changes
+
+- fix: teams
+
+## 0.3.20
+
+### Patch Changes
+
+- fix: patcefgfesd
+
 ## 0.3.19
 
 ### Patch Changes

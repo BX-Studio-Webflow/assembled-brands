@@ -2915,8 +2915,12 @@ var constructNavBarClasses = () => {
       nav_attr: "nav-team-ownership-link",
       nav_class: "is-active-financial"
     },
-    "/team-members": {
-      nav_attr: "nav-team-ownership-link",
+    "/invite-team-members": {
+      nav_attr: "nav-team-member-link",
+      nav_class: "is-active-financial"
+    },
+    "/dev/invite-team-members": {
+      nav_attr: "nav-team-member-link",
       nav_class: "is-active-financial"
     }
   };
