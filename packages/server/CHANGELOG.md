@@ -1,5 +1,11 @@
 # server
 
+## 0.0.19
+
+### Patch Changes
+
+- fix: auth
+
 ## 0.0.18
 
 ### Patch Changes

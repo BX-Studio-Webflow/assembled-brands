@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.22
+
+### Patch Changes
+
+- fix: auth
+
 ## 0.3.21
 
 ### Patch Changes

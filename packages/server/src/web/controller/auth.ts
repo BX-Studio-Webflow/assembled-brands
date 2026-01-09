@@ -74,7 +74,7 @@ export class AuthController {
 						message: 'Invalid email, please try again',
 						code: 'AUTH_INVALID_EMAIL',
 					},
-					401,
+					400,
 				);
 			}
 			const isVerified = verify(body.password, user.password);
@@ -85,7 +85,7 @@ export class AuthController {
 						message: 'Invalid password, please try again',
 						code: 'AUTH_INVALID_PASSWORD',
 					},
-					401,
+					400,
 				);
 			}
 

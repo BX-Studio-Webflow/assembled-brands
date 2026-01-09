@@ -3044,6 +3044,9 @@ var TeamMembersPage = async () => {
   const nameInput = queryElement('[dev-target="name-input"]');
   const emailInput = queryElement('[dev-target="email-input"]');
   const roleInput = queryElement('[dev-target="role-input"]');
+  const limitedPrivilegeWrapper = queryElement(
+    '[dev-target="limited-priviledge-wrapper"]'
+  );
   const inviteMessageInput = queryElement('[dev-target="invite-message"]');
   const addAnotherMemberFormLink = queryElement(
     '[dev-target="add-another-member-form"]'
@@ -3070,19 +3073,29 @@ var TeamMembersPage = async () => {
     return;
   }
   if (!addAnotherMemberTableLink) {
-    console.error("Add another member link not found");
+    console.error(
+      'Add another member link not found. Ensure [dev-target="invite-another-member"] is present.'
+    );
     return;
   }
   if (!addAnotherMemberFormLink) {
-    console.error("Add another member form link not found");
+    console.error(
+      'Add another member form link not found. Ensure [dev-target="add-another-member-form"] is present.'
+    );
+    return;
+  }
+  if (!limitedPrivilegeWrapper) {
+    console.error(
+      'Limited privilege wrapper not found. Ensure [dev-target="limited-priviledge-wrapper"] is present.'
+    );
     return;
   }
   if (!tableBody) {
-    console.error("Table body not found");
+    console.error("Table body not found. Ensure .fs-table_body is present.");
     return;
   }
   if (!templateRow) {
-    console.error("Template row not found");
+    console.error('Template row not found. Ensure [dev-target="table-row"] is present.');
     return;
   }
   const loadTeamInvitations = async () => {
@@ -3138,6 +3151,12 @@ var TeamMembersPage = async () => {
       tableBody.appendChild(fragment);
     } catch (error) {
       console.error("Failed to load team members:", error);
+      const { message } = error;
+      if (message === "You are not a host of any team") {
+        limitedPrivilegeWrapper.classList.remove("hide");
+        teamFormWrapper.classList.add("hide");
+        teamTableWrapper.classList.add("hide");
+      }
     }
   };
   form.addEventListener("submit", async (event) => {
