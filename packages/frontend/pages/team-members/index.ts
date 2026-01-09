@@ -1,9 +1,5 @@
 import type { AxiosError } from 'axios';
-import {
-  apiGetMyTeams,
-  apiGetTeamInvitations,
-  apiInviteTeamMember,
-} from 'shared/services/TeamService';
+import { apiGetTeamInvitations, apiInviteTeamMember } from 'shared/services/TeamService';
 
 import { processMiddleware } from '$utils/auth';
 import {
@@ -16,9 +12,15 @@ import { queryElement } from '$utils/selectors';
 const TeamMembersPage = async () => {
   constructNavBarClasses();
   processMiddleware();
-  checkProgressUserAndTeams();
   initCollapsibleSidebar();
-  await checkProgressUserAndTeams();
+
+  const progressData = await checkProgressUserAndTeams();
+  const teams = progressData?.teams || [];
+
+  let teamId: number | null = null;
+  if (teams && teams.length > 0) {
+    teamId = teams[0].team_id;
+  }
 
   // Find the table and template row
   const teamTableWrapper = document.querySelector('[dev-target="member-table-wrapper"]');
@@ -73,11 +75,6 @@ const TeamMembersPage = async () => {
     return;
   }
 
-  let teamId: number | null = null;
-  const teams = await apiGetMyTeams();
-  if (teams && teams.length > 0) {
-    teamId = teams[0].team_id;
-  }
   if (!addAnotherMemberTableLink) {
     console.error('Add another member link not found');
     return;
@@ -105,12 +102,18 @@ const TeamMembersPage = async () => {
       teamFormWrapper.classList.toggle('hide', hasInvites);
       teamTableWrapper.classList.toggle('hide', !hasInvites);
 
-      // If no members, hide template row
-      if (invites?.length === 0) {
+      // Clear existing rows (except template) to avoid duplicates on reload
+      const existingRows = Array.from(tableBody.children).slice(1);
+      existingRows.forEach((row) => row.remove());
+
+      // If no invites, hide template row
+      if (!invites || invites.length === 0) {
         templateRow.style.display = 'none';
         return;
       }
 
+      // Show and populate template row with first invite
+      templateRow.style.display = '';
       const usernameCell = queryElement<HTMLTableCellElement>(
         '[dev-target="username"]',
         templateRow
@@ -125,6 +128,9 @@ const TeamMembersPage = async () => {
         roleCell.textContent = invites[0].user_defined_role || 'Unknown';
         statusCell.textContent = invites[0].status.trim() || 'Unknown';
       }
+
+      // Use DocumentFragment for better performance when adding multiple rows
+      const fragment = document.createDocumentFragment();
 
       // Clone template row for remaining members
       for (let i = 1; i < invites.length; i++) {
@@ -150,8 +156,11 @@ const TeamMembersPage = async () => {
           clonedStatusCell.textContent = invites[i].status.trim() || 'Unknown';
         }
 
-        tableBody.appendChild(clonedRow);
+        fragment.appendChild(clonedRow);
       }
+
+      // Append all rows at once for better performance
+      tableBody.appendChild(fragment);
     } catch (error) {
       console.error('Failed to load team members:', error);
     }

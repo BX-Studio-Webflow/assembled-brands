@@ -135,46 +135,69 @@ const initLoginPage = () => {
       eyeIcon.innerHTML = password.type === 'password' ? EYE_OPEN_SVG : EYE_CLOSED_SVG;
     });
   }
+  // Real-time validation on input change
+  email.addEventListener('change', () => {
+    email.classList.remove('is-error');
+    submitButton.classList.remove('is-error');
+    submitButton.value = 'CONTINUE';
+
+    // Validate email on change
+    if (email.value && !isValidEmail(email.value)) {
+      email.classList.add('is-error');
+      submitButton.classList.add('is-error');
+      submitButton.value = 'Please enter a valid email';
+    }
+  });
+
+  password.addEventListener('change', () => {
+    password.classList.remove('is-error');
+    submitButton.classList.remove('is-error');
+    submitButton.value = 'CONTINUE';
+
+    // Validate password on change
+    if (password.value && password.value.length < 8) {
+      password.classList.add('is-error');
+      submitButton.classList.add('is-error');
+      submitButton.value = 'Password must be at least 8 characters long';
+    }
+  });
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     event.stopPropagation();
 
-    email.addEventListener('input', () => {
-      email.classList.remove('is-error');
-      password.classList.remove('is-error');
-      submitButton.classList.remove('is-error');
-      submitButton.value = 'CONTINUE';
-    });
-    password.addEventListener('input', () => {
-      password.classList.remove('is-error');
-      email.classList.remove('is-error');
-      submitButton.classList.remove('is-error');
-      submitButton.value = 'CONTINUE';
-    });
-
     //validate email
     if (!email.value) {
-      console.error('Invalid email');
+      console.error('Email is required');
+      submitButton.value = 'Email is required';
+      email.classList.add('is-error');
+      return;
+    }
+
+    //invalid email
+    if (!isValidEmail(email.value)) {
+      console.error('Please enter a valid email');
+      submitButton.value = 'Please enter a valid email';
+      email.classList.add('is-error');
       return;
     }
 
     //validate password
     if (!password.value) {
-      console.error('Invalid password');
+      console.error('Password cannot be empty');
+      submitButton.value = 'Password cannot be empty';
+      password.classList.add('is-error');
       return;
     }
 
     //validate password length
     if (password.value.length < 8) {
       console.error('Password must be at least 8 characters long');
+      submitButton.value = 'Password must be at least 8 characters long';
+      password.classList.add('is-error');
       return;
     }
 
-    //validate email format
-    if (!isValidEmail(email.value)) {
-      console.error('Invalid email format');
-      return;
-    }
     try {
       const response = await apiSignIn({
         email: email.value,

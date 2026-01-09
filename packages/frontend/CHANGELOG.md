@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.19
+
+### Patch Changes
+
+- fix: password
+
 ## 0.3.18
 
 ### Patch Changes
