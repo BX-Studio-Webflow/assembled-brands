@@ -1,8 +1,8 @@
-# Finsweet Developer Starter
+# Assembled Brands
 
-A starter template for both Client & Power projects.
+A financial platform for brand businesses with integrated onboarding, financial wizards, team management, and document processing capabilities.
 
-Before starting to work with this template, please take some time to read through the documentation.
+This is a monorepo with frontend (Cloudflare Pages) and backend (Cloudflare Workers) packages. For detailed documentation, see [documentation.md](documentation.md).
 
 ## Reference
 
@@ -23,35 +23,37 @@ Before starting to work with this template, please take some time to read throug
 
 ## Included tools
 
-This template contains some preconfigured development tools:
+This project contains preconfigured development tools:
 
-- [Typescript](https://www.typescriptlang.org/): A superset of Javascript that adds an additional layer of Typings, bringing more security and efficiency to the written code.
-- [Prettier](https://prettier.io/): Code formatting that assures consistency across all Finsweet's projects.
-- [ESLint](https://eslint.org/): Code linting that enforces industries' best practices. It uses [our own custom configuration](https://github.com/finsweet/eslint-config) to maintain consistency across all Finsweet's projects.
+- [TypeScript](https://www.typescriptlang.org/): Type-safe development across frontend and backend.
+- [Cloudflare Workers](https://workers.cloudflare.com/): Serverless edge computing platform.
+- [Cloudflare D1](https://developers.cloudflare.com/d1/): SQLite-based edge database.
+- [Drizzle ORM](https://orm.drizzle.team/): Type-safe database queries and migrations.
 - [Playwright](https://playwright.dev/): Fast and reliable end-to-end testing.
-- [esbuild](https://esbuild.github.io/): Javascript bundler that compiles, bundles and minifies the original Typescript files.
-- [Changesets](https://github.com/changesets/changesets): A way to manage your versioning and changelogs.
-- [Finsweet's TypeScript Utils](https://github.com/finsweet/ts-utils): Some utilities to help you in your Webflow development.
+- [Vitest](https://vitest.dev/): Fast unit testing for backend services.
+- [ESLint](https://eslint.org/): Code formatting that assures consistency.
+- [Prettier](https://prettier.io/): Code linting and quality enforcement.
+- [Changesets](https://github.com/changesets/changesets): Version management and changelog generation.
 
 ## Requirements
 
-This template requires the use of [pnpm](https://pnpm.js.org/en/). You can [install pnpm](https://pnpm.io/installation) with:
+This project requires:
+
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [pnpm](https://pnpm.js.org/) - Install with:
 
 ```bash
 npm i -g pnpm
 ```
 
-To enable automatic deployments to npm, please read the [Continuous Deployment](#continuous-deployment) section.
+- [Cloudflare Account](https://dash.cloudflare.com/sign-up) - For Workers and D1 database
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) - Cloudflare's CLI tool
 
 ## Getting started
 
-The quickest way to start developing a new project is by [creating a new repository from this template](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template#creating-a-repository-from-a-template).
-
-Once the new repository has been created, update the `package.json` file with the correct information, specially the name of the package which has to be unique.
-
 ### Installing
 
-After creating the new repository, open it in your terminal and install the packages by running:
+Clone the repository and install dependencies:
 
 ```bash
 pnpm install
@@ -70,126 +72,97 @@ It is also recommended that you install the following extensions in your VSCode 
 - [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
 
+### Database Setup
+
+Initialize the D1 database:
+
+```bash
+cd packages/server
+pnpm wrangler d1 create <database-name>
+pnpm wrangler d1 migrations apply <database-name>
+```
+
+Update `packages/server/wrangler.jsonc` with your database ID.
+
 ### Building
 
-To build the files, you have two defined scripts:
+To run the development servers:
 
-- `pnpm dev`: Builds and creates a local server that serves all files (check [Serving files on development mode](#serving-files-on-development-mode) for more info).
-- `pnpm build`: Builds to the production directory (`dist`).
+- `pnpm dev`: Runs both frontend and backend in development mode
+- `pnpm build`: Builds both packages for production
 
-### Serving files on development mode
+**Frontend** (Cloudflare Pages):
 
-When you run `pnpm dev`, two things happen:
-
-- esbuild is set to `watch` mode. Every time that you save your files, the project will be rebuilt.
-- A local server is created under `http://localhost:3000` that serves all your project files. You can import them in your Webflow projects like:
-
-```html
-<script defer src="http://localhost:3000/{FILE_PATH}.js"></script>
+```bash
+cd packages/frontend
+pnpm dev  # Development server at localhost:3000
 ```
 
-- Live Reloading is enabled by default, meaning that every time you save a change in your files, the website you're working on will reload automatically. You can disable it in `/bin/build.js`.
+**Backend** (Cloudflare Workers):
 
-### Building multiple files
-
-If you need to build multiple files into different outputs, you can do it by updating the build settings.
-
-In `bin/build.js`, update the `ENTRY_POINTS` array with any files you'd like to build:
-
-```javascript
-const ENTRY_POINTS = [
-  'src/home/index.ts',
-  'src/contact/whatever.ts',
-  'src/hooyah.ts',
-  'src/home/other.ts',
-];
+```bash
+cd packages/server
+pnpm dev  # Local worker with D1 database
 ```
-
-This will tell `esbuild` to build all those files and output them in the `dist` folder for production and in `http://localhost:3000` for development.
-
-### Building CSS files
-
-CSS files are also supported by the bundler. When including a CSS file as an entry point, the compiler will generate a minified version in your output folder.
-
-You can define a CSS entry point by either:
-
-- Manually defining it in the `bin/build.js` config. [See previous section](#building-multiple-files) for reference.
-- Or importing the file inside any of your JavaScript / TypeScript files:
-
-```typescript
-// src/index.ts
-import './index.css';
-```
-
-CSS outputs are also available in `localhost` during [development mode](#serving-files-on-development-mode).
-
-### Setting up a path alias
-
-Path aliases are very helpful to avoid code like:
-
-```typescript
-import example from '../../../../utils/example';
-```
-
-Instead, we can create path aliases that map to a specific folder, so the code becomes cleaner like:
-
-```typescript
-import example from '$utils/example';
-```
-
-You can set up path aliases using the `paths` setting in `tsconfig.json`. This template has an already predefined path as an example:
-
-```json
-{
-  "paths": {
-    "$utils/*": ["src/utils/*"]
-  }
-}
-```
-
-To avoid any surprises, take some time to familiarize yourself with the [tsconfig](/tsconfig.json) enabled flags.
 
 ## Testing
 
-As previously mentioned, this library has [Playwright](https://playwright.dev/) included as an automated testing tool.
+This project uses [Playwright](https://playwright.dev/) for end-to-end testing and [Vitest](https://vitest.dev/) for unit tests.
 
-All tests are located under the `/tests` folder. This template includes a test spec example that will help you catch up with Playwright.
+**End-to-End Tests:**
 
-After [installing the dependencies](#installing), you can try it out by running `pnpm test`.
-Make sure you replace it with your own tests! Writing proper tests will help improve the maintainability and scalability of your project in the long term.
+```bash
+pnpm test              # Run Playwright tests headless
+pnpm test:headed       # Run tests with browser UI
+```
 
-By default, Playwright will also run `pnpm dev` in the background while the tests are running, so [your files served](#serving-files-on-development-mode) under `localhost:3000` will run as usual.
-You can disable this behavior in the `playwright.config.ts` file.
+Tests are located in:
 
-If you project doesn't require any testing, you should disable the Tests job in the [CI workflow](#continuous-integration) by commenting it out in the `.github/workflows/ci.yml` file.
-This will prevent the tests from running when you open a Pull Request.
+- `packages/frontend/tests/` - Frontend E2E tests
+- `packages/server/test/` - Backend integration tests
+
+**Unit Tests:**
+
+```bash
+cd packages/server
+pnpm test  # Run Vitest unit tests
+```
 
 ## Contributing guide
 
-In general, your development workflow should look like this:
+Development workflow:
 
-1. Create a new branch where to develop a new feature or bug fix.
-2. Once you've finished the implementation, [create a Changeset](#continuous-deployment) (or multiple) explaining the changes that you've made in the codebase.
-3. Open a Pull Request and wait until the [CI workflows](#continuous-integration) finish. If something fails, please try to fix it before merging the PR.
-   If you don't want to wait for the CI workflows to run on GitHub to know if something fails, it will be always faster to run them in your machine before opening a PR.
-4. Merge the Pull Request. The Changesets bot will automatically open a new PR with updates to the `CHANGELOG.md`, you should also merge that one. If you have [automatic npm deployments](#how-to-automatically-deploy-updates-to-npm) enabled, Changesets will also publish this new version on npm.
-
-If you need to work on several features before publishing a new version on npm, it is a good practise to create a `development` branch where to merge all the PR's before pushing your code to master.
+1. Create a new branch for your feature or bug fix.
+2. Make your changes with proper TypeScript types.
+3. Run `pnpm lint` and `pnpm test` to ensure code quality.
+4. Create a Changeset: `pnpm changeset` (select packages, bump type, and describe changes).
+5. Commit your code and the changeset file, then push.
+6. Open a Pull Request and wait for CI checks to pass.
+7. After merging to `main`, Changesets will create a "Version Packages" PR.
+8. Review and merge the version PR to update `CHANGELOG.md` and bump versions.
+9. Deploy manually to Cloudflare after the version PR is merged.
 
 ## Pre-defined scripts
 
-This template contains a set of predefined scripts in the `package.json` file:
+Available scripts in `package.json`:
 
-- `pnpm dev`: Builds and creates a local server that serves all files (check [Serving files on development mode](#serving-files-on-development-mode) for more info).
-- `pnpm build`: Builds to the production directory (`dist`).
-- `pnpm lint`: Scans the codebase with ESLint and Prettier to see if there are any errors.
-- `pnpm lint:fix`: Fixes all auto-fixable issues in ESLint.
-- `pnpm check`: Checks for TypeScript errors in the codebase.
-- `pnpm format`: Formats all the files in the codebase using Prettier. You probably won't need this script if you have automatic [formatting on save](https://www.digitalocean.com/community/tutorials/code-formatting-with-prettier-in-visual-studio-code#automatically-format-on-save) active in your editor.
-- `pnpm test`: Will run all the tests that are located in the `/tests` folder.
-- `pnpm test:headed`: Will run all the tests that are located in the `/tests` folder visually in headed browsers.
-- `pnpm release`: This command is defined for [Changesets](https://github.com/changesets/changesets). You don't have to interact with it.
-- `pnpm run update`: Scans the dependencies of the project and provides an interactive UI to select the ones that you want to update.
+**Root level:**
+
+- `pnpm dev`: Run both frontend and backend in development mode
+- `pnpm build`: Build both packages for production
+- `pnpm lint`: Scan codebase for linting errors
+- `pnpm format`: Format code with Prettier
+- `pnpm test`: Run all Playwright tests
+- `pnpm test:headed`: Run Playwright tests with browser UI
+- `pnpm changeset`: Create a new changeset for version tracking
+- `pnpm changeset version`: Manually bump versions from changesets
+
+**Package level** (`packages/frontend/` or `packages/server/`):
+
+- `pnpm dev`: Start development server
+- `pnpm build`: Build for production
+- `pnpm deploy`: Deploy to Cloudflare (via Wrangler)
+- `pnpm test`: Run tests (Vitest for server)
 
 ## CI/CD
 
@@ -208,23 +181,33 @@ If any of these jobs fail, you will get a warning in your Pull Request and shoul
 
 ### Continuous Deployment
 
-[Changesets](https://github.com/changesets/changesets) allows us to generate automatic changelog updates when merging a Pull Request to the `master` branch.
+[Changesets](https://github.com/changesets/changesets) manages versioning and changelogs when merging to `main`.
 
-Before starting, make sure to [enable full compatibility with Changesets in the repository](#how-to-enable-continuous-deployment-with-changesets).
-
-To generate a new changelog, run:
+**Creating a changeset:**
 
 ```bash
 pnpm changeset
 ```
 
-You'll be prompted with a few questions to complete the changelog.
+You'll select which packages changed (frontend/server), the version bump type (major/minor/patch), and describe the changes.
 
-Once the Pull Request is merged into `master`, a new Pull Request will automatically be opened by a changesets bot that bumps the package version and updates the `CHANGELOG.md` file.
-You'll have to manually merge this new PR to complete the workflow.
+**Workflow:**
 
-If an `NPM_TOKEN` secret is included in the repository secrets, Changesets will automatically deploy the new package version to npm.
-See [how to automatically deploy updates to npm](#how-to-automatically-deploy-updates-to-npm) for more info.
+1. Merge PR with changeset to `main`
+2. Changesets bot creates a "Version Packages" PR automatically
+3. Review and merge the version PR to update `CHANGELOG.md` and bump versions
+4. Deploy manually to Cloudflare:
+
+```bash
+# Frontend
+cd packages/frontend && pnpm wrangler pages deploy
+
+# Backend
+cd packages/server && pnpm wrangler deploy
+
+# Database migrations
+cd packages/server && pnpm wrangler d1 migrations apply <database-name> --remote
+```
 
 #### How to enable Continuous Deployment with Changesets
 
@@ -237,15 +220,16 @@ To enable full compatibility with Changesets, go to the repository settings (`Se
 
 Enabling this setting for your organization account (`Account Settings > Actions > General`) could help streamline the process. By doing so, any new repos created under the org will automatically inherit the setting, which can save your teammates time and effort. This can only be applied to organization accounts at the time.
 
-#### How to automatically deploy updates to npm
+#### Deployment Configuration
 
-As mentioned before, Changesets will automatically deploy the new package version to npm if an `NPM_TOKEN` secret is provided.
+Ensure Cloudflare secrets and environment variables are configured:
 
-This npm token should be:
+1. **Environment Variables**: Set in `wrangler.jsonc` files
+2. **Secrets**: Use Wrangler CLI:
+   ```bash
+   pnpm wrangler secret put SECRET_NAME
+   ```
+3. **D1 Database**: Bind database ID in `wrangler.jsonc`
+4. **R2 Storage**: Configure buckets for asset storage (if applicable)
 
-- From Finsweet's npm organization if this repository is meant for internal/product development.
-- From a client's npm organization if this repository is meant for client development. In this case, you should ask the client to [create an npm account](https://www.npmjs.com/signup) and provide you the credentials (or the npm token, if they know how to get it).
-
-Once you're logged into the npm account, you can get an access token by following [this guide](https://docs.npmjs.com/creating-and-viewing-access-tokens).
-
-The access token must be then placed in a [repository secret](https://docs.github.com/en/codespaces/managing-codespaces-for-your-organization/managing-encrypted-secrets-for-your-repository-and-organization-for-codespaces#adding-secrets-for-a-repository) named `NPM_TOKEN`.
+For production deployments, ensure all secrets (JWT keys, API keys, encryption keys) are set via Wrangler before deploying.
