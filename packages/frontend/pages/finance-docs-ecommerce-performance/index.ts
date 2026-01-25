@@ -12,6 +12,7 @@ import { navigateToPath } from '$utils/config';
 import {
   checkProgressUserAndTeams,
   constructAdminSelect,
+  constructModalFunctionality,
   constructNavBarClasses,
   fileToBase64,
   initCollapsibleSidebar,
@@ -22,6 +23,7 @@ const initEcommercePerformancePage = async () => {
   constructNavBarClasses();
   processMiddleware();
   initCollapsibleSidebar();
+  constructModalFunctionality();
 
   //ONLY SHEET AND XLSX ALLOWED
   const ALLOWED_FILE_TYPES = [

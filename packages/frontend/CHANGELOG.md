@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.23
+
+### Patch Changes
+
+- fix: version
+
 ## 0.3.22
 
 ### Patch Changes

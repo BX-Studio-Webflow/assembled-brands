@@ -2831,6 +2831,64 @@ var queryAllElements = (selector, scope = document) => {
 };
 
 // shared/utils/helpers.ts
+var routeMap = {
+  "/dev/finance-company-profile": {
+    nav_attr: "nav-company-profile-link",
+    nav_class: "is-active"
+  },
+  "/finance-company-profile": {
+    nav_attr: "nav-company-profile-link",
+    nav_class: "is-active"
+  },
+  "/dev/finance-financial-overview": {
+    nav_attr: "nav-financial-overview-link",
+    nav_class: "is-active"
+  },
+  "/finance-financial-overview": {
+    nav_attr: "nav-financial-overview-link",
+    nav_class: "is-active"
+  },
+  "/dev/finance-docs-financial-reports": {
+    nav_attr: "nav-financial-reports-link",
+    nav_class: "is-active-financial"
+  },
+  "/finance-docs-financial-reports": {
+    nav_attr: "nav-financial-reports-link",
+    nav_class: "is-active-financial"
+  },
+  "/dev/finance-docs-accounts-and-inventory": {
+    nav_attr: "nav-accounts-inventory-link",
+    nav_class: "is-active-financial"
+  },
+  "/finance-docs-accounts-and-inventory": {
+    nav_attr: "nav-accounts-inventory-link",
+    nav_class: "is-active-financial"
+  },
+  "/dev/finance-docs-ecommerce-performance": {
+    nav_attr: "nav-eccomerce-performance-link",
+    nav_class: "is-active-financial"
+  },
+  "/finance-docs-ecommerce-performance": {
+    nav_attr: "nav-eccomerce-performance-link",
+    nav_class: "is-active-financial"
+  },
+  "/dev/finance-docs-team-and-ownership": {
+    nav_attr: "nav-team-ownership-link",
+    nav_class: "is-active-financial"
+  },
+  "/finance-docs-team-and-ownership": {
+    nav_attr: "nav-team-ownership-link",
+    nav_class: "is-active-financial"
+  },
+  "/invite-team-members": {
+    nav_attr: "nav-team-member-link",
+    nav_class: "is-active-financial"
+  },
+  "/dev/invite-team-members": {
+    nav_attr: "nav-team-member-link",
+    nav_class: "is-active-financial"
+  }
+};
 var fetchProgressData = async (userId) => {
   const [financialProgress, user, teams, onboardingProgress] = await Promise.all([
     apiGetFinancialProgress(userId),
@@ -2877,64 +2935,6 @@ var constructNavBarClasses = () => {
     return;
   }
   const currentPath = window.location.pathname;
-  const routeMap = {
-    "/dev/finance-company-profile": {
-      nav_attr: "nav-company-profile-link",
-      nav_class: "is-active"
-    },
-    "/finance-company-profile": {
-      nav_attr: "nav-company-profile-link",
-      nav_class: "is-active"
-    },
-    "/dev/finance-financial-overview": {
-      nav_attr: "nav-financial-overview-link",
-      nav_class: "is-active"
-    },
-    "/finance-financial-overview": {
-      nav_attr: "nav-financial-overview-link",
-      nav_class: "is-active"
-    },
-    "/dev/finance-docs-financial-reports": {
-      nav_attr: "nav-financial-reports-link",
-      nav_class: "is-active-financial"
-    },
-    "/finance-docs-financial-reports": {
-      nav_attr: "nav-financial-reports-link",
-      nav_class: "is-active-financial"
-    },
-    "/dev/finance-docs-accounts-and-inventory": {
-      nav_attr: "nav-accounts-inventory-link",
-      nav_class: "is-active-financial"
-    },
-    "/finance-docs-accounts-and-inventory": {
-      nav_attr: "nav-accounts-inventory-link",
-      nav_class: "is-active-financial"
-    },
-    "/dev/finance-docs-ecommerce-performance": {
-      nav_attr: "nav-eccomerce-performance-link",
-      nav_class: "is-active-financial"
-    },
-    "/finance-docs-ecommerce-performance": {
-      nav_attr: "nav-eccomerce-performance-link",
-      nav_class: "is-active-financial"
-    },
-    "/dev/finance-docs-team-and-ownership": {
-      nav_attr: "nav-team-ownership-link",
-      nav_class: "is-active-financial"
-    },
-    "/finance-docs-team-and-ownership": {
-      nav_attr: "nav-team-ownership-link",
-      nav_class: "is-active-financial"
-    },
-    "/invite-team-members": {
-      nav_attr: "nav-team-member-link",
-      nav_class: "is-active-financial"
-    },
-    "/dev/invite-team-members": {
-      nav_attr: "nav-team-member-link",
-      nav_class: "is-active-financial"
-    }
-  };
   const activeTarget = routeMap[currentPath];
   const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
   if (activeTarget) {
@@ -2951,6 +2951,128 @@ var constructNavBarClasses = () => {
       link.classList.remove("is-active");
       link.classList.remove("is-active-financial");
     });
+  }
+};
+var constructModalFunctionality = () => {
+  const modalWrapper = queryElement('[dev-target="modal-wrapper"]');
+  const modalImage = queryElement('[dev-target="modal-image"]');
+  const modalClose = queryElement('[dev-target="close-button"]');
+  const modalTitle = queryElement('[dev-target="modal-title"]');
+  if (!modalClose) {
+    console.error('Ensure [dev-target="close-button"] is present.');
+    return;
+  }
+  if (!modalTitle) {
+    console.error('Ensure [dev-target="modal-title"] is present.');
+    return;
+  }
+  if (!modalWrapper) {
+    console.error('Ensure [dev-target="modal-wrapper"] is present.');
+    return;
+  }
+  if (!modalImage) {
+    console.error('Ensure [dev-target="modal-image"] is present.');
+    return;
+  }
+  const { pathname } = window.location;
+  modalClose.addEventListener("click", () => {
+    modalWrapper.classList.add("hide");
+  });
+  const modalData = {
+    "monthly-balance-sheet": {
+      title: "Monthly Balance Sheets ** Last 2 years of monthly balance sheets",
+      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
+    },
+    "monthly-income-statement": {
+      title: "Monthly Income Statements ** Last 2 years of monthly income statements",
+      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
+    },
+    "monthly-income-forecast": {
+      title: "Monthly Income Forecast ** 12-month income forecast projection",
+      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
+    },
+    "monthly-inventory-reports": {
+      title: "Monthly Inventory Reports ** Please provide inventory reports for at least the last 24 months, or longer if possible",
+      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
+    },
+    "ar-aging-reports": {
+      title: "Accounts Receivable Aging Reports ** Please provide AR aging reports for the last 24 months, or longer if available",
+      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
+    },
+    "ap-aging-reports": {
+      title: "Accounts Payable Aging Report ** Please provide the accounts payable aging report for the next 24 months, or longer if possible",
+      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
+    },
+    "repeat-customer-reports": {
+      title: "Shopify Repeat Customer Reports ** Please provide reports on repeat customers for at least the last 24 months, or longer if possible",
+      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
+    },
+    "monthly-sales-reports": {
+      title: "Shopify Monthly Sales Reports ** Please provide monthly sales reports from Shopify for the last 24 months, or longer if available",
+      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
+    },
+    "management-bios": {
+      title: "Management Bios ** Please upload the management bios for our team",
+      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
+    },
+    "investor-deck": {
+      title: "Investor Deck ** Please provide the most recent investor deck",
+      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
+    },
+    "cap-table": {
+      title: "Capitalization Table ** Please provide the most recent capitalization table",
+      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
+    }
+  };
+  const showModal = (key) => {
+    const data = modalData[key];
+    modalWrapper.classList.toggle("hide");
+    modalImage.src = data.imageUrl;
+    modalTitle.textContent = data.title;
+  };
+  if (pathname.includes("/dev/finance-docs-financial-reports") || pathname.includes("/finance-docs-financial-reports")) {
+    const monthly_balance_sheet = queryElement('[dev-target="monthly-balance-sheet"]');
+    const monthly_income_statement = queryElement(
+      '[dev-target="monthly-income-statement"]'
+    );
+    const monthly_income_forecast = queryElement(
+      '[dev-target="monthly-income-forecast"]'
+    );
+    monthly_balance_sheet?.addEventListener("click", () => showModal("monthly-balance-sheet"));
+    monthly_income_statement?.addEventListener(
+      "click",
+      () => showModal("monthly-income-statement")
+    );
+    monthly_income_forecast?.addEventListener("click", () => showModal("monthly-income-forecast"));
+  }
+  if (pathname.includes("/dev/finance-docs-accounts-and-inventory") || pathname.includes("/finance-docs-accounts-and-inventory")) {
+    const monthly_inventory_reports = queryElement(
+      '[dev-target="monthly-inventory-reports"]'
+    );
+    const ar_aging_reports = queryElement('[dev-target="ar-aging-reports"]');
+    const ap_aging_reports = queryElement('[dev-target="ap-aging-reports"]');
+    monthly_inventory_reports?.addEventListener(
+      "click",
+      () => showModal("monthly-inventory-reports")
+    );
+    ar_aging_reports?.addEventListener("click", () => showModal("ar-aging-reports"));
+    ap_aging_reports?.addEventListener("click", () => showModal("ap-aging-reports"));
+  }
+  if (pathname.includes("/dev/finance-docs-ecommerce-performance") || pathname.includes("/finance-docs-ecommerce-performance")) {
+    const repeat_customer_reports = queryElement(
+      '[dev-target="repeat-customer-reports"]'
+    );
+    const monthly_sales_reports = queryElement('[dev-target="monthly-sales-reports"]');
+    repeat_customer_reports?.addEventListener("click", () => showModal("repeat-customer-reports"));
+    monthly_sales_reports?.addEventListener("click", () => showModal("monthly-sales-reports"));
+  }
+  if (pathname.includes("/dev/finance-docs-team-and-ownership") || pathname.includes("/finance-docs-team-and-ownership")) {
+    const management_bios = queryElement('[dev-target="management-bios"]');
+    const investor_deck = queryElement('[dev-target="investor-deck"]');
+    const cap_table = queryElement('[dev-target="cap-table"]');
+    management_bios?.addEventListener("click", () => showModal("management-bios"));
+    investor_deck?.addEventListener("click", () => showModal("investor-deck"));
+    cap_table?.addEventListener("click", () => showModal("cap-table"));
   }
 };
 var constructAdminSelect = async (onChangeCallback) => {
@@ -3065,6 +3187,7 @@ var initEcommercePerformancePage = async () => {
   constructNavBarClasses();
   processMiddleware();
   initCollapsibleSidebar();
+  constructModalFunctionality();
   const ALLOWED_FILE_TYPES = [
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

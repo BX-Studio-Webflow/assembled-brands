@@ -2820,6 +2820,64 @@ var queryAllElements = (selector, scope = document) => {
 };
 
 // shared/utils/helpers.ts
+var routeMap = {
+  "/dev/finance-company-profile": {
+    nav_attr: "nav-company-profile-link",
+    nav_class: "is-active"
+  },
+  "/finance-company-profile": {
+    nav_attr: "nav-company-profile-link",
+    nav_class: "is-active"
+  },
+  "/dev/finance-financial-overview": {
+    nav_attr: "nav-financial-overview-link",
+    nav_class: "is-active"
+  },
+  "/finance-financial-overview": {
+    nav_attr: "nav-financial-overview-link",
+    nav_class: "is-active"
+  },
+  "/dev/finance-docs-financial-reports": {
+    nav_attr: "nav-financial-reports-link",
+    nav_class: "is-active-financial"
+  },
+  "/finance-docs-financial-reports": {
+    nav_attr: "nav-financial-reports-link",
+    nav_class: "is-active-financial"
+  },
+  "/dev/finance-docs-accounts-and-inventory": {
+    nav_attr: "nav-accounts-inventory-link",
+    nav_class: "is-active-financial"
+  },
+  "/finance-docs-accounts-and-inventory": {
+    nav_attr: "nav-accounts-inventory-link",
+    nav_class: "is-active-financial"
+  },
+  "/dev/finance-docs-ecommerce-performance": {
+    nav_attr: "nav-eccomerce-performance-link",
+    nav_class: "is-active-financial"
+  },
+  "/finance-docs-ecommerce-performance": {
+    nav_attr: "nav-eccomerce-performance-link",
+    nav_class: "is-active-financial"
+  },
+  "/dev/finance-docs-team-and-ownership": {
+    nav_attr: "nav-team-ownership-link",
+    nav_class: "is-active-financial"
+  },
+  "/finance-docs-team-and-ownership": {
+    nav_attr: "nav-team-ownership-link",
+    nav_class: "is-active-financial"
+  },
+  "/invite-team-members": {
+    nav_attr: "nav-team-member-link",
+    nav_class: "is-active-financial"
+  },
+  "/dev/invite-team-members": {
+    nav_attr: "nav-team-member-link",
+    nav_class: "is-active-financial"
+  }
+};
 var fetchProgressData = async (userId) => {
   const [financialProgress, user, teams, onboardingProgress] = await Promise.all([
     apiGetFinancialProgress(userId),
@@ -2866,64 +2924,6 @@ var constructNavBarClasses = () => {
     return;
   }
   const currentPath = window.location.pathname;
-  const routeMap = {
-    "/dev/finance-company-profile": {
-      nav_attr: "nav-company-profile-link",
-      nav_class: "is-active"
-    },
-    "/finance-company-profile": {
-      nav_attr: "nav-company-profile-link",
-      nav_class: "is-active"
-    },
-    "/dev/finance-financial-overview": {
-      nav_attr: "nav-financial-overview-link",
-      nav_class: "is-active"
-    },
-    "/finance-financial-overview": {
-      nav_attr: "nav-financial-overview-link",
-      nav_class: "is-active"
-    },
-    "/dev/finance-docs-financial-reports": {
-      nav_attr: "nav-financial-reports-link",
-      nav_class: "is-active-financial"
-    },
-    "/finance-docs-financial-reports": {
-      nav_attr: "nav-financial-reports-link",
-      nav_class: "is-active-financial"
-    },
-    "/dev/finance-docs-accounts-and-inventory": {
-      nav_attr: "nav-accounts-inventory-link",
-      nav_class: "is-active-financial"
-    },
-    "/finance-docs-accounts-and-inventory": {
-      nav_attr: "nav-accounts-inventory-link",
-      nav_class: "is-active-financial"
-    },
-    "/dev/finance-docs-ecommerce-performance": {
-      nav_attr: "nav-eccomerce-performance-link",
-      nav_class: "is-active-financial"
-    },
-    "/finance-docs-ecommerce-performance": {
-      nav_attr: "nav-eccomerce-performance-link",
-      nav_class: "is-active-financial"
-    },
-    "/dev/finance-docs-team-and-ownership": {
-      nav_attr: "nav-team-ownership-link",
-      nav_class: "is-active-financial"
-    },
-    "/finance-docs-team-and-ownership": {
-      nav_attr: "nav-team-ownership-link",
-      nav_class: "is-active-financial"
-    },
-    "/invite-team-members": {
-      nav_attr: "nav-team-member-link",
-      nav_class: "is-active-financial"
-    },
-    "/dev/invite-team-members": {
-      nav_attr: "nav-team-member-link",
-      nav_class: "is-active-financial"
-    }
-  };
   const activeTarget = routeMap[currentPath];
   const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
   if (activeTarget) {
