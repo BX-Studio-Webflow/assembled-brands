@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.3.24
+
+### Patch Changes
+
+- fix: url
+
 ## 0.3.23
 
 ### Patch Changes
