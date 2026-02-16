@@ -290,6 +290,12 @@ const initOnboardingStep1Page = async () => {
     }
   });
 
+  const isValidWebsite = (value: string) => {
+    const trimmed = value.trim();
+    const websitePattern = /^(https?:\/\/)?(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+$/i;
+    return websitePattern.test(trimmed);
+  };
+
   // Step 1 submit handler
   const handleStep1Submit = async () => {
     const resetErrors = () => {
@@ -324,6 +330,13 @@ const initOnboardingStep1Page = async () => {
       website?.classList.add('is-error');
       submitButton.classList.add('is-error');
       submitButton.value = 'Website is required';
+      return;
+    }
+
+    if (!isValidWebsite(website.value)) {
+      website?.classList.add('is-error');
+      submitButton.classList.add('is-error');
+      submitButton.value = 'Enter a valid website address';
       return;
     }
 

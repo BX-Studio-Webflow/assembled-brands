@@ -5,7 +5,7 @@ import { z } from 'zod';
 const onboardingStep1Schema = z.object({
 	legal_name: z.string().min(1, 'Legal name is required'),
 	employee_count: z.enum(['just_me', '2-10', '11-50', '51-100', '101-500', '501+']),
-	website: z.string().url('Invalid website URL').optional().or(z.literal('')),
+	website: z.string().optional().or(z.literal('')),
 });
 
 export const onboardingStep1Validator = zValidator('json', onboardingStep1Schema);
