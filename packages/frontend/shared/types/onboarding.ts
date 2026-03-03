@@ -9,12 +9,12 @@ export type OnboardingStep1Body = {
 export type OnboardingStep2Body = {
   years_in_business: string;
   asset_type: 'inventory' | 'accounts_receivable' | 'purchase_orders' | 'not_sure';
-  desired_loan_amount: string;
+  desired_loan_amount: '1-5' | '5-10' | '10-25' | '25+';
 };
 
 // Step 3: Qualification
 export type OnboardingStep3Body = {
-  company_type: 'cpg' | 'saas' | 'consulting' | 'distributor_wholesaler' | 'other';
+  company_type: 'cpg' | 'distributor_wholesaler' | 'service_provider' | 'other';
   company_type_other?: string;
   revenue_qualification: 'yes' | 'no';
 };

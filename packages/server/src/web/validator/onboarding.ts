@@ -15,7 +15,7 @@ export type OnboardingStep1Body = z.infer<typeof onboardingStep1Schema>;
 const onboardingStep2Schema = z.object({
 	years_in_business: z.string().min(1, 'Years in business is required'),
 	asset_type: z.enum(['inventory', 'accounts_receivable', 'purchase_orders', 'not_sure']),
-	desired_loan_amount: z.string().min(1, 'Desired loan amount is required'),
+	desired_loan_amount: z.enum(['1-5', '5-10', '10-25', '25+']),
 });
 
 export const onboardingStep2Validator = zValidator('json', onboardingStep2Schema);
@@ -24,7 +24,7 @@ export type OnboardingStep2Body = z.infer<typeof onboardingStep2Schema>;
 // Step 3: Qualification
 const onboardingStep3Schema = z
 	.object({
-		company_type: z.enum(['cpg', 'saas', 'consulting', 'distributor_wholesaler', 'other']),
+		company_type: z.enum(['cpg', 'distributor_wholesaler', 'service_provider', 'other']),
 		company_type_other: z.string().optional(),
 		revenue_qualification: z.enum(['yes', 'no']),
 	})

@@ -232,6 +232,8 @@ const initOnboardingStep1Page = async () => {
       }
       if (progress.step2.desired_loan_amount) {
         desiredLoanAmount.value = progress.step2.desired_loan_amount;
+        // Trigger change event to update Webflow custom select visual state
+        desiredLoanAmount.dispatchEvent(new Event('change', { bubbles: true }));
       }
     }
 
@@ -377,7 +379,7 @@ const initOnboardingStep1Page = async () => {
     assetTypeInputs.forEach((input) =>
       input.addEventListener('change', resetErrors, { once: true })
     );
-    desiredLoanAmount?.addEventListener('input', resetErrors, { once: true });
+    desiredLoanAmount?.addEventListener('change', resetErrors, { once: true });
 
     if (!yearsInBusiness?.value) {
       yearsInBusiness?.classList.add('is-error');

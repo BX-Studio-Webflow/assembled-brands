@@ -2993,6 +2993,7 @@ var initOnboardingStep1Page = async () => {
       }
       if (progress.step2.desired_loan_amount) {
         desiredLoanAmount.value = progress.step2.desired_loan_amount;
+        desiredLoanAmount.dispatchEvent(new Event("change", { bubbles: true }));
       }
     }
     if (progress.step3) {
@@ -3112,7 +3113,7 @@ var initOnboardingStep1Page = async () => {
     assetTypeInputs.forEach(
       (input) => input.addEventListener("change", resetErrors, { once: true })
     );
-    desiredLoanAmount?.addEventListener("input", resetErrors, { once: true });
+    desiredLoanAmount?.addEventListener("change", resetErrors, { once: true });
     if (!yearsInBusiness?.value) {
       yearsInBusiness?.classList.add("is-error");
       submitButton.classList.add("is-error");
