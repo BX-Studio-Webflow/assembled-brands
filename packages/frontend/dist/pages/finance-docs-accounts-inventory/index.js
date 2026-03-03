@@ -2791,6 +2791,12 @@ var apiGetFinancialProgress = (userId) => {
     params: userId ? { user_id: userId } : void 0
   });
 };
+var apiDeleteFinancialDocument = (id) => {
+  return ApiService_default.fetchDataWithAxios({
+    url: `/financial-wizard/document/${id}`,
+    method: "delete"
+  });
+};
 var apiAdminGetApplications = () => {
   return ApiService_default.fetchDataWithAxios({
     url: `/financial-wizard/applications`,
@@ -3209,7 +3215,7 @@ var initFinanceDocsAccountsInventoryPage = async () => {
     form
   );
   const monthlyInventoryHelpText = queryElement(
-    '[dev-target="balance-sheet-helper"]',
+    '[dev-target="monthly-inventory-helper"]',
     form
   );
   const accountsReceivableBox = queryElement(
@@ -3221,7 +3227,7 @@ var initFinanceDocsAccountsInventoryPage = async () => {
     form
   );
   const accountsReceivableHelpText = queryElement(
-    '[dev-target="income-statement-helper"]',
+    '[dev-target="accounts-receivable-helper"]',
     form
   );
   const accountsPayableBox = queryElement(
@@ -3233,26 +3239,38 @@ var initFinanceDocsAccountsInventoryPage = async () => {
     form
   );
   const accountsPayableHelpText = queryElement(
-    '[dev-target="income-forecast-helper"]',
+    '[dev-target="accounts-payable-helper"]',
     form
   );
   const submitButton = queryElement('[dev-target="submit-button"]', form);
   if (!monthlyInventoryBox || !monthlyInventoryInput || !monthlyInventoryHelpText) {
     console.error(
-      'Ensure [dev-target="monthly-inventory-upload-box"] and [dev-target="monthly-inventory-input"] and [dev-target="balance-sheet-helper"] are present.'
+      'Ensure [dev-target="monthly-inventory-upload-box"] and [dev-target="monthly-inventory-input"] and [dev-target="monthly-inventory-helper"] are present.'
     );
     return;
   }
-  if (!accountsReceivableBox || !accountsReceivableInput || !accountsReceivableHelpText) {
-    console.error(
-      'Ensure [dev-target="accounts-receivable-upload-box"] and [dev-target="accounts-receivable-input"] and [dev-target="income-statement-helper"] are present.'
-    );
+  if (!accountsReceivableBox) {
+    console.error('Ensure [dev-target="accounts-receivable-upload-box"] is present.');
     return;
   }
-  if (!accountsPayableBox || !accountsPayableInput || !accountsPayableHelpText) {
-    console.error(
-      'Ensure [dev-target="accounts-payable-upload-box"] and [dev-target="accounts-payable-input"] and [dev-target="income-forecast-helper"] are present.'
-    );
+  if (!accountsReceivableInput) {
+    console.error('Ensure [dev-target="accounts-receivable-input"] is present.');
+    return;
+  }
+  if (!accountsReceivableHelpText) {
+    console.error('Ensure [dev-target="accounts-receivable-helper"] is present.');
+    return;
+  }
+  if (!accountsPayableBox) {
+    console.error('Ensure [dev-target="accounts-payable-upload-box"] is present.');
+    return;
+  }
+  if (!accountsPayableInput) {
+    console.error('Ensure [dev-target="accounts-payable-input"] is present.');
+    return;
+  }
+  if (!accountsPayableHelpText) {
+    console.error('Ensure [dev-target="accounts-payable-helper"] is present.');
     return;
   }
   if (!submitButton) {
@@ -3267,7 +3285,7 @@ var initFinanceDocsAccountsInventoryPage = async () => {
       if (monthlyInventory) {
         monthlyInventoryHelpText.textContent = monthlyInventory.asset_name || "";
       } else {
-        monthlyInventoryHelpText.textContent = "";
+        monthlyInventoryHelpText.textContent = "Supported formats: sheets. xcel";
       }
       const accountsReceivable = progress.accounts_inventory.find(
         (document2) => document2.document_type === "accounts_receivable_aging"
@@ -3275,7 +3293,7 @@ var initFinanceDocsAccountsInventoryPage = async () => {
       if (accountsReceivable) {
         accountsReceivableHelpText.textContent = accountsReceivable.asset_name || "";
       } else {
-        accountsReceivableHelpText.textContent = "";
+        accountsReceivableHelpText.textContent = "Supported formats: sheets. xcel";
       }
       const accountsPayable = progress.accounts_inventory.find(
         (document2) => document2.document_type === "accounts_payable_aging"
@@ -3283,12 +3301,12 @@ var initFinanceDocsAccountsInventoryPage = async () => {
       if (accountsPayable) {
         accountsPayableHelpText.textContent = accountsPayable.asset_name || "";
       } else {
-        accountsPayableHelpText.textContent = "";
+        accountsPayableHelpText.textContent = "Supported formats: sheets. xcel";
       }
     } else {
-      monthlyInventoryHelpText.textContent = "";
-      accountsReceivableHelpText.textContent = "";
-      accountsPayableHelpText.textContent = "";
+      monthlyInventoryHelpText.textContent = "Supported formats: sheets. xcel";
+      accountsReceivableHelpText.textContent = "Supported formats: sheets. xcel";
+      accountsPayableHelpText.textContent = "Supported formats: sheets. xcel";
     }
   };
   let financialProgress;
@@ -3296,6 +3314,10 @@ var initFinanceDocsAccountsInventoryPage = async () => {
     const result = await checkProgressUserAndTeams(userId);
     financialProgress = result?.financialProgress;
     updateHelperTexts(financialProgress);
+  };
+  const getAccountsInventoryDoc = (documentType) => {
+    if (!financialProgress?.accounts_inventory) return void 0;
+    return financialProgress.accounts_inventory.find((doc) => doc.document_type === documentType);
   };
   await loadFinancialProgress();
   constructAdminSelect(loadFinancialProgress);
@@ -3381,6 +3403,63 @@ var initFinanceDocsAccountsInventoryPage = async () => {
       updateHelperText(accountsPayableInput, accountsPayableHelpText);
     });
   }
+  const monthlyInventoryTrash = queryElement(
+    '[dev-target="monthly-inventory-trash-icon"]',
+    form
+  );
+  const accountsReceivableTrash = queryElement(
+    '[dev-target="accounts-receivable-trash-icon"]',
+    form
+  );
+  const accountsPayableTrash = queryElement(
+    '[dev-target="accounts-payable-trash-icon"]',
+    form
+  );
+  const handleDeleteDocument = async (documentType, helperText) => {
+    const doc = getAccountsInventoryDoc(documentType);
+    if (!doc) {
+      if (helperText) {
+        helperText.textContent = "Supported formats: sheets. xcel";
+        helperText.classList.remove("is-error");
+      }
+      return;
+    }
+    if (helperText) {
+      helperText.classList.remove("is-error");
+      helperText.textContent = "Deleting...";
+    }
+    try {
+      await apiDeleteFinancialDocument(doc.id);
+      await loadFinancialProgress();
+    } catch (error) {
+      console.error(error);
+      if (helperText) {
+        helperText.classList.add("is-error");
+        helperText.textContent = "Failed to delete file. Please try again.";
+      }
+    }
+  };
+  if (monthlyInventoryTrash) {
+    monthlyInventoryTrash.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument("monthly_inventory_report", monthlyInventoryHelpText);
+    });
+  }
+  if (accountsReceivableTrash) {
+    accountsReceivableTrash.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument("accounts_receivable_aging", accountsReceivableHelpText);
+    });
+  }
+  if (accountsPayableTrash) {
+    accountsPayableTrash.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument("accounts_payable_aging", accountsPayableHelpText);
+    });
+  }
   const uploadFile = async (file, documentType) => {
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
       throw new Error("Invalid file type. Please upload Excel (.xls or .xlsx) files only");
@@ -3403,7 +3482,6 @@ var initFinanceDocsAccountsInventoryPage = async () => {
       xhr.upload.addEventListener("progress", (event) => {
         if (event.lengthComputable) {
           const percent = Math.round(event.loaded / event.total * 100);
-          console.log(`Upload progress: ${percent}%`);
         }
       });
       xhr.addEventListener("load", () => {

@@ -1,6 +1,9 @@
 import type { AxiosError } from 'axios';
 import { apiCreateAssetPresignedUrl } from 'shared/services/AssetService';
-import { apiUploadFinancialDocument } from 'shared/services/FinancialWizardService';
+import {
+  apiDeleteFinancialDocument,
+  apiUploadFinancialDocument,
+} from 'shared/services/FinancialWizardService';
 import type { CreateAssetBody } from 'shared/types/asset';
 import type {
   FinancialDocumentBody,
@@ -118,6 +121,13 @@ const initEcommercePerformancePage = async () => {
     updateHelperTexts(financialProgress);
   };
 
+  const getEcommerceDoc = (documentType: FinancialDocumentBody['document_type']) => {
+    if (!financialProgress?.ecommerce_performance) return undefined;
+    return financialProgress.ecommerce_performance.find(
+      (doc) => doc.document_type === documentType
+    );
+  };
+
   await loadFinancialProgress();
   constructAdminSelect(loadFinancialProgress);
 
@@ -203,6 +213,64 @@ const initEcommercePerformancePage = async () => {
     });
   }
 
+  // Delete actions for existing ecommerce documents
+  const shopifyRepeatTrash = queryElement<HTMLElement>(
+    '[dev-target="shopifiy-repeat-trash-icon"]',
+    form
+  );
+  const shopifyMonthlyTrash = queryElement<HTMLElement>(
+    '[dev-target="shopify-monthly-trash-icon"]',
+    form
+  );
+
+  const handleDeleteDocument = async (
+    documentType: FinancialDocumentBody['document_type'],
+    helperText?: HTMLElement | null
+  ) => {
+    const doc = getEcommerceDoc(documentType);
+
+    // If no saved document, reset helper text and return
+    if (!doc) {
+      if (helperText) {
+        helperText.textContent = 'Supported formats: sheets. xcel';
+        helperText.classList.remove('is-error');
+      }
+      return;
+    }
+
+    if (helperText) {
+      helperText.classList.remove('is-error');
+      helperText.textContent = 'Deleting...';
+    }
+
+    try {
+      await apiDeleteFinancialDocument(doc.id);
+      await loadFinancialProgress();
+    } catch (error) {
+      console.error(error);
+      if (helperText) {
+        helperText.classList.add('is-error');
+        helperText.textContent = 'Failed to delete file. Please try again.';
+      }
+    }
+  };
+
+  if (shopifyRepeatTrash) {
+    shopifyRepeatTrash.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument('shopify_repeat_customers', shopifyRepeatHelpText);
+    });
+  }
+
+  if (shopifyMonthlyTrash) {
+    shopifyMonthlyTrash.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument('shopify_monthly_sales', shopifyMonthlyHelpText);
+    });
+  }
+
   const uploadFile = async (
     file: File,
     documentType: FinancialDocumentBody['document_type']
@@ -235,7 +303,7 @@ const initEcommercePerformancePage = async () => {
       xhr.upload.addEventListener('progress', (event) => {
         if (event.lengthComputable) {
           const percent = Math.round((event.loaded / event.total) * 100);
-          console.log(`Upload progress: ${percent}%`);
+          void percent;
         }
       });
       xhr.addEventListener('load', () => {

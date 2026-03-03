@@ -2791,6 +2791,12 @@ var apiGetFinancialProgress = (userId) => {
     params: userId ? { user_id: userId } : void 0
   });
 };
+var apiDeleteFinancialDocument = (id) => {
+  return ApiService_default.fetchDataWithAxios({
+    url: `/financial-wizard/document/${id}`,
+    method: "delete"
+  });
+};
 var apiAdminGetApplications = () => {
   return ApiService_default.fetchDataWithAxios({
     url: `/financial-wizard/applications`,
@@ -3270,6 +3276,12 @@ var initEcommercePerformancePage = async () => {
     financialProgress = result?.financialProgress;
     updateHelperTexts(financialProgress);
   };
+  const getEcommerceDoc = (documentType) => {
+    if (!financialProgress?.ecommerce_performance) return void 0;
+    return financialProgress.ecommerce_performance.find(
+      (doc) => doc.document_type === documentType
+    );
+  };
   await loadFinancialProgress();
   constructAdminSelect(loadFinancialProgress);
   const updateHelperText = (input, helperText) => {
@@ -3332,6 +3344,52 @@ var initEcommercePerformancePage = async () => {
       updateHelperText(shopifyMonthlyInput, shopifyMonthlyHelpText);
     });
   }
+  const shopifyRepeatTrash = queryElement(
+    '[dev-target="shopifiy-repeat-trash-icon"]',
+    form
+  );
+  const shopifyMonthlyTrash = queryElement(
+    '[dev-target="shopify-monthly-trash-icon"]',
+    form
+  );
+  const handleDeleteDocument = async (documentType, helperText) => {
+    const doc = getEcommerceDoc(documentType);
+    if (!doc) {
+      if (helperText) {
+        helperText.textContent = "Supported formats: sheets. xcel";
+        helperText.classList.remove("is-error");
+      }
+      return;
+    }
+    if (helperText) {
+      helperText.classList.remove("is-error");
+      helperText.textContent = "Deleting...";
+    }
+    try {
+      await apiDeleteFinancialDocument(doc.id);
+      await loadFinancialProgress();
+    } catch (error) {
+      console.error(error);
+      if (helperText) {
+        helperText.classList.add("is-error");
+        helperText.textContent = "Failed to delete file. Please try again.";
+      }
+    }
+  };
+  if (shopifyRepeatTrash) {
+    shopifyRepeatTrash.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument("shopify_repeat_customers", shopifyRepeatHelpText);
+    });
+  }
+  if (shopifyMonthlyTrash) {
+    shopifyMonthlyTrash.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument("shopify_monthly_sales", shopifyMonthlyHelpText);
+    });
+  }
   const uploadFile = async (file, documentType) => {
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
       throw new Error("Invalid file type. Please upload Excel (.xls or .xlsx) files only");
@@ -3354,7 +3412,6 @@ var initEcommercePerformancePage = async () => {
       xhr.upload.addEventListener("progress", (event) => {
         if (event.lengthComputable) {
           const percent = Math.round(event.loaded / event.total * 100);
-          console.log(`Upload progress: ${percent}%`);
         }
       });
       xhr.addEventListener("load", () => {

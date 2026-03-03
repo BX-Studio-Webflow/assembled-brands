@@ -2791,6 +2791,12 @@ var apiGetFinancialProgress = (userId) => {
     params: userId ? { user_id: userId } : void 0
   });
 };
+var apiDeleteFinancialDocument = (id) => {
+  return ApiService_default.fetchDataWithAxios({
+    url: `/financial-wizard/document/${id}`,
+    method: "delete"
+  });
+};
 var apiAdminGetApplications = () => {
   return ApiService_default.fetchDataWithAxios({
     url: `/financial-wizard/applications`,
@@ -3237,16 +3243,28 @@ var initTeamOwnershipPage = async () => {
     form
   );
   const submitButton = queryElement('[dev-target="submit-button"]', form);
-  if (!managementBiosBox || !managementBiosInput || !managementBiosHelpText) {
-    console.error(
-      'Ensure [dev-target="management-bios-upload-box"] and [dev-target="management-bios-input"] and [dev-target="management-bios-helper"] are present.'
-    );
+  if (!managementBiosBox) {
+    console.error('Ensure [dev-target="management-bios-upload-box"] is present.');
     return;
   }
-  if (!investorDeckBox || !investorDeckInput || !investorDeckHelpText) {
-    console.error(
-      'Ensure [dev-target="investor-deck-upload-box"] and [dev-target="investor-deck-input"] and [dev-target="investor-deck-helper"] are present.'
-    );
+  if (!managementBiosInput) {
+    console.error('Ensure [dev-target="management-bios-input"] is present.');
+    return;
+  }
+  if (!managementBiosHelpText) {
+    console.error('Ensure [dev-target="management-bios-helper"] is present.');
+    return;
+  }
+  if (!investorDeckBox) {
+    console.error('Ensure [dev-target="investor-deck-upload-box"] is present.');
+    return;
+  }
+  if (!investorDeckInput) {
+    console.error('Ensure [dev-target="investor-deck-input"] is present.');
+    return;
+  }
+  if (!investorDeckHelpText) {
+    console.error('Ensure [dev-target="investor-deck-helper"] is present.');
     return;
   }
   if (!capitalisationTableBox || !capitalisationTableInput || !capitalisationTableHelpText) {
@@ -3296,6 +3314,10 @@ var initTeamOwnershipPage = async () => {
     const result = await checkProgressUserAndTeams(userId);
     financialProgress = result?.financialProgress;
     updateHelperTexts(financialProgress);
+  };
+  const getTeamOwnershipDoc = (documentType) => {
+    if (!financialProgress?.team_ownership) return void 0;
+    return financialProgress.team_ownership.find((doc) => doc.document_type === documentType);
   };
   await loadFinancialProgress();
   constructAdminSelect(loadFinancialProgress);
@@ -3381,6 +3403,61 @@ var initTeamOwnershipPage = async () => {
       updateHelperText(capitalisationTableInput, capitalisationTableHelpText);
     });
   }
+  const managementBiosTrash = queryElement(
+    '[dev-target="management-bios-trash-icon"]',
+    form
+  );
+  const investorDeckTrash = investorDeckBox?.querySelector(
+    '[dev-target="shopify-monthly-trash-icon"]'
+  );
+  const capitalisationTableTrash = capitalisationTableBox?.querySelector(
+    '[dev-target="shopify-monthly-trash-icon"]'
+  );
+  const handleDeleteDocument = async (documentType, helperText) => {
+    const doc = getTeamOwnershipDoc(documentType);
+    if (!doc) {
+      if (helperText) {
+        helperText.textContent = "Supported formats: sheets. xcel";
+        helperText.classList.remove("is-error");
+      }
+      return;
+    }
+    if (helperText) {
+      helperText.classList.remove("is-error");
+      helperText.textContent = "Deleting...";
+    }
+    try {
+      await apiDeleteFinancialDocument(doc.id);
+      await loadFinancialProgress();
+    } catch (error) {
+      console.error(error);
+      if (helperText) {
+        helperText.classList.add("is-error");
+        helperText.textContent = "Failed to delete file. Please try again.";
+      }
+    }
+  };
+  if (managementBiosTrash) {
+    managementBiosTrash.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument("management_bios", managementBiosHelpText);
+    });
+  }
+  if (investorDeckTrash) {
+    investorDeckTrash.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument("investor_deck", investorDeckHelpText);
+    });
+  }
+  if (capitalisationTableTrash) {
+    capitalisationTableTrash.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument("cap_table", capitalisationTableHelpText);
+    });
+  }
   const uploadFile = async (file, documentType) => {
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
       throw new Error("Invalid file type. Please upload Excel (.xls or .xlsx) files only");
@@ -3403,7 +3480,6 @@ var initTeamOwnershipPage = async () => {
       xhr.upload.addEventListener("progress", (event) => {
         if (event.lengthComputable) {
           const percent = Math.round(event.loaded / event.total * 100);
-          console.log(`Upload progress: ${percent}%`);
         }
       });
       xhr.addEventListener("load", () => {

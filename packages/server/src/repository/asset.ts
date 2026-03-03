@@ -54,7 +54,7 @@ export class AssetRepository {
 	}
 
 	/**
-	 * Fetch financial documents enriched with asset information for a given application
+	 * Fetch current financial documents (non–soft-deleted) enriched with asset information for a given application
 	 * @param {number} application_id - Financial application ID
 	 * @returns {Promise<DocumentWithAsset[]>} Documents joined with asset metadata
 	 */
@@ -76,7 +76,7 @@ export class AssetRepository {
 			})
 			.from(financialDocumentSchema)
 			.leftJoin(assetsSchema, eq(financialDocumentSchema.asset_id, assetsSchema.id))
-			.where(eq(financialDocumentSchema.application_id, application_id));
+			.where(and(eq(financialDocumentSchema.application_id, application_id), eq(financialDocumentSchema.is_current, true)));
 
 		return result;
 	}

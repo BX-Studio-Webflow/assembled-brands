@@ -2791,6 +2791,12 @@ var apiGetFinancialProgress = (userId) => {
     params: userId ? { user_id: userId } : void 0
   });
 };
+var apiDeleteFinancialDocument = (id) => {
+  return ApiService_default.fetchDataWithAxios({
+    url: `/financial-wizard/document/${id}`,
+    method: "delete"
+  });
+};
 var apiAdminGetApplications = () => {
   return ApiService_default.fetchDataWithAxios({
     url: `/financial-wizard/applications`,
@@ -3297,6 +3303,10 @@ var initFinanceReportsPage = async () => {
     financialProgress = result?.financialProgress;
     updateHelperTexts(financialProgress);
   };
+  const getFinancialReportDoc = (documentType) => {
+    if (!financialProgress?.financial_reports) return void 0;
+    return financialProgress.financial_reports.find((doc) => doc.document_type === documentType);
+  };
   await loadFinancialProgress();
   constructAdminSelect(loadFinancialProgress);
   const updateHelperText = (input, helperText) => {
@@ -3377,6 +3387,60 @@ var initFinanceReportsPage = async () => {
       updateHelperText(incomeForecastInput, incomeForecastHelpText);
     });
   }
+  const balanceSheetTrash = queryElement('[dev-target="balance_trash-icon"]', form);
+  const incomeStatementTrash = queryElement(
+    '[dev-target="income-statement-trash-icon"]',
+    form
+  );
+  const incomeForecastTrash = queryElement(
+    '[dev-target="income-forecast-trash-icon"]',
+    form
+  );
+  const handleDeleteDocument = async (documentType, helperText) => {
+    const doc = getFinancialReportDoc(documentType);
+    if (!doc) {
+      if (helperText) {
+        helperText.textContent = "Supported formats: sheets. xcel";
+        helperText.classList.remove("is-error");
+      }
+      return;
+    }
+    if (helperText) {
+      helperText.classList.remove("is-error");
+      helperText.textContent = "Deleting...";
+    }
+    try {
+      await apiDeleteFinancialDocument(doc.id);
+      await loadFinancialProgress();
+    } catch (error) {
+      console.error(error);
+      if (helperText) {
+        helperText.classList.add("is-error");
+        helperText.textContent = "Failed to delete file. Please try again.";
+      }
+    }
+  };
+  if (balanceSheetTrash) {
+    balanceSheetTrash.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument("monthly_balance_sheet", balaceSheetHelpText);
+    });
+  }
+  if (incomeStatementTrash) {
+    incomeStatementTrash.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument("monthly_income_statement", incomeStatementHelpText);
+    });
+  }
+  if (incomeForecastTrash) {
+    incomeForecastTrash.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument("monthly_income_forecast", incomeForecastHelpText);
+    });
+  }
   const allowedTypes = [
     "application/pdf",
     "application/msword",
@@ -3407,7 +3471,6 @@ var initFinanceReportsPage = async () => {
       xhr.upload.addEventListener("progress", (event) => {
         if (event.lengthComputable) {
           const percent = Math.round(event.loaded / event.total * 100);
-          console.log(`Upload progress: ${percent}%`);
         }
       });
       xhr.addEventListener("load", () => {

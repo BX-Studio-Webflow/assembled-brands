@@ -1,6 +1,9 @@
 import type { AxiosError } from 'axios';
 import { apiCreateAssetPresignedUrl } from 'shared/services/AssetService';
-import { apiUploadFinancialDocument } from 'shared/services/FinancialWizardService';
+import {
+  apiDeleteFinancialDocument,
+  apiUploadFinancialDocument,
+} from 'shared/services/FinancialWizardService';
 import type { CreateAssetBody } from 'shared/types/asset';
 import type {
   FinancialDocumentBody,
@@ -146,6 +149,11 @@ const initFinanceReportsPage = async () => {
     updateHelperTexts(financialProgress);
   };
 
+  const getFinancialReportDoc = (documentType: FinancialDocumentBody['document_type']) => {
+    if (!financialProgress?.financial_reports) return undefined;
+    return financialProgress.financial_reports.find((doc) => doc.document_type === documentType);
+  };
+
   await loadFinancialProgress();
   constructAdminSelect(loadFinancialProgress);
 
@@ -252,6 +260,73 @@ const initFinanceReportsPage = async () => {
     });
   }
 
+  // Delete actions for existing financial report documents
+  const balanceSheetTrash = queryElement<HTMLElement>('[dev-target="balance_trash-icon"]', form);
+  const incomeStatementTrash = queryElement<HTMLElement>(
+    '[dev-target="income-statement-trash-icon"]',
+    form
+  );
+  const incomeForecastTrash = queryElement<HTMLElement>(
+    '[dev-target="income-forecast-trash-icon"]',
+    form
+  );
+
+  const handleDeleteDocument = async (
+    documentType: FinancialDocumentBody['document_type'],
+    helperText?: HTMLElement | null
+  ) => {
+    const doc = getFinancialReportDoc(documentType);
+
+    // If no saved document, reset helper text and return
+    if (!doc) {
+      if (helperText) {
+        helperText.textContent = 'Supported formats: sheets. xcel';
+        helperText.classList.remove('is-error');
+      }
+      return;
+    }
+
+    if (helperText) {
+      helperText.classList.remove('is-error');
+      helperText.textContent = 'Deleting...';
+    }
+
+    try {
+      await apiDeleteFinancialDocument(doc.id);
+      await loadFinancialProgress();
+    } catch (error) {
+      console.error(error);
+      if (helperText) {
+        helperText.classList.add('is-error');
+        helperText.textContent = 'Failed to delete file. Please try again.';
+      }
+    }
+  };
+
+  if (balanceSheetTrash) {
+    balanceSheetTrash.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument('monthly_balance_sheet', balaceSheetHelpText);
+    });
+  }
+
+  if (incomeStatementTrash) {
+    incomeStatementTrash.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument('monthly_income_statement', incomeStatementHelpText);
+    });
+  }
+
+  if (incomeForecastTrash) {
+    incomeForecastTrash.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument('monthly_income_forecast', incomeForecastHelpText);
+    });
+  }
+
   const allowedTypes = [
     'application/pdf',
     'application/msword',
@@ -293,7 +368,7 @@ const initFinanceReportsPage = async () => {
       xhr.upload.addEventListener('progress', (event) => {
         if (event.lengthComputable) {
           const percent = Math.round((event.loaded / event.total) * 100);
-          console.log(`Upload progress: ${percent}%`);
+          void percent;
         }
       });
       xhr.addEventListener('load', () => {

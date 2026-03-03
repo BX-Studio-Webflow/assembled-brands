@@ -1,5 +1,11 @@
 # server
 
+## 0.0.21
+
+### Patch Changes
+
+- fix: uploads
+
 ## 0.0.20
 
 ### Patch Changes
