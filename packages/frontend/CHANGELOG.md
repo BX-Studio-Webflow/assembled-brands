@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.4.0
+
+### Minor Changes
+
+- fix: company profile
+
 ## 0.3.24
 
 ### Patch Changes

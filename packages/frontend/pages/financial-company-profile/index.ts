@@ -2,6 +2,7 @@ import type { AxiosError } from 'axios';
 import { apiUpdateBusiness } from 'shared/services/BusinessService';
 import type { UpdateBusinessRequest } from 'shared/types/business';
 import type { FinancialWizardProgressResponse } from 'shared/types/financial-wizard';
+import type { OnboardingProgressApiResponse } from 'shared/types/onboarding';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
@@ -97,12 +98,23 @@ const initFinancialCompanyProfilePage = async () => {
 
   accountingSoftwareInput.addEventListener('change', handleAccountingSoftwareChange);
 
-  // Function to update form fields based on financial progress
-  const updateFormFields = (progress: FinancialWizardProgressResponse | undefined) => {
+  // Function to update form fields based on financial and onboarding progress
+  const updateFormFields = (
+    progress: FinancialWizardProgressResponse | undefined,
+    onboardingProgress: OnboardingProgressApiResponse | undefined
+  ) => {
+    const legalNameFromCompanyProfile = progress?.company_profile?.legal_name;
+    const legalNameFromOnboarding = onboardingProgress?.progress?.step1?.legal_name;
+    const legalNameFromBusiness = progress?.business?.legal_name;
+
+    const resolvedLegalName =
+      legalNameFromCompanyProfile || legalNameFromOnboarding || legalNameFromBusiness;
+
+    if (resolvedLegalName) {
+      companyLegalNameInput.value = resolvedLegalName;
+    }
+
     if (progress?.company_profile) {
-      if (progress.company_profile.legal_name) {
-        companyLegalNameInput.value = progress.company_profile.legal_name;
-      }
       if (progress.company_profile.headquarters) {
         companyHeadquartersInput.value = progress.company_profile.headquarters;
         companyHeadquartersInput.dispatchEvent(new Event('change', { bubbles: true }));
@@ -121,10 +133,12 @@ const initFinancialCompanyProfilePage = async () => {
   };
 
   let financialProgress: FinancialWizardProgressResponse | undefined;
+  let onboardingProgress: OnboardingProgressApiResponse | undefined;
   const loadFinancialProgress = async (userId?: string) => {
     const result = await checkProgressUserAndTeams(userId);
     financialProgress = result?.financialProgress;
-    updateFormFields(financialProgress);
+    onboardingProgress = result?.onboardingProgress;
+    updateFormFields(financialProgress, onboardingProgress);
   };
 
   await loadFinancialProgress();

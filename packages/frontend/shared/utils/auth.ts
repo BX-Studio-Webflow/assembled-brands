@@ -37,6 +37,7 @@ export const processMiddleware = (): string | null => {
 export const logoutUser = () => {
   deleteCookie('accessToken');
   localStorage.removeItem('x-team-id');
+  localStorage.removeItem('user');
   navigateToPath('/login?error=logged-out');
 };
 
