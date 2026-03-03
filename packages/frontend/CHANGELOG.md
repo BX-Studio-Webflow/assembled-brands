@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.4.2
+
+### Patch Changes
+
+- FIX: FILES
+
 ## 0.4.1
 
 ### Patch Changes

@@ -114,12 +114,29 @@ const initFinancialCompanyProfilePage = async () => {
       companyLegalNameInput.value = resolvedLegalName;
     }
 
+    // Derive company "years in business" from onboarding step 2 formation year when available
+    const formationYearStr = onboardingProgress?.progress?.step2?.years_in_business;
+    const currentYear = new Date().getFullYear();
+    const formationYear = formationYearStr ? Number.parseInt(formationYearStr, 10) : NaN;
+
+    if (
+      formationYearStr &&
+      !Number.isNaN(formationYear) &&
+      formationYear > 0 &&
+      formationYear <= currentYear
+    ) {
+      const yearsInBusiness = currentYear - formationYear;
+      companyYear.value = yearsInBusiness.toString();
+      companyYear.disabled = true;
+    }
+
     if (progress?.company_profile) {
       if (progress.company_profile.headquarters) {
         companyHeadquartersInput.value = progress.company_profile.headquarters;
         companyHeadquartersInput.dispatchEvent(new Event('change', { bubbles: true }));
       }
-      if (progress.company_profile.year_formed) {
+      // If onboarding data did not populate years in business, fall back to stored year_formed
+      if (!companyYear.value && progress.company_profile.year_formed) {
         companyYear.value = progress.company_profile.year_formed;
       }
       if (progress.company_profile.accounting_software) {

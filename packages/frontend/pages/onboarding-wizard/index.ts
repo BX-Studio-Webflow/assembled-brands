@@ -78,8 +78,12 @@ const initOnboardingStep1Page = async () => {
     console.error('Step wrappers not found');
     return;
   }
-  if (!submitButton || !backButton) {
-    console.error('Navigation buttons not found');
+  if (!submitButton) {
+    console.error('Navigation submit button not found');
+    return;
+  }
+  if (!backButton) {
+    console.error('Navigation back button not found');
     return;
   }
   if (!stepText) {
@@ -142,6 +146,13 @@ const initOnboardingStep1Page = async () => {
     if (step === 1) step1Wrapper.classList.add('is-active');
     if (step === 2) step2Wrapper.classList.add('is-active');
     if (step === 3) step3Wrapper.classList.add('is-active');
+
+    // Show/hide back button per step
+    if (step === 1) {
+      backButton.classList.add('hide');
+    } else {
+      backButton.classList.remove('hide');
+    }
 
     // Update progress bar
     if (progressBar) {
@@ -388,6 +399,19 @@ const initOnboardingStep1Page = async () => {
       return;
     }
 
+    // Validate yearsInBusiness as a 4-digit year not in the future
+    const yearTrimmed = yearsInBusiness.value.trim();
+    const yearPattern = /^\d{4}$/;
+    const currentYear = new Date().getFullYear();
+    const parsedYear = Number.parseInt(yearTrimmed, 10);
+
+    if (!yearPattern.test(yearTrimmed) || Number.isNaN(parsedYear) || parsedYear > currentYear) {
+      yearsInBusiness.classList.add('is-error');
+      submitButton.classList.add('is-error');
+      submitButton.value = `Enter a valid year (≤ ${currentYear})`;
+      return;
+    }
+
     const selectedAssetType = assetTypeInputs.find((input) => input.checked);
     if (!selectedAssetType) {
       submitButton.classList.add('is-error');
@@ -405,7 +429,7 @@ const initOnboardingStep1Page = async () => {
     const payload: OnboardingStep2Body = {
       years_in_business: yearsInBusiness.value,
       asset_type: selectedAssetType.value as OnboardingStep2Body['asset_type'],
-      desired_loan_amount: desiredLoanAmount.value,
+      desired_loan_amount: desiredLoanAmount.value as OnboardingStep2Body['desired_loan_amount'],
     };
 
     try {

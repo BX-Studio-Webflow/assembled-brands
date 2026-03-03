@@ -3128,12 +3128,20 @@ var initFinancialCompanyProfilePage = async () => {
     if (resolvedLegalName) {
       companyLegalNameInput.value = resolvedLegalName;
     }
+    const formationYearStr = onboardingProgress2?.progress?.step2?.years_in_business;
+    const currentYear = (/* @__PURE__ */ new Date()).getFullYear();
+    const formationYear = formationYearStr ? Number.parseInt(formationYearStr, 10) : NaN;
+    if (formationYearStr && !Number.isNaN(formationYear) && formationYear > 0 && formationYear <= currentYear) {
+      const yearsInBusiness = currentYear - formationYear;
+      companyYear.value = yearsInBusiness.toString();
+      companyYear.disabled = true;
+    }
     if (progress?.company_profile) {
       if (progress.company_profile.headquarters) {
         companyHeadquartersInput.value = progress.company_profile.headquarters;
         companyHeadquartersInput.dispatchEvent(new Event("change", { bubbles: true }));
       }
-      if (progress.company_profile.year_formed) {
+      if (!companyYear.value && progress.company_profile.year_formed) {
         companyYear.value = progress.company_profile.year_formed;
       }
       if (progress.company_profile.accounting_software) {

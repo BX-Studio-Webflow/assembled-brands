@@ -2876,8 +2876,12 @@ var initOnboardingStep1Page = async () => {
     console.error("Step wrappers not found");
     return;
   }
-  if (!submitButton || !backButton) {
-    console.error("Navigation buttons not found");
+  if (!submitButton) {
+    console.error("Navigation submit button not found");
+    return;
+  }
+  if (!backButton) {
+    console.error("Navigation back button not found");
     return;
   }
   if (!stepText) {
@@ -2922,6 +2926,11 @@ var initOnboardingStep1Page = async () => {
     if (step === 1) step1Wrapper.classList.add("is-active");
     if (step === 2) step2Wrapper.classList.add("is-active");
     if (step === 3) step3Wrapper.classList.add("is-active");
+    if (step === 1) {
+      backButton.classList.add("hide");
+    } else {
+      backButton.classList.remove("hide");
+    }
     if (progressBar) {
       const percentage = step / 3 * 100;
       progressBar.style.width = `${percentage}%`;
@@ -3118,6 +3127,16 @@ var initOnboardingStep1Page = async () => {
       yearsInBusiness?.classList.add("is-error");
       submitButton.classList.add("is-error");
       submitButton.value = "Years in business is required";
+      return;
+    }
+    const yearTrimmed = yearsInBusiness.value.trim();
+    const yearPattern = /^\d{4}$/;
+    const currentYear = (/* @__PURE__ */ new Date()).getFullYear();
+    const parsedYear = Number.parseInt(yearTrimmed, 10);
+    if (!yearPattern.test(yearTrimmed) || Number.isNaN(parsedYear) || parsedYear > currentYear) {
+      yearsInBusiness.classList.add("is-error");
+      submitButton.classList.add("is-error");
+      submitButton.value = `Enter a valid year (\u2264 ${currentYear})`;
       return;
     }
     const selectedAssetType = assetTypeInputs.find((input) => input.checked);
