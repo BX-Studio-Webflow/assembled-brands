@@ -1,5 +1,11 @@
 # @assembled-brands/frontend
 
+## 0.4.5
+
+### Patch Changes
+
+- fix: bugs
+
 ## 0.4.4
 
 ### Patch Changes

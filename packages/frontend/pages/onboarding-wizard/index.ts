@@ -19,11 +19,9 @@ import { queryAllElements, queryElement } from '$utils/selectors';
 const initOnboardingStep1Page = async () => {
   processMiddleware();
 
-  const form = document.querySelector('[dev-target="onboarding-step1-form"]');
+  const form = document.querySelector('[dev-target="onboarding-form"]');
   if (!form) {
-    console.error(
-      'Onboarding Step 1 form not found. Element: [dev-target="onboarding-step1-form"] not found'
-    );
+    console.error('Onboarding form not found. Element: [dev-target="onboarding-form"] not found.');
     return;
   }
 
@@ -75,19 +73,25 @@ const initOnboardingStep1Page = async () => {
 
   // Validation
   if (!step1Wrapper || !step2Wrapper || !step3Wrapper) {
-    console.error('Step wrappers not found');
+    console.error(
+      'Step wrappers not found. Elements: [dev-target="step-1"], [dev-target="step-2"], [dev-target="step-3"] not found.'
+    );
     return;
   }
   if (!submitButton) {
-    console.error('Navigation submit button not found');
+    console.error(
+      'Navigation submit button not found. Element: [dev-target="submit-button"] not found.'
+    );
     return;
   }
   if (!backButton) {
-    console.error('Navigation back button not found');
+    console.error(
+      'Navigation back button not found. Element: [dev-target="back-button"] not found.'
+    );
     return;
   }
   if (!stepText) {
-    console.error('Step text element not found');
+    console.error('Step text element not found. Element: [dev-target="step-text"] not found.');
     return;
   }
   //validate all inputs exist
@@ -300,6 +304,19 @@ const initOnboardingStep1Page = async () => {
       await handleStep2Submit();
     } else if (currentStep === 3) {
       await handleStep3Submit();
+    }
+  });
+
+  form.addEventListener('keydown', async (event) => {
+    if ((event as KeyboardEvent).key === 'Enter') {
+      event.preventDefault();
+      if (currentStep === 1) {
+        await handleStep1Submit();
+      } else if (currentStep === 2) {
+        await handleStep2Submit();
+      } else if (currentStep === 3) {
+        await handleStep3Submit();
+      }
     }
   });
 
