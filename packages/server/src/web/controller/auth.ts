@@ -326,7 +326,7 @@ export class AuthController {
 					400,
 				);
 			}
-			const { email, firstname, lastname } = contactDetails.properties;
+			const { email, firstname, lastname, phone } = contactDetails.properties;
 			const existingUser = await this.service.findByEmail(email);
 			if (existingUser) {
 				return c.json({
@@ -334,39 +334,6 @@ export class AuthController {
 					code: 'USER_ALREADY_EXISTS',
 				});
 			}
-
-			//reject personal emails
-			const rejectedEmails = [
-				'gmail.com',
-				'yahoo.com',
-				'hotmail.com',
-				'outlook.com',
-				'icloud.com',
-				'aol.com',
-				'yahoo.co.uk',
-				'yahoo.com.au',
-				'yahoo.com.br',
-				'yahoo.com.es',
-				'yahoo.com.fr',
-				'yahoo.com.de',
-				'yahoo.com.it',
-				'yahoo.com.nl',
-				'yahoo.com.pt',
-				'yahoo.com.ru',
-				'yahoo.com.tr',
-				'yahoo.com.ua',
-				'yahoo.com.vn',
-			];
-			if (rejectedEmails.includes(email.split('@')[1])) {
-				return c.json(
-					{
-						message: 'We are not accepting personal emails at the moment',
-						code: 'INVALID_EMAIL',
-					},
-					400,
-				);
-			}
-
 			//create user
 			const password = generateSecurePassword(6);
 			const newUser: NewUser = {
@@ -374,7 +341,7 @@ export class AuthController {
 				password: password,
 				role: 'user',
 				dial_code: '+1',
-				phone: '',
+				phone: phone || '',
 				first_name: firstname,
 				last_name: lastname,
 			};
