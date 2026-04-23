@@ -27,7 +27,7 @@ import type {
 	UpdateUserDetailsBody,
 	VerifyEmailAndSetPasswordBody,
 } from '../validator/user.js';
-import { ERRORS, serveInternalServerError } from './resp/error.js';
+import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { serializeUser } from './serializer/user.js';
 
 export class AuthController {
@@ -305,34 +305,18 @@ export class AuthController {
 		try {
 			const { objectId } = body;
 			if (!objectId) {
-				return c.json(
-					{
-						message: 'Object ID is required, please provide it in the request body of the webhook',
-						code: 'OBJECT_ID_REQUIRED',
-						body: body,
-					},
-					400,
-				);
+				return serveBadRequest(c, 'Object ID is required, please provide it in the request body of the webhook');
 			}
 			//call hs service to fetch contact details
 			const contactDetails = await this.hubSpotService.getContactById(objectId);
 
 			if (!contactDetails) {
-				return c.json(
-					{
-						message: ERRORS.USER_NOT_FOUND,
-						code: 'USER_NOT_FOUND',
-					},
-					400,
-				);
+				return serveBadRequest(c, 'Contact details not found');
 			}
 			const { email, firstname, lastname, phone } = contactDetails.properties;
 			const existingUser = await this.service.findByEmail(email);
 			if (existingUser) {
-				return c.json({
-					message: 'User already exists',
-					code: 'USER_ALREADY_EXISTS',
-				});
+				return serveBadRequest(c, 'User already exists');
 			}
 			//create user
 			const password = generateSecurePassword(6);
