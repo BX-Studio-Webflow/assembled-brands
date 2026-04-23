@@ -1,8 +1,9 @@
 import { env } from 'cloudflare:workers';
 
 import { logger } from '../lib/logger.ts';
-import type { OnboardingApplication } from '../schema/schema.ts';
-import type { User } from '../schema/schema.ts';
+import { HubspotContactWebhookRepository } from '../repository/hubspot-contact-webhook.ts';
+import type { NewHubspotContactWebhook, OnboardingApplication, User } from '../schema/schema.ts';
+import type { HubspotNewLeadBody } from '../web/validator/user.js';
 
 const HUBSPOT_API_URL = 'https://api.hubapi.com/crm/v3/objects/contacts';
 
@@ -37,17 +38,79 @@ export interface HubSpotContact {
 	archived: boolean;
 }
 
+const newLeadEventToRow = (e: HubspotNewLeadBody[number]): NewHubspotContactWebhook => ({
+	app_id: e.appId,
+	event_id: e.eventId,
+	subscription_id: e.subscriptionId,
+	portal_id: e.portalId,
+	occurred_at: e.occurredAt,
+	subscription_type: e.subscriptionType,
+	attempt_number: e.attemptNumber,
+	object_id: e.objectId,
+	change_source: e.changeSource,
+	change_flag: e.changeFlag,
+});
+
 /**
  * Service class for managing HubSpot CRM operations
  */
 export class HubSpotService {
 	private apiKey: string;
+	private contactWebhookRepo: HubspotContactWebhookRepository;
 
-	constructor() {
+	constructor(contactWebhookRepo: HubspotContactWebhookRepository) {
+		this.contactWebhookRepo = contactWebhookRepo;
 		this.apiKey = env.HUBSPOT_API_KEY || '';
 		if (!this.apiKey) {
 			logger.warn('HubSpot API key not configured');
 		}
+	}
+
+	/**
+	 * Insert or load a DB row for the first webhook event only (idempotent per portal/event/subscription).
+	 */
+	public async recordOrLoadContactWebhookEvent(event: HubspotNewLeadBody[number]): Promise<{ id: number }> {
+		const existing = await this.contactWebhookRepo.findByPortalEventSubscription(event.portalId, event.eventId, event.subscriptionId);
+		if (existing) {
+			return { id: existing.id };
+		}
+		const [inserted] = await this.contactWebhookRepo.create(newLeadEventToRow(event));
+		if (!inserted) {
+			throw new Error('Failed to persist webhook event');
+		}
+		return { id: inserted.id };
+	}
+
+	/**
+	 * True when this row was already fully processed and linked to a user.
+	 */
+	public async isContactWebhookAlreadyProcessed(webhookRowId: number): Promise<boolean> {
+		const rec = await this.contactWebhookRepo.findById(webhookRowId);
+		return rec?.status === 'processed' && rec.user_id != null;
+	}
+
+	/** @param {string} message - Failure reason (stored on row) */
+	public async markContactWebhookFailed(webhookRowId: number, message: string) {
+		return this.contactWebhookRepo.update(webhookRowId, { status: 'failed', error_message: message });
+	}
+
+	/** @param {string} message - Skip reason (e.g. duplicate user) */
+	public async markContactWebhookSkipped(webhookRowId: number, message: string) {
+		return this.contactWebhookRepo.update(webhookRowId, { status: 'skipped', error_message: message });
+	}
+
+	/** After user creation and welcome email, mark the webhook row processed and link the user. */
+	public async markContactWebhookProcessedForNewUser(webhookRowId: number, userId: number) {
+		return this.contactWebhookRepo.update(webhookRowId, {
+			status: 'processed',
+			user_id: userId,
+			error_message: null,
+		});
+	}
+
+	public async markContactWebhookError(webhookRowId: number, err: unknown) {
+		const message = err instanceof Error ? err.message : String(err);
+		return this.contactWebhookRepo.update(webhookRowId, { status: 'failed', error_message: message });
 	}
 
 	/**

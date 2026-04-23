@@ -9,6 +9,7 @@ import { AssetRepository } from '../repository/asset.ts';
 import { BusinessRepository } from '../repository/business.ts';
 import { EmailRepository } from '../repository/email.ts';
 import { FinancialWizardRepository } from '../repository/financial-wizard.ts';
+import { HubspotContactWebhookRepository } from '../repository/hubspot-contact-webhook.ts';
 import { NotificationRepository } from '../repository/notification.ts';
 import { OnboardingWizardRepository } from '../repository/onboarding-wizard.ts';
 import { TeamRepository } from '../repository/team.ts';
@@ -94,6 +95,7 @@ export class Server {
 
 		// Setup repos
 		const userRepo = new UserRepository(db);
+		const hubspotContactWebhookRepo = new HubspotContactWebhookRepository(db);
 		const assetRepo = new AssetRepository(db);
 		const teamRepo = new TeamRepository(db);
 		const businessRepo = new BusinessRepository(db);
@@ -109,7 +111,7 @@ export class Server {
 		const userService = new UserService(userRepo);
 		const teamService = new TeamService(teamRepo, userService);
 		const financialWizardService = new FinancialWizardService(financialWizardRepo, assetService);
-		const hubSpotService = new HubSpotService();
+		const hubSpotService = new HubSpotService(hubspotContactWebhookRepo);
 		const onboardingWizardService = new OnboardingWizardService(onboardingWizardRepo, hubSpotService, userService);
 		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService, financialWizardService);
 		const emailService = new EmailService(emailRepo);

@@ -307,10 +307,29 @@ export class AuthController {
 			return serveUnprocessableEntity(c, getErrorPhrase(parsed.error));
 		}
 		const body = parsed.data;
-		logger.info(body);
+		if (body.length === 0) {
+			return serveBadRequest(c, 'At least one webhook event is required');
+		}
+		const first = body[0]!;
+
+		let webhookRowId: number;
 		try {
-			const { objectId } = body[0];
+			const recorded = await this.hubSpotService.recordOrLoadContactWebhookEvent(first);
+			webhookRowId = recorded.id;
+		} catch (err) {
+			return serveInternalServerError(c, err);
+		}
+
+		if (await this.hubSpotService.isContactWebhookAlreadyProcessed(webhookRowId)) {
+			return c.json({ message: 'Webhook event already processed' });
+		}
+
+		logger.info({ objectId: first.objectId, eventId: first.eventId });
+
+		try {
+			const { objectId } = first;
 			if (!objectId) {
+				await this.hubSpotService.markContactWebhookFailed(webhookRowId, 'Missing objectId');
 				return serveBadRequest(c, 'Object ID is required, please provide it in the request body of the webhook');
 			}
 
@@ -318,11 +337,13 @@ export class AuthController {
 			const contactDetails = await this.hubSpotService.getContactById(objectId);
 
 			if (!contactDetails) {
+				await this.hubSpotService.markContactWebhookFailed(webhookRowId, 'Contact details not found');
 				return serveBadRequest(c, 'Contact details not found');
 			}
 			const { email, firstname, lastname, phone } = contactDetails.properties;
 			const existingUser = await this.service.findByEmail(email);
 			if (existingUser) {
+				await this.hubSpotService.markContactWebhookSkipped(webhookRowId, 'User already exists');
 				return serveBadRequest(c, 'User already exists');
 			}
 			//create user
@@ -338,6 +359,7 @@ export class AuthController {
 			};
 			const [createdUser] = await this.service.create(newUser);
 			if (!createdUser) {
+				await this.hubSpotService.markContactWebhookFailed(webhookRowId, 'Failed to create user');
 				return c.json(
 					{
 						message: 'Failed to create user',
@@ -356,8 +378,11 @@ export class AuthController {
 				buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/login?email=${email}&id=${createdUser.id}`,
 			});
 
+			await this.hubSpotService.markContactWebhookProcessedForNewUser(webhookRowId, createdUser.id);
+
 			return c.json({ message: 'User created successfully, please check your email for your verification code' });
 		} catch (err) {
+			await this.hubSpotService.markContactWebhookError(webhookRowId, err);
 			return serveInternalServerError(c, err);
 		}
 	};

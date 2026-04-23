@@ -1,5 +1,5 @@
 import { relations, sql } from 'drizzle-orm';
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const teamSchema = sqliteTable('teams', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
@@ -137,6 +137,33 @@ export const notificationsSchema = sqliteTable('notifications', {
 	updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 });
 
+export const hubspotContactWebhookSchema = sqliteTable(
+	'hubspot_contact_webhook_events',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		app_id: integer('app_id').notNull(),
+		event_id: integer('event_id').notNull(),
+		subscription_id: integer('subscription_id').notNull(),
+		portal_id: integer('portal_id').notNull(),
+		occurred_at: integer('occurred_at').notNull(),
+		subscription_type: text('subscription_type').notNull(),
+		attempt_number: integer('attempt_number').notNull(),
+		object_id: integer('object_id').notNull(),
+		change_source: text('change_source').notNull(),
+		change_flag: text('change_flag').notNull(),
+		status: text('status', {
+			enum: ['pending', 'processed', 'failed', 'skipped'],
+		})
+			.notNull()
+			.default('pending'),
+		error_message: text('error_message'),
+		user_id: integer('user_id').references(() => userSchema.id),
+		created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+		updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+	},
+	(t) => [uniqueIndex('hubspot_webhook_portal_event_subscription_unique').on(t.portal_id, t.event_id, t.subscription_id)],
+);
+
 export const emailsSchema = sqliteTable('emails', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	email: text('email').notNull(),
@@ -179,7 +206,7 @@ export const onboardingApplicationSchema = sqliteTable('onboarding_applications'
 
 	// Step 3: Qualification
 	company_type: text('company_type', {
-		enum: ['cpg', 'saas', 'consulting', 'distributor_wholesaler', 'other'],
+		enum: ['cpg', 'saas', 'consulting', 'distributor_wholesaler', 'service_provider', 'other'],
 	}),
 	company_type_other: text('company_type_other'), // Only if company_type is 'other'
 	revenue_qualification: text('revenue_qualification', {
@@ -373,6 +400,8 @@ export type NewEmail = typeof emailsSchema.$inferInsert;
 
 export type Notification = typeof notificationsSchema.$inferSelect;
 export type NewNotification = typeof notificationsSchema.$inferInsert;
+export type HubspotContactWebhook = typeof hubspotContactWebhookSchema.$inferSelect;
+export type NewHubspotContactWebhook = typeof hubspotContactWebhookSchema.$inferInsert;
 export type Asset = typeof assetsSchema.$inferSelect;
 export type NewAsset = typeof assetsSchema.$inferInsert;
 export type User = typeof userSchema.$inferSelect & {
@@ -396,6 +425,13 @@ export const userRelations = relations(userSchema, ({ one }) => ({
 export const notificationRelations = relations(notificationsSchema, ({ one }) => ({
 	user: one(userSchema, {
 		fields: [notificationsSchema.user_id],
+		references: [userSchema.id],
+	}),
+}));
+
+export const hubspotContactWebhookRelations = relations(hubspotContactWebhookSchema, ({ one }) => ({
+	user: one(userSchema, {
+		fields: [hubspotContactWebhookSchema.user_id],
 		references: [userSchema.id],
 	}),
 }));
@@ -443,6 +479,7 @@ export const schema = {
 	teamMemberSchema,
 	teamInvitationSchema,
 	notificationsSchema,
+	hubspotContactWebhookSchema,
 	emailsSchema,
 	onboardingApplicationSchema,
 	financialWizardApplicationSchema,
@@ -451,6 +488,7 @@ export const schema = {
 
 	userRelations,
 	notificationRelations,
+	hubspotContactWebhookRelations,
 	businessRelations,
 	teamRelations,
 	teamMemberRelations,
