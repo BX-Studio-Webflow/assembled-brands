@@ -16,18 +16,19 @@ import type { S3Service } from '../../service/s3.js';
 import { TeamService } from '../../service/team.ts';
 import type { UserService } from '../../service/user.js';
 import { generateSecurePassword } from '../../util/string.ts';
-import type {
-	ClaimYourAccountBody,
-	EmailVerificationBody,
-	HubspotNewLeadBody,
-	LoginBody,
-	RegistrationBody,
-	RequestResetPasswordBody,
-	ResetPasswordBody,
-	UpdateUserDetailsBody,
-	VerifyEmailAndSetPasswordBody,
+import {
+	type ClaimYourAccountBody,
+	type EmailVerificationBody,
+	hubspotNewLeadSchema,
+	type LoginBody,
+	type RegistrationBody,
+	type RequestResetPasswordBody,
+	type ResetPasswordBody,
+	type UpdateUserDetailsBody,
+	type VerifyEmailAndSetPasswordBody,
 } from '../validator/user.js';
-import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
+import { getErrorPhrase } from '../validator/validator.js';
+import { ERRORS, serveBadRequest, serveInternalServerError, serveUnprocessableEntity } from './resp/error.js';
 import { serializeUser } from './serializer/user.js';
 
 export class AuthController {
@@ -300,13 +301,19 @@ export class AuthController {
 	 * @throws {Error} When registration fails or user already exists
 	 */
 	public handleNewHubspotLeads = async (c: Context) => {
-		const body: HubspotNewLeadBody = await c.req.json();
+		const raw = await c.req.json();
+		const parsed = hubspotNewLeadSchema.safeParse(raw);
+		if (!parsed.success) {
+			return serveUnprocessableEntity(c, getErrorPhrase(parsed.error));
+		}
+		const body = parsed.data;
 		logger.info(body);
 		try {
-			const { objectId } = body;
+			const { objectId } = body[0];
 			if (!objectId) {
 				return serveBadRequest(c, 'Object ID is required, please provide it in the request body of the webhook');
 			}
+
 			//call hs service to fetch contact details
 			const contactDetails = await this.hubSpotService.getContactById(objectId);
 
