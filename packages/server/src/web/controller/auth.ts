@@ -326,7 +326,7 @@ export class AuthController {
 				return serveBadRequest(c, 'User already exists');
 			}
 			//create user
-			const password = generateSecurePassword(6);
+			const password = generateSecurePassword(8);
 			const newUser: NewUser = {
 				email: email,
 				password: password,
@@ -351,9 +351,9 @@ export class AuthController {
 				title: 'Welcome to Assembled Brands',
 				subtitle: `Welcome to Assembled Brands`,
 				name: firstname || 'Dear User',
-				body: `Welcome to Assembled Brands. We have are glad to have you on board. We still need you to add more information to your account to complete your onboarding. For your reference, your login credentials are: Email: ${email} and Password: ${password}. Please click the button below to complete your onboarding.`,
-				buttonText: 'Ok, got it',
-				buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/account-setup-finish-verification?email=${email}&id=${createdUser.id}`,
+				body: `Welcome to Assembled Brands. We have are glad to have you on board. We still need you to add more information to your account to complete your onboarding. For your reference, your login credentials are: Password: ${password} and Email: ${email}. Please click the button below to complete your onboarding: ${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/account-setup-finish-verification?email=${email}&id=${createdUser.id}`,
+				buttonText: 'Complete onboarding',
+				buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/login?email=${email}&id=${createdUser.id}`,
 			});
 
 			return c.json({ message: 'User created successfully, please check your email for your verification code' });
