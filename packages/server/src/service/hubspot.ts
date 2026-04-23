@@ -15,6 +15,28 @@ export interface HubSpotContactProperties {
 	company?: string;
 }
 
+export interface HubSpotContact {
+	id: string;
+	properties: {
+		firstname: string;
+		lastname: string;
+		email: string;
+		phone: string;
+		company: string;
+		website: string;
+		jobtitle: string;
+		lifecyclestage: string;
+		hs_lead_status: string;
+		hubspot_owner_id: string;
+		createdate: string;
+		lastmodifieddate: string;
+		hs_object_id: string;
+	};
+	createdAt: string;
+	updatedAt: string;
+	archived: boolean;
+}
+
 /**
  * Service class for managing HubSpot CRM operations
  */
@@ -60,6 +82,42 @@ export class HubSpotService {
 
 			const result = (await response.json()) as { id: string };
 			logger.info(`Contact created/updated in HubSpot: ${result.id}`);
+			return result;
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Creates or updates a contact in HubSpot
+	 * @param {HubSpotContactProperties} properties - Contact properties to send
+	 * @returns {Promise<{id: string}>} HubSpot contact ID
+	 * @throws {Error} When HubSpot API call fails
+	 */
+	public async getContactById(id: number): Promise<HubSpotContact> {
+		if (!this.apiKey) {
+			logger.warn('HubSpot API key not configured, skipping contact creation');
+			throw new Error('HubSpot API key not configured');
+		}
+
+		try {
+			const response = await fetch(`${HUBSPOT_API_URL}/${id}`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${this.apiKey}`,
+				},
+			});
+
+			if (!response.ok) {
+				const error = await response.json();
+				logger.error({ error }, 'HubSpot API error');
+				throw new Error(`HubSpot API error: ${JSON.stringify(error)}`);
+			}
+
+			const result = (await response.json()) as HubSpotContact;
+			logger.info(`Contact fetched from HubSpot: ${result.id}`);
 			return result;
 		} catch (error) {
 			logger.error(error);

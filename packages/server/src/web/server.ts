@@ -124,6 +124,7 @@ export class Server {
 			financialWizardService,
 			onboardingWizardService,
 			teamService,
+			hubSpotService,
 		);
 		const assetController = new AssetController(assetService, userService, emailService, notificationService);
 
@@ -154,6 +155,7 @@ export class Server {
 
 		user.get('/me', authCheck, authCtrl.me);
 		user.post('/login', loginValidator, authCtrl.login);
+		user.post('/hubspot/new-lead', authCtrl.handleNewHubspotLeads);
 
 		user.post('/cold-lead-register', registrationValidator, authCtrl.coldRegister);
 		user.post('/verify-registration', verifyEmailAndSetPasswordValidator, authCtrl.verifyEmailAndSetPassword);

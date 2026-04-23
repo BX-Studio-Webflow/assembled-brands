@@ -10,6 +10,7 @@ import { NewUser } from '../../schema/schema.ts';
 import type { AssetService } from '../../service/asset.js';
 import type { BusinessService } from '../../service/business.js';
 import { FinancialWizardService } from '../../service/financial-wizard.ts';
+import { HubSpotService } from '../../service/hubspot.ts';
 import { OnboardingWizardService } from '../../service/onboarding-wizard.ts';
 import type { S3Service } from '../../service/s3.js';
 import { TeamService } from '../../service/team.ts';
@@ -18,6 +19,7 @@ import { generateSecurePassword } from '../../util/string.ts';
 import type {
 	ClaimYourAccountBody,
 	EmailVerificationBody,
+	HubspotNewLeadBody,
 	LoginBody,
 	RegistrationBody,
 	RequestResetPasswordBody,
@@ -33,6 +35,7 @@ export class AuthController {
 	private businessService: BusinessService;
 	private s3Service: S3Service;
 	private assetService: AssetService;
+	private hubSpotService: HubSpotService;
 	private userRepository: UserRepository;
 	private financialWizardService: FinancialWizardService;
 	private onboardingWizardService: OnboardingWizardService;
@@ -46,6 +49,7 @@ export class AuthController {
 		financialWizardService: FinancialWizardService,
 		onboardingWizardService: OnboardingWizardService,
 		teamService: TeamService,
+		hubSpotService: HubSpotService,
 	) {
 		this.service = userService;
 		this.businessService = businessService;
@@ -55,6 +59,7 @@ export class AuthController {
 		this.financialWizardService = financialWizardService;
 		this.onboardingWizardService = onboardingWizardService;
 		this.teamService = teamService;
+		this.hubSpotService = hubSpotService;
 	}
 
 	/**
@@ -288,6 +293,116 @@ export class AuthController {
 		}
 	};
 
+	/**
+	 * Registers a new user in the system
+	 * @param {Context} c - The Hono context containing registration data
+	 * @returns {Promise<Response>} Response containing JWT token and user data
+	 * @throws {Error} When registration fails or user already exists
+	 */
+	public handleNewHubspotLeads = async (c: Context) => {
+		const body: HubspotNewLeadBody = await c.req.json();
+		logger.info(body);
+		try {
+			const { objectId } = body;
+			if (!objectId) {
+				return c.json(
+					{
+						message: 'Object ID is required, please provide it in the request body of the webhook',
+						code: 'OBJECT_ID_REQUIRED',
+						body: body,
+					},
+					400,
+				);
+			}
+			//call hs service to fetch contact details
+			const contactDetails = await this.hubSpotService.getContactById(objectId);
+
+			if (!contactDetails) {
+				return c.json(
+					{
+						message: ERRORS.USER_NOT_FOUND,
+						code: 'USER_NOT_FOUND',
+					},
+					400,
+				);
+			}
+			const { email, firstname, lastname } = contactDetails.properties;
+			const existingUser = await this.service.findByEmail(email);
+			if (existingUser) {
+				return c.json({
+					message: 'User already exists',
+					code: 'USER_ALREADY_EXISTS',
+				});
+			}
+
+			//reject personal emails
+			const rejectedEmails = [
+				'gmail.com',
+				'yahoo.com',
+				'hotmail.com',
+				'outlook.com',
+				'icloud.com',
+				'aol.com',
+				'yahoo.co.uk',
+				'yahoo.com.au',
+				'yahoo.com.br',
+				'yahoo.com.es',
+				'yahoo.com.fr',
+				'yahoo.com.de',
+				'yahoo.com.it',
+				'yahoo.com.nl',
+				'yahoo.com.pt',
+				'yahoo.com.ru',
+				'yahoo.com.tr',
+				'yahoo.com.ua',
+				'yahoo.com.vn',
+			];
+			if (rejectedEmails.includes(email.split('@')[1])) {
+				return c.json(
+					{
+						message: 'We are not accepting personal emails at the moment',
+						code: 'INVALID_EMAIL',
+					},
+					400,
+				);
+			}
+
+			//create user
+			const password = generateSecurePassword(6);
+			const newUser: NewUser = {
+				email: email,
+				password: password,
+				role: 'user',
+				dial_code: '+1',
+				phone: '',
+				first_name: firstname,
+				last_name: lastname,
+			};
+			const [createdUser] = await this.service.create(newUser);
+			if (!createdUser) {
+				return c.json(
+					{
+						message: 'Failed to create user',
+						code: 'FAILED_TO_CREATE_USER',
+					},
+					400,
+				);
+			}
+			await sendTemplateEmail(email, firstname || 'Dear User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
+				subject: 'Welcome to Assembled Brands',
+				title: 'Welcome to Assembled Brands',
+				subtitle: `Welcome to Assembled Brands`,
+				name: firstname || 'Dear User',
+				body: `Welcome to Assembled Brands. We have are glad to have you on board. We still need you to add more information to your account to complete your onboarding. For your reference, your login credentials are: Email: ${email} and Password: ${password}. Please click the button below to complete your onboarding.`,
+				buttonText: 'Ok, got it',
+				buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/account-setup-finish-verification?email=${email}&id=${createdUser.id}`,
+			});
+
+			return c.json({ message: 'User created successfully, please check your email for your verification code' });
+		} catch (err) {
+			return serveInternalServerError(c, err);
+		}
+	};
 	/**
 	 * Sends a verification token to user's email, tp prevent spam registrations
 	 * @param {Context} c - The Hono context containing email information

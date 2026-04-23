@@ -87,6 +87,22 @@ const updateUserDetailsSchema = z.object({
 const updateUserDetailsValidator = validator('json', (value, c) => {
 	return validateSchema(c, updateUserDetailsSchema, value);
 });
+const hubspotNewLeadSchema = z.object({
+	appId: z.number(),
+	eventId: z.number(),
+	subscriptionId: z.number(),
+	portalId: z.number(),
+	occurredAt: z.number(),
+	subscriptionType: z.string(),
+	attemptNumber: z.number(),
+	objectId: z.number(),
+	changeSource: z.string(),
+	changeFlag: z.string(),
+});
+
+const hubspotNewLeadValidator = validator('json', (value, c) => {
+	return validateSchema(c, hubspotNewLeadSchema, value);
+});
 
 type LoginBody = z.infer<typeof loginSchema>;
 type RegistrationBody = z.infer<typeof registrationSchema>;
@@ -98,11 +114,15 @@ type StartAccountRecoveryBody = z.infer<typeof startAccountRecoverySchema>;
 type ClaimYourAccountBody = z.infer<typeof claimYourAccountSchema>;
 type UpdateUserDetailsBody = z.infer<typeof updateUserDetailsSchema>;
 
+type HubspotNewLeadBody = z.infer<typeof hubspotNewLeadSchema>;
+
 export {
 	type ClaimYourAccountBody,
 	claimYourAccountValidator,
 	type EmailVerificationBody,
 	emailVerificationValidator,
+	type HubspotNewLeadBody,
+	hubspotNewLeadValidator,
 	type LoginBody,
 	loginValidator,
 	type RegistrationBody,
