@@ -1,6 +1,7 @@
 import type { AxiosError } from 'axios';
 import ApiService from 'shared/services/ApiService';
 
+import { setCookie } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
 import { queryElement } from '$utils/selectors';
 
@@ -155,16 +156,31 @@ const initWarmLeadOnboardingPage = async () => {
       ...(isWorkingWithMember ? { team_member_email: memberSelect.value } : {}),
     };
 
+    type WarmLeadResponse = {
+      token: string;
+      user: Record<string, unknown>;
+      teams: { team_id: number }[];
+    };
+
     try {
-      await ApiService.fetchDataWithAxios({
+      const response = await ApiService.fetchDataWithAxios<WarmLeadResponse>({
         url: '/onboarding-wizard/warm-lead',
         method: 'post',
         data: payload,
       });
+
+      setCookie('accessToken', response.token, 10);
+      localStorage.setItem('user', JSON.stringify(response.user));
+
+      const team = response.teams?.[0];
+      if (team) {
+        localStorage.setItem('x-team-id', team.team_id.toString());
+      }
+
       submitButton.classList.add('is-success');
       submitButton.value = 'Saved!';
       setTimeout(() => {
-        //navigateToPath('/login');
+        navigateToPath('/warm/finance-docs-financial-report');
       }, 400);
     } catch (error) {
       const { message } = error as AxiosError;

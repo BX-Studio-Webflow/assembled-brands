@@ -1,6 +1,6 @@
 import { logger } from '../lib/logger.ts';
 import type { OnboardingWizardRepository } from '../repository/onboarding-wizard.ts';
-import type { NewOnboardingApplication, OnboardingApplication } from '../schema/schema.ts';
+import type { NewOnboardingApplication, OnboardingApplication, User } from '../schema/schema.ts';
 import type { OnboardingStep1Body, OnboardingStep2Body, OnboardingStep3Body, WarmLeadDetailsBody } from '../web/validator/onboarding.js';
 import type { HubSpotService } from './hubspot.ts';
 import type { UserService } from './user.ts';
@@ -307,7 +307,7 @@ export class OnboardingWizardService {
 	 * @returns The upserted onboarding application
 	 * @throws {Error} When deal not found, user not linked, or DB write fails
 	 */
-	public async saveWarmLeadDetails(body: WarmLeadDetailsBody): Promise<OnboardingApplication> {
+	public async saveWarmLeadDetails(body: WarmLeadDetailsBody): Promise<{ application: OnboardingApplication; user: User }> {
 		try {
 			const dealRow = await this.hubSpotService.findProcessedDealByObjectId(body.deal_id);
 			if (!dealRow) {
@@ -317,6 +317,11 @@ export class OnboardingWizardService {
 				throw new Error(`Deal ${body.deal_id} has no associated user yet`);
 			}
 			const userId = dealRow.user_id;
+
+			const user = await this.userService.find(userId);
+			if (!user) {
+				throw new Error(`No user found for deal ${body.deal_id}`);
+			}
 
 			const update: Partial<NewOnboardingApplication> = {
 				legal_name: body.legal_name,
@@ -353,7 +358,7 @@ export class OnboardingWizardService {
 				logger.error({ hsErr, deal_id: body.deal_id }, 'Failed to sync warm-lead fields to HubSpot (non-fatal)');
 			}
 
-			return savedApplication;
+			return { application: savedApplication, user };
 		} catch (error) {
 			logger.error(error);
 			throw error;

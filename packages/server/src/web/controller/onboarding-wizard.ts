@@ -1,21 +1,34 @@
 import type { Context } from 'hono';
 
+import { encode } from '../../lib/jwt.js';
 import { logger } from '../../lib/logger.js';
 import type { User } from '../../schema/schema.js';
+import type { FinancialWizardService } from '../../service/financial-wizard.js';
 import type { OnboardingWizardService } from '../../service/onboarding-wizard.js';
+import type { TeamService } from '../../service/team.js';
 import type { UserService } from '../../service/user.js';
 import type { UpdateStepBody } from '../validator/financial-wizard.js';
 import type { OnboardingStep1Body, OnboardingStep2Body, OnboardingStep3Body, WarmLeadDetailsBody } from '../validator/onboarding.ts';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { serveData } from './resp/resp.js';
+import { serializeUser } from './serializer/user.js';
 
 export class OnboardingWizardController {
 	private service: OnboardingWizardService;
 	private userService: UserService;
+	private financialWizardService: FinancialWizardService;
+	private teamService: TeamService;
 
-	constructor(service: OnboardingWizardService, userService: UserService) {
+	constructor(
+		service: OnboardingWizardService,
+		userService: UserService,
+		financialWizardService: FinancialWizardService,
+		teamService: TeamService,
+	) {
 		this.service = service;
 		this.userService = userService;
+		this.financialWizardService = financialWizardService;
+		this.teamService = teamService;
 	}
 
 	/**
@@ -257,15 +270,28 @@ export class OnboardingWizardController {
 
 	/**
 	 * Unauthenticated warm-lead submission.
-	 * Looks up the platform user via the HubSpot deal_id and upserts their
-	 * onboarding application with the submitted company details.
+	 * Saves the company details, then returns a signed JWT + full user payload
+	 * so the client can authenticate immediately (same shape as /user/login).
 	 */
 	public submitWarmLeadDetails = async (c: Context) => {
 		try {
 			const body: WarmLeadDetailsBody = await c.req.json();
-			const application = await this.service.saveWarmLeadDetails(body);
-			return serveData(c, {
-				message: 'Details saved successfully',
+			const { application, user } = await this.service.saveWarmLeadDetails(body);
+
+			const [token, serializedUser, financialWizardProgress, onboardingProgress, teams] = await Promise.all([
+				encode(user.id, user.email),
+				serializeUser(user),
+				this.financialWizardService.getProgress(user.id),
+				this.service.getProgress(user.id),
+				this.teamService.getUserTeams(user.id),
+			]);
+
+			return c.json({
+				token,
+				user: serializedUser,
+				financialWizardProgress,
+				onboardingProgress,
+				teams,
 				application,
 			});
 		} catch (error) {

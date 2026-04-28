@@ -2863,14 +2863,21 @@ var initWarmLeadOnboardingPage = async () => {
       ...isWorkingWithMember ? { team_member_email: memberSelect.value } : {}
     };
     try {
-      await ApiService_default.fetchDataWithAxios({
+      const response = await ApiService_default.fetchDataWithAxios({
         url: "/onboarding-wizard/warm-lead",
         method: "post",
         data: payload
       });
+      setCookie("accessToken", response.token, 10);
+      localStorage.setItem("user", JSON.stringify(response.user));
+      const team = response.teams?.[0];
+      if (team) {
+        localStorage.setItem("x-team-id", team.team_id.toString());
+      }
       submitButton.classList.add("is-success");
       submitButton.value = "Saved!";
       setTimeout(() => {
+        navigateToPath("/warm/finance-docs-financial-report");
       }, 400);
     } catch (error) {
       const { message } = error;
