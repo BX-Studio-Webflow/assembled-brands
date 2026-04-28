@@ -319,7 +319,7 @@ const initFinanceReportsPage = async () => {
       incomeStatementHelpText.textContent = '';
 
       setTimeout(() => {
-        navigateToPath('/dev/warm/finance-docs-forecasts');
+        navigateToPath('/warm/finance-docs-forecasts');
       }, 900);
     } catch (error) {
       const { message } = error as AxiosError;

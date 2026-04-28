@@ -2,6 +2,7 @@ import { logger } from '../lib/logger.ts';
 import type { OnboardingWizardRepository } from '../repository/onboarding-wizard.ts';
 import type { NewOnboardingApplication, OnboardingApplication, User } from '../schema/schema.ts';
 import type { OnboardingStep1Body, OnboardingStep2Body, OnboardingStep3Body, WarmLeadDetailsBody } from '../web/validator/onboarding.js';
+import type { BusinessService } from './business.ts';
 import type { HubSpotService } from './hubspot.ts';
 import type { UserService } from './user.ts';
 
@@ -12,11 +13,18 @@ export class OnboardingWizardService {
 	private repo: OnboardingWizardRepository;
 	private hubSpotService: HubSpotService;
 	private userService: UserService;
+	private businessService: BusinessService;
 
-	constructor(onboardingWizardRepo: OnboardingWizardRepository, hubSpotService: HubSpotService, userService: UserService) {
+	constructor(
+		onboardingWizardRepo: OnboardingWizardRepository,
+		hubSpotService: HubSpotService,
+		userService: UserService,
+		businessService: BusinessService,
+	) {
 		this.repo = onboardingWizardRepo;
 		this.hubSpotService = hubSpotService;
 		this.userService = userService;
+		this.businessService = businessService;
 	}
 
 	/**
@@ -343,6 +351,20 @@ export class OnboardingWizardService {
 				const [created] = await this.repo.create({ user_id: userId, ...update });
 				if (!created) throw new Error('Failed to create warm-lead application');
 				savedApplication = created;
+			}
+
+			// Provision Google Drive folder structure + business record (non-fatal).
+			// Uses legal_name as the company name and incorporation_state as headquarters.
+			// accounting_software defaults to 'other' since warm leads haven't specified it yet.
+			try {
+				await this.businessService.upsertBusiness(userId, {
+					legal_name: body.legal_name,
+					headquarters: body.incorporation_state,
+					accounting_software: 'other',
+				});
+				logger.info({ userId }, 'Business and Google Drive folders provisioned for warm lead');
+			} catch (bizErr) {
+				logger.error({ bizErr, userId }, 'Failed to provision business/Drive folders for warm lead (non-fatal)');
 			}
 
 			// Push fields back to HubSpot. Non-fatal: a failure here does not roll back

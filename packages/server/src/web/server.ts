@@ -120,8 +120,8 @@ export class Server {
 		const teamService = new TeamService(teamRepo, userService);
 		const financialWizardService = new FinancialWizardService(financialWizardRepo, assetService);
 		const hubSpotService = new HubSpotService(hubspotContactWebhookRepo, hubspotDealWebhookRepo, userService);
-		const onboardingWizardService = new OnboardingWizardService(onboardingWizardRepo, hubSpotService, userService);
 		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService, financialWizardService);
+		const onboardingWizardService = new OnboardingWizardService(onboardingWizardRepo, hubSpotService, userService, businessService);
 		const emailService = new EmailService(emailRepo);
 
 		// Setup controllers
