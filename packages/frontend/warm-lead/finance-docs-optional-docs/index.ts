@@ -20,10 +20,31 @@ import {
 } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
-const ALLOWED_FILE_TYPES = [
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-];
+const FILE_TYPES = {
+  pdf: 'application/pdf',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ppt: 'application/vnd.ms-powerpoint',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+} as const;
+
+const DOC_RULES: Record<
+  'instore_velocity_reports' | 'business_plan',
+  { allowed: string[]; message: string; placeholder: string }
+> = {
+  instore_velocity_reports: {
+    allowed: [FILE_TYPES.doc, FILE_TYPES.docx, FILE_TYPES.pdf, FILE_TYPES.xls, FILE_TYPES.xlsx],
+    message: 'Invalid file type. Allowed: WORD, PDF, or EXCEL',
+    placeholder: 'Supported formats: WORD, PDF, EXCEL',
+  },
+  business_plan: {
+    allowed: [FILE_TYPES.pdf, FILE_TYPES.ppt, FILE_TYPES.pptx],
+    message: 'Invalid file type. Allowed: PPT or PDF',
+    placeholder: 'Supported formats: PPT, PDF',
+  },
+};
 
 const initOptionalDocsPage = async () => {
   constructNavBarClasses();
@@ -94,13 +115,12 @@ const initOptionalDocsPage = async () => {
   }
 
   const updateHelperTexts = (progress: FinancialWizardProgressResponse | undefined) => {
-    const placeholder = 'Supported formats: sheets, excel';
     instoreVelocityHelpText.textContent =
       progress?.team_ownership?.find((d) => d.document_type === 'instore_velocity_reports')
-        ?.asset_name || placeholder;
+        ?.asset_name || DOC_RULES.instore_velocity_reports.placeholder;
     businessPlanHelpText.textContent =
       progress?.team_ownership?.find((d) => d.document_type === 'business_plan')?.asset_name ||
-      placeholder;
+      DOC_RULES.business_plan.placeholder;
   };
 
   let financialProgress: FinancialWizardProgressResponse | undefined;
@@ -115,11 +135,16 @@ const initOptionalDocsPage = async () => {
 
   await loadFinancialProgress();
 
-  const updateHelperText = (input: HTMLInputElement, helperText: HTMLElement) => {
+  const updateHelperText = (
+    input: HTMLInputElement,
+    helperText: HTMLElement,
+    documentType: 'instore_velocity_reports' | 'business_plan'
+  ) => {
     const file = input.files?.[0];
     if (!file) return;
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      helperText.textContent = 'Invalid file type. Please upload Excel (.xls or .xlsx) files only';
+    const rule = DOC_RULES[documentType];
+    if (!rule.allowed.includes(file.type)) {
+      helperText.textContent = rule.message;
       helperText.classList.add('is-error');
     } else {
       helperText.textContent = file.name;
@@ -127,7 +152,12 @@ const initOptionalDocsPage = async () => {
     }
   };
 
-  const setupDropZone = (box: HTMLElement, input: HTMLInputElement, helperText: HTMLElement) => {
+  const setupDropZone = (
+    box: HTMLElement,
+    input: HTMLInputElement,
+    helperText: HTMLElement,
+    documentType: 'instore_velocity_reports' | 'business_plan'
+  ) => {
     box.addEventListener('click', () => input.click());
     box.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -139,15 +169,20 @@ const initOptionalDocsPage = async () => {
       box.classList.remove('drag');
       if (e.dataTransfer?.files.length) {
         input.files = e.dataTransfer.files;
-        updateHelperText(input, helperText);
+        updateHelperText(input, helperText, documentType);
         input.dispatchEvent(new Event('change', { bubbles: true }));
       }
     });
-    input.addEventListener('change', () => updateHelperText(input, helperText));
+    input.addEventListener('change', () => updateHelperText(input, helperText, documentType));
   };
 
-  setupDropZone(instoreVelocityBox, instoreVelocityInput, instoreVelocityHelpText);
-  setupDropZone(businessPlanBox, businessPlanInput, businessPlanHelpText);
+  setupDropZone(
+    instoreVelocityBox,
+    instoreVelocityInput,
+    instoreVelocityHelpText,
+    'instore_velocity_reports'
+  );
+  setupDropZone(businessPlanBox, businessPlanInput, businessPlanHelpText, 'business_plan');
 
   const handleDeleteDocument = async (
     documentType: FinancialDocumentBody['document_type'],
@@ -190,6 +225,16 @@ const initOptionalDocsPage = async () => {
     file: File,
     documentType: FinancialDocumentBody['document_type']
   ): Promise<void> => {
+    const rule =
+      documentType === 'instore_velocity_reports'
+        ? DOC_RULES.instore_velocity_reports
+        : documentType === 'business_plan'
+          ? DOC_RULES.business_plan
+          : undefined;
+    if (rule && !rule.allowed.includes(file.type)) {
+      throw new Error(rule.message);
+    }
+
     const assetPayload: CreateAssetBody = {
       fileName: file.name,
       contentType: file.type,

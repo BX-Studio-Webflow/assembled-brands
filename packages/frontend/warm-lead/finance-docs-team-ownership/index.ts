@@ -20,10 +20,29 @@ import {
 } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
-const ALLOWED_FILE_TYPES = [
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-];
+const FILE_TYPES = {
+  pdf: 'application/pdf',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+} as const;
+
+const DOC_RULES: Record<
+  'management_bios' | 'cap_table',
+  { allowed: string[]; message: string; placeholder: string }
+> = {
+  management_bios: {
+    allowed: [FILE_TYPES.doc, FILE_TYPES.docx, FILE_TYPES.pdf, FILE_TYPES.xls, FILE_TYPES.xlsx],
+    message: 'Invalid file type. Allowed: WORD, PDF, or EXCEL',
+    placeholder: 'Supported formats: WORD, PDF, EXCEL',
+  },
+  cap_table: {
+    allowed: [FILE_TYPES.pdf, FILE_TYPES.xls, FILE_TYPES.xlsx],
+    message: 'Invalid file type. Allowed: PDF or EXCEL',
+    placeholder: 'Supported formats: PDF, EXCEL',
+  },
+};
 
 const initTeamOwnershipPage = async () => {
   constructNavBarClasses();
@@ -94,13 +113,12 @@ const initTeamOwnershipPage = async () => {
   }
 
   const updateHelperTexts = (progress: FinancialWizardProgressResponse | undefined) => {
-    const placeholder = 'Supported formats: sheets, excel';
     managementBiosHelpText.textContent =
       progress?.team_ownership?.find((d) => d.document_type === 'management_bios')?.asset_name ||
-      placeholder;
+      DOC_RULES.management_bios.placeholder;
     capitalisationTableHelpText.textContent =
       progress?.team_ownership?.find((d) => d.document_type === 'cap_table')?.asset_name ||
-      placeholder;
+      DOC_RULES.cap_table.placeholder;
   };
 
   let financialProgress: FinancialWizardProgressResponse | undefined;
@@ -115,11 +133,16 @@ const initTeamOwnershipPage = async () => {
 
   await loadFinancialProgress();
 
-  const updateHelperText = (input: HTMLInputElement, helperText: HTMLElement) => {
+  const updateHelperText = (
+    input: HTMLInputElement,
+    helperText: HTMLElement,
+    documentType: 'management_bios' | 'cap_table'
+  ) => {
     const file = input.files?.[0];
     if (!file) return;
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      helperText.textContent = 'Invalid file type. Please upload Excel (.xls or .xlsx) files only';
+    const rule = DOC_RULES[documentType];
+    if (!rule.allowed.includes(file.type)) {
+      helperText.textContent = rule.message;
       helperText.classList.add('is-error');
     } else {
       helperText.textContent = file.name;
@@ -127,7 +150,12 @@ const initTeamOwnershipPage = async () => {
     }
   };
 
-  const setupDropZone = (box: HTMLElement, input: HTMLInputElement, helperText: HTMLElement) => {
+  const setupDropZone = (
+    box: HTMLElement,
+    input: HTMLInputElement,
+    helperText: HTMLElement,
+    documentType: 'management_bios' | 'cap_table'
+  ) => {
     box.addEventListener('click', () => input.click());
     box.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -139,15 +167,20 @@ const initTeamOwnershipPage = async () => {
       box.classList.remove('drag');
       if (e.dataTransfer?.files.length) {
         input.files = e.dataTransfer.files;
-        updateHelperText(input, helperText);
+        updateHelperText(input, helperText, documentType);
         input.dispatchEvent(new Event('change', { bubbles: true }));
       }
     });
-    input.addEventListener('change', () => updateHelperText(input, helperText));
+    input.addEventListener('change', () => updateHelperText(input, helperText, documentType));
   };
 
-  setupDropZone(managementBiosBox, managementBiosInput, managementBiosHelpText);
-  setupDropZone(capitalisationTableBox, capitalisationTableInput, capitalisationTableHelpText);
+  setupDropZone(managementBiosBox, managementBiosInput, managementBiosHelpText, 'management_bios');
+  setupDropZone(
+    capitalisationTableBox,
+    capitalisationTableInput,
+    capitalisationTableHelpText,
+    'cap_table'
+  );
 
   const handleDeleteDocument = async (
     documentType: FinancialDocumentBody['document_type'],
@@ -190,6 +223,16 @@ const initTeamOwnershipPage = async () => {
     file: File,
     documentType: FinancialDocumentBody['document_type']
   ): Promise<void> => {
+    const rule =
+      documentType === 'management_bios'
+        ? DOC_RULES.management_bios
+        : documentType === 'cap_table'
+          ? DOC_RULES.cap_table
+          : undefined;
+    if (rule && !rule.allowed.includes(file.type)) {
+      throw new Error(rule.message);
+    }
+
     const assetPayload: CreateAssetBody = {
       fileName: file.name,
       contentType: file.type,
