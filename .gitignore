@@ -27,5 +27,6 @@ typings/
 # Wrangler local config
 wrangler.jsonc
 packages/server/wrangler.jsonc
+packages/server/worker-configuration.d.ts
 
 
