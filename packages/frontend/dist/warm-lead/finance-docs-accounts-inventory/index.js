@@ -2668,15 +2668,6 @@ var logoutUser = () => {
   localStorage.removeItem("user");
   navigateToPath("/login?error=logged-out");
 };
-var getUserRole = () => {
-  const admin = localStorage.getItem("user");
-  const user = admin && JSON.parse(admin);
-  return user && user?.role;
-};
-var isAdmin = () => {
-  const role = getUserRole();
-  return role === "admin";
-};
 
 // shared/services/axios/AxiosRequestIntrceptorConfigCallback.ts
 var AxiosRequestIntrceptorConfigCallback = (config) => {
@@ -2795,12 +2786,6 @@ var apiDeleteFinancialDocument = (id) => {
   return ApiService_default.fetchDataWithAxios({
     url: `/financial-wizard/document/${id}`,
     method: "delete"
-  });
-};
-var apiAdminGetApplications = () => {
-  return ApiService_default.fetchDataWithAxios({
-    url: `/financial-wizard/applications`,
-    method: "get"
   });
 };
 
@@ -2960,158 +2945,6 @@ var constructNavBarClasses = () => {
     });
   }
 };
-var constructModalFunctionality = () => {
-  const modalWrapper = queryElement('[dev-target="modal-wrapper"]');
-  const modalImage = queryElement('[dev-target="modal-image"]');
-  const modalClose = queryElement('[dev-target="close-button"]');
-  const modalTitle = queryElement('[dev-target="modal-title"]');
-  if (!modalClose) {
-    console.error('Ensure [dev-target="close-button"] is present.');
-    return;
-  }
-  if (!modalTitle) {
-    console.error('Ensure [dev-target="modal-title"] is present.');
-    return;
-  }
-  if (!modalWrapper) {
-    console.error('Ensure [dev-target="modal-wrapper"] is present.');
-    return;
-  }
-  if (!modalImage) {
-    console.error('Ensure [dev-target="modal-image"] is present.');
-    return;
-  }
-  const { pathname } = window.location;
-  modalClose.addEventListener("click", () => {
-    modalWrapper.classList.add("hide");
-  });
-  const modalData = {
-    "monthly-balance-sheet": {
-      title: "Monthly Balance Sheets ** Last 2 years of monthly balance sheets",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "monthly-income-statement": {
-      title: "Monthly Income Statements ** Last 2 years of monthly income statements",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "monthly-income-forecast": {
-      title: "Monthly Income Forecast ** 12-month income forecast projection",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "monthly-inventory-reports": {
-      title: "Monthly Inventory Reports ** Please provide inventory reports for at least the last 24 months, or longer if possible",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "ar-aging-reports": {
-      title: "Accounts Receivable Aging Reports ** Please provide AR aging reports for the last 24 months, or longer if available",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "ap-aging-reports": {
-      title: "Accounts Payable Aging Report ** Please provide the accounts payable aging report for the next 24 months, or longer if possible",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "repeat-customer-reports": {
-      title: "Shopify Repeat Customer Reports ** Please provide reports on repeat customers for at least the last 24 months, or longer if possible",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "monthly-sales-reports": {
-      title: "Shopify Monthly Sales Reports ** Please provide monthly sales reports from Shopify for the last 24 months, or longer if available",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "management-bios": {
-      title: "Management Bios ** Please upload the management bios for our team",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "investor-deck": {
-      title: "Investor Deck ** Please provide the most recent investor deck",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "cap-table": {
-      title: "Capitalization Table ** Please provide the most recent capitalization table",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    }
-  };
-  const showModal = (key) => {
-    const data = modalData[key];
-    modalWrapper.classList.toggle("hide");
-    modalImage.src = data.imageUrl;
-    modalTitle.textContent = data.title;
-  };
-  if (pathname.includes("/dev/finance-docs-financial-reports") || pathname.includes("/finance-docs-financial-reports")) {
-    const monthly_balance_sheet = queryElement('[dev-target="monthly-balance-sheet"]');
-    const monthly_income_statement = queryElement(
-      '[dev-target="monthly-income-statement"]'
-    );
-    const monthly_income_forecast = queryElement(
-      '[dev-target="monthly-income-forecast"]'
-    );
-    monthly_balance_sheet?.addEventListener("click", () => showModal("monthly-balance-sheet"));
-    monthly_income_statement?.addEventListener(
-      "click",
-      () => showModal("monthly-income-statement")
-    );
-    monthly_income_forecast?.addEventListener("click", () => showModal("monthly-income-forecast"));
-  }
-  if (pathname.includes("/dev/finance-docs-accounts-and-inventory") || pathname.includes("/finance-docs-accounts-and-inventory")) {
-    const monthly_inventory_reports = queryElement(
-      '[dev-target="monthly-inventory-reports"]'
-    );
-    const ar_aging_reports = queryElement('[dev-target="ar-aging-reports"]');
-    const ap_aging_reports = queryElement('[dev-target="ap-aging-reports"]');
-    monthly_inventory_reports?.addEventListener(
-      "click",
-      () => showModal("monthly-inventory-reports")
-    );
-    ar_aging_reports?.addEventListener("click", () => showModal("ar-aging-reports"));
-    ap_aging_reports?.addEventListener("click", () => showModal("ap-aging-reports"));
-  }
-  if (pathname.includes("/dev/finance-docs-ecommerce-performance") || pathname.includes("/finance-docs-ecommerce-performance")) {
-    const repeat_customer_reports = queryElement(
-      '[dev-target="repeat-customer-reports"]'
-    );
-    const monthly_sales_reports = queryElement('[dev-target="monthly-sales-reports"]');
-    repeat_customer_reports?.addEventListener("click", () => showModal("repeat-customer-reports"));
-    monthly_sales_reports?.addEventListener("click", () => showModal("monthly-sales-reports"));
-  }
-  if (pathname.includes("/dev/finance-docs-team-and-ownership") || pathname.includes("/finance-docs-team-and-ownership")) {
-    const management_bios = queryElement('[dev-target="management-bios"]');
-    const investor_deck = queryElement('[dev-target="investor-deck"]');
-    const cap_table = queryElement('[dev-target="cap-table"]');
-    management_bios?.addEventListener("click", () => showModal("management-bios"));
-    investor_deck?.addEventListener("click", () => showModal("investor-deck"));
-    cap_table?.addEventListener("click", () => showModal("cap-table"));
-  }
-};
-var constructAdminSelect = async (onChangeCallback) => {
-  const admin = isAdmin();
-  if (admin) {
-    const selectWrapper = queryElement('[dev-target="admin-select-wrapper"]');
-    const select = queryElement('[dev-target="admin-select"]');
-    selectWrapper?.classList.remove("hide");
-    if (!selectWrapper || !select) {
-      console.error(
-        'Ensure [dev-target="admin-select"] and  [dev-target="admin-select-wrapper"] is present.'
-      );
-      return;
-    }
-    const applications = await apiAdminGetApplications();
-    select.innerHTML = "";
-    applications.forEach((app) => {
-      const name = app.first_name || "" + app.last_name || "";
-      const option = document.createElement("option");
-      option.value = app.id.toString();
-      option.textContent = `${name || app.email}`;
-      select.appendChild(option);
-    });
-    select.addEventListener("change", async (e) => {
-      const target = e.target;
-      const { value } = target;
-      if (onChangeCallback) {
-        await onChangeCallback(value);
-      }
-    });
-  }
-};
 var fileToBase64 = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();
   reader.onload = () => {
@@ -3190,19 +3023,18 @@ var initCollapsibleSidebar = () => {
 };
 
 // warm-lead/finance-docs-accounts-inventory/index.ts
+var ALLOWED_FILE_TYPES = [
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+];
 var initFinanceDocsAccountsInventoryPage = async () => {
   constructNavBarClasses();
   processMiddleware();
   initCollapsibleSidebar();
-  constructModalFunctionality();
-  const ALLOWED_FILE_TYPES = [
-    "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-  ];
   const form = document.querySelector('[dev-target="accounts-inventory-reports-form"]');
   if (!form) {
     console.error(
-      'Accounts & Inventory form not found. Element: [dev-target="accounts-inventory-reports-form"] not found'
+      'Accounts & Inventory form not found: [dev-target="accounts-inventory-reports-form"]'
     );
     return;
   }
@@ -3211,8 +3043,8 @@ var initFinanceDocsAccountsInventoryPage = async () => {
     form
   );
   const monthlyInventoryInput = queryElement(
-    '[dev-target="monthly-inventory-input"]',
-    form
+    '[dev-target="file-input"]',
+    monthlyInventoryBox ?? form
   );
   const monthlyInventoryHelpText = queryElement(
     '[dev-target="monthly-inventory-helper"]',
@@ -3223,8 +3055,8 @@ var initFinanceDocsAccountsInventoryPage = async () => {
     form
   );
   const accountsReceivableInput = queryElement(
-    '[dev-target="accounts-receivable-input"]',
-    form
+    '[dev-target="file-input"]',
+    accountsReceivableBox ?? form
   );
   const accountsReceivableHelpText = queryElement(
     '[dev-target="accounts-receivable-helper"]',
@@ -3235,235 +3067,116 @@ var initFinanceDocsAccountsInventoryPage = async () => {
     form
   );
   const accountsPayableInput = queryElement(
-    '[dev-target="accounts-payable-input"]',
-    form
+    '[dev-target="file-input"]',
+    accountsPayableBox ?? form
   );
   const accountsPayableHelpText = queryElement(
     '[dev-target="accounts-payable-helper"]',
     form
   );
   const submitButton = queryElement('[dev-target="submit-button"]', form);
-  if (!monthlyInventoryBox || !monthlyInventoryInput || !monthlyInventoryHelpText) {
-    console.error(
-      'Ensure [dev-target="monthly-inventory-upload-box"] and [dev-target="monthly-inventory-input"] and [dev-target="monthly-inventory-helper"] are present.'
-    );
-    return;
+  const requiredElements = [
+    ['[dev-target="monthly-inventory-upload-box"]', monthlyInventoryBox],
+    ['[dev-target="file-input"] inside monthly-inventory-upload-box', monthlyInventoryInput],
+    ['[dev-target="monthly-inventory-helper"]', monthlyInventoryHelpText],
+    ['[dev-target="accounts-receivable-upload-box"]', accountsReceivableBox],
+    ['[dev-target="file-input"] inside accounts-receivable-upload-box', accountsReceivableInput],
+    ['[dev-target="accounts-receivable-helper"]', accountsReceivableHelpText],
+    ['[dev-target="accounts-payable-upload-box"]', accountsPayableBox],
+    ['[dev-target="file-input"] inside accounts-payable-upload-box', accountsPayableInput],
+    ['[dev-target="accounts-payable-helper"]', accountsPayableHelpText],
+    ['[dev-target="submit-button"]', submitButton]
+  ];
+  let missingElements = false;
+  for (const [selector, el] of requiredElements) {
+    if (!el) {
+      console.error(`Missing required element: ${selector}`);
+      missingElements = true;
+    }
   }
-  if (!accountsReceivableBox) {
-    console.error('Ensure [dev-target="accounts-receivable-upload-box"] is present.');
-    return;
-  }
-  if (!accountsReceivableInput) {
-    console.error('Ensure [dev-target="accounts-receivable-input"] is present.');
-    return;
-  }
-  if (!accountsReceivableHelpText) {
-    console.error('Ensure [dev-target="accounts-receivable-helper"] is present.');
-    return;
-  }
-  if (!accountsPayableBox) {
-    console.error('Ensure [dev-target="accounts-payable-upload-box"] is present.');
-    return;
-  }
-  if (!accountsPayableInput) {
-    console.error('Ensure [dev-target="accounts-payable-input"] is present.');
-    return;
-  }
-  if (!accountsPayableHelpText) {
-    console.error('Ensure [dev-target="accounts-payable-helper"] is present.');
-    return;
-  }
-  if (!submitButton) {
-    console.error('Ensure [dev-target="submit-button"] is present.');
+  if (missingElements || !monthlyInventoryBox || !monthlyInventoryInput || !monthlyInventoryHelpText || !accountsReceivableBox || !accountsReceivableInput || !accountsReceivableHelpText || !accountsPayableBox || !accountsPayableInput || !accountsPayableHelpText || !submitButton) {
     return;
   }
   const updateHelperTexts = (progress) => {
-    if (progress?.accounts_inventory) {
-      const monthlyInventory = progress.accounts_inventory.find(
-        (document2) => document2.document_type === "monthly_inventory_report"
-      );
-      if (monthlyInventory) {
-        monthlyInventoryHelpText.textContent = monthlyInventory.asset_name || "";
-      } else {
-        monthlyInventoryHelpText.textContent = "Supported formats: sheets. xcel";
-      }
-      const accountsReceivable = progress.accounts_inventory.find(
-        (document2) => document2.document_type === "accounts_receivable_aging"
-      );
-      if (accountsReceivable) {
-        accountsReceivableHelpText.textContent = accountsReceivable.asset_name || "";
-      } else {
-        accountsReceivableHelpText.textContent = "Supported formats: sheets. xcel";
-      }
-      const accountsPayable = progress.accounts_inventory.find(
-        (document2) => document2.document_type === "accounts_payable_aging"
-      );
-      if (accountsPayable) {
-        accountsPayableHelpText.textContent = accountsPayable.asset_name || "";
-      } else {
-        accountsPayableHelpText.textContent = "Supported formats: sheets. xcel";
-      }
-    } else {
-      monthlyInventoryHelpText.textContent = "Supported formats: sheets. xcel";
-      accountsReceivableHelpText.textContent = "Supported formats: sheets. xcel";
-      accountsPayableHelpText.textContent = "Supported formats: sheets. xcel";
-    }
+    const placeholder = "Supported formats: sheets, excel";
+    monthlyInventoryHelpText.textContent = progress?.accounts_inventory?.find((d) => d.document_type === "monthly_inventory_report")?.asset_name || placeholder;
+    accountsReceivableHelpText.textContent = progress?.accounts_inventory?.find((d) => d.document_type === "accounts_receivable_aging")?.asset_name || placeholder;
+    accountsPayableHelpText.textContent = progress?.accounts_inventory?.find((d) => d.document_type === "accounts_payable_aging")?.asset_name || placeholder;
   };
   let financialProgress;
-  const loadFinancialProgress = async (userId) => {
-    const result = await checkProgressUserAndTeams(userId);
+  const loadFinancialProgress = async () => {
+    const result = await checkProgressUserAndTeams();
     financialProgress = result?.financialProgress;
     updateHelperTexts(financialProgress);
   };
-  const getAccountsInventoryDoc = (documentType) => {
-    if (!financialProgress?.accounts_inventory) return void 0;
-    return financialProgress.accounts_inventory.find((doc) => doc.document_type === documentType);
-  };
+  const getDoc = (documentType) => financialProgress?.accounts_inventory?.find((doc) => doc.document_type === documentType);
   await loadFinancialProgress();
-  constructAdminSelect(loadFinancialProgress);
   const updateHelperText = (input, helperText) => {
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-        input.value = "";
-        helperText.textContent = "Invalid file type. Please upload Excel (.xls or .xlsx) files only";
-        helperText.classList.add("is-error");
-        return;
-      }
-      helperText.textContent = file.name || "Supported formats: sheets. xcel";
-      helperText.classList.remove("is-error");
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      helperText.textContent = "Invalid file type. Please upload Excel (.xls or .xlsx) files only";
+      helperText.classList.add("is-error");
     } else {
-      helperText.textContent = "Supported formats: sheets. xcel";
+      helperText.textContent = file.name;
       helperText.classList.remove("is-error");
     }
   };
-  if (monthlyInventoryBox && monthlyInventoryInput && monthlyInventoryHelpText) {
-    monthlyInventoryBox.addEventListener("click", () => monthlyInventoryInput.click());
-    monthlyInventoryBox.addEventListener("dragover", (e) => {
+  const setupDropZone = (box, input, helperText) => {
+    box.addEventListener("click", () => input.click());
+    box.addEventListener("dragover", (e) => {
       e.preventDefault();
-      monthlyInventoryBox.classList.add("drag");
+      box.classList.add("drag");
     });
-    monthlyInventoryBox.addEventListener("dragleave", () => {
-      monthlyInventoryBox.classList.remove("drag");
-    });
-    monthlyInventoryBox.addEventListener("drop", (e) => {
+    box.addEventListener("dragleave", () => box.classList.remove("drag"));
+    box.addEventListener("drop", (e) => {
       e.preventDefault();
-      monthlyInventoryBox.classList.remove("drag");
-      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-        monthlyInventoryInput.files = e.dataTransfer.files;
-        updateHelperText(monthlyInventoryInput, monthlyInventoryHelpText);
-        monthlyInventoryInput.dispatchEvent(new Event("change", { bubbles: true }));
+      box.classList.remove("drag");
+      if (e.dataTransfer?.files.length) {
+        input.files = e.dataTransfer.files;
+        updateHelperText(input, helperText);
+        input.dispatchEvent(new Event("change", { bubbles: true }));
       }
     });
-    monthlyInventoryInput.addEventListener("change", () => {
-      updateHelperText(monthlyInventoryInput, monthlyInventoryHelpText);
-    });
-  }
-  if (accountsReceivableBox && accountsReceivableInput && accountsReceivableHelpText) {
-    accountsReceivableBox.addEventListener("click", () => accountsReceivableInput.click());
-    accountsReceivableBox.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      accountsReceivableBox.classList.add("drag");
-    });
-    accountsReceivableBox.addEventListener("dragleave", () => {
-      accountsReceivableBox.classList.remove("drag");
-    });
-    accountsReceivableBox.addEventListener("drop", (e) => {
-      e.preventDefault();
-      accountsReceivableBox.classList.remove("drag");
-      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-        accountsReceivableInput.files = e.dataTransfer.files;
-        updateHelperText(accountsReceivableInput, accountsReceivableHelpText);
-        accountsReceivableInput.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-    });
-    accountsReceivableInput.addEventListener("change", () => {
-      updateHelperText(accountsReceivableInput, accountsReceivableHelpText);
-    });
-  }
-  if (accountsPayableBox && accountsPayableInput && accountsPayableHelpText) {
-    accountsPayableBox.addEventListener("click", () => accountsPayableInput.click());
-    accountsPayableBox.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      accountsPayableBox.classList.add("drag");
-    });
-    accountsPayableBox.addEventListener("dragleave", () => {
-      accountsPayableBox.classList.remove("drag");
-    });
-    accountsPayableBox.addEventListener("drop", (e) => {
-      e.preventDefault();
-      accountsPayableBox.classList.remove("drag");
-      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-        accountsPayableInput.files = e.dataTransfer.files;
-        updateHelperText(accountsPayableInput, accountsPayableHelpText);
-        accountsPayableInput.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-    });
-    accountsPayableInput.addEventListener("change", () => {
-      updateHelperText(accountsPayableInput, accountsPayableHelpText);
-    });
-  }
-  const monthlyInventoryTrash = queryElement(
-    '[dev-target="monthly-inventory-trash-icon"]',
-    form
-  );
-  const accountsReceivableTrash = queryElement(
-    '[dev-target="accounts-receivable-trash-icon"]',
-    form
-  );
-  const accountsPayableTrash = queryElement(
-    '[dev-target="accounts-payable-trash-icon"]',
-    form
-  );
+    input.addEventListener("change", () => updateHelperText(input, helperText));
+  };
+  setupDropZone(monthlyInventoryBox, monthlyInventoryInput, monthlyInventoryHelpText);
+  setupDropZone(accountsReceivableBox, accountsReceivableInput, accountsReceivableHelpText);
+  setupDropZone(accountsPayableBox, accountsPayableInput, accountsPayableHelpText);
   const handleDeleteDocument = async (documentType, helperText) => {
-    const doc = getAccountsInventoryDoc(documentType);
+    const doc = getDoc(documentType);
     if (!doc) {
-      if (helperText) {
-        helperText.textContent = "Supported formats: sheets. xcel";
-        helperText.classList.remove("is-error");
-      }
+      helperText.textContent = "Supported formats: sheets, excel";
+      helperText.classList.remove("is-error");
       return;
     }
-    if (helperText) {
-      helperText.classList.remove("is-error");
-      helperText.textContent = "Deleting...";
-    }
+    helperText.classList.remove("is-error");
+    helperText.textContent = "Deleting\u2026";
     try {
       await apiDeleteFinancialDocument(doc.id);
       await loadFinancialProgress();
     } catch (error) {
       console.error(error);
-      if (helperText) {
-        helperText.classList.add("is-error");
-        helperText.textContent = "Failed to delete file. Please try again.";
-      }
+      helperText.classList.add("is-error");
+      helperText.textContent = "Failed to delete file. Please try again.";
     }
   };
-  if (monthlyInventoryTrash) {
-    monthlyInventoryTrash.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleDeleteDocument("monthly_inventory_report", monthlyInventoryHelpText);
-    });
-  }
-  if (accountsReceivableTrash) {
-    accountsReceivableTrash.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleDeleteDocument("accounts_receivable_aging", accountsReceivableHelpText);
-    });
-  }
-  if (accountsPayableTrash) {
-    accountsPayableTrash.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleDeleteDocument("accounts_payable_aging", accountsPayableHelpText);
-    });
+  const trashHandlers = [
+    [monthlyInventoryBox, "monthly_inventory_report", monthlyInventoryHelpText],
+    [accountsReceivableBox, "accounts_receivable_aging", accountsReceivableHelpText],
+    [accountsPayableBox, "accounts_payable_aging", accountsPayableHelpText]
+  ];
+  for (const [box, documentType, helperText] of trashHandlers) {
+    const trash = queryElement('[dev-target="trash-icon"]', box);
+    if (trash) {
+      trash.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        void handleDeleteDocument(documentType, helperText);
+      });
+    }
   }
   const uploadFile = async (file, documentType) => {
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      throw new Error("Invalid file type. Please upload Excel (.xls or .xlsx) files only");
-    }
     const assetPayload = {
       fileName: file.name,
       contentType: file.type,
@@ -3472,18 +3185,10 @@ var initFinanceDocsAccountsInventoryPage = async () => {
       duration: 0
     };
     const assetResponse = await apiCreateAssetPresignedUrl(assetPayload);
-    const assetId = assetResponse.asset.id;
-    const { presignedUrl } = assetResponse;
-    if (!presignedUrl) {
-      throw new Error("Presigned URL not received from server");
-    }
+    const { presignedUrl, asset } = assetResponse;
+    if (!presignedUrl) throw new Error("Presigned URL not received from server");
     await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.upload.addEventListener("progress", (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.round(event.loaded / event.total * 100);
-        }
-      });
       xhr.addEventListener("load", () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve();
@@ -3491,80 +3196,45 @@ var initFinanceDocsAccountsInventoryPage = async () => {
           reject(new Error("Failed to upload file to S3"));
         }
       });
-      xhr.addEventListener("error", (error) => {
-        console.error(error);
-        reject(new Error("Network error during upload"));
-      });
+      xhr.addEventListener("error", () => reject(new Error("Network error during upload")));
       xhr.open("PUT", presignedUrl);
       xhr.setRequestHeader("Content-Type", file.type);
       xhr.send(file);
     });
-    const base64 = await fileToBase64(file);
+    const base64Data = await fileToBase64(file);
     const documentPayload = {
       page: "accounts-inventory",
       document_type: documentType,
-      asset_id: assetId,
-      file_data: base64,
+      asset_id: asset.id,
       file_name: file.name,
-      file_mime_type: file.type
+      file_mime_type: file.type,
+      file_data: base64Data
     };
     await apiUploadFinancialDocument(documentPayload);
   };
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     event.stopPropagation();
-    const resetErrors = () => {
-      monthlyInventoryBox?.classList.remove("is-error");
-      accountsReceivableBox?.classList.remove("is-error");
-      accountsPayableBox?.classList.remove("is-error");
-      monthlyInventoryHelpText?.classList.remove("is-error");
-      accountsReceivableHelpText?.classList.remove("is-error");
-      accountsPayableHelpText?.classList.remove("is-error");
-      submitButton.classList.remove("is-error");
-      submitButton.value = "UPLOAD DOCUMENTS";
-    };
-    monthlyInventoryInput?.addEventListener("change", resetErrors, { once: true });
-    accountsReceivableInput?.addEventListener("change", resetErrors, { once: true });
-    accountsPayableInput?.addEventListener("change", resetErrors, { once: true });
+    submitButton.classList.remove("is-error", "is-success");
+    submitButton.value = "UPLOAD DOCUMENTS";
     const filesToUpload = [];
-    if (monthlyInventoryInput?.files && monthlyInventoryInput.files[0]) {
-      const file = monthlyInventoryInput.files[0];
-      if (ALLOWED_FILE_TYPES.includes(file.type)) {
-        filesToUpload.push({
-          file,
-          documentType: "monthly_inventory_report"
-        });
-      } else {
-        monthlyInventoryHelpText?.classList.add("is-error");
-      }
+    if (monthlyInventoryInput.files?.[0]) {
+      filesToUpload.push({
+        file: monthlyInventoryInput.files[0],
+        documentType: "monthly_inventory_report"
+      });
     }
-    if (accountsReceivableInput?.files && accountsReceivableInput.files[0]) {
-      const file = accountsReceivableInput.files[0];
-      if (ALLOWED_FILE_TYPES.includes(file.type)) {
-        filesToUpload.push({
-          file,
-          documentType: "accounts_receivable_aging"
-        });
-      } else {
-        accountsReceivableHelpText?.classList.add("is-error");
-      }
+    if (accountsReceivableInput.files?.[0]) {
+      filesToUpload.push({
+        file: accountsReceivableInput.files[0],
+        documentType: "accounts_receivable_aging"
+      });
     }
-    if (accountsPayableInput?.files && accountsPayableInput.files[0]) {
-      const file = accountsPayableInput.files[0];
-      if (ALLOWED_FILE_TYPES.includes(file.type)) {
-        filesToUpload.push({
-          file,
-          documentType: "accounts_payable_aging"
-        });
-      } else {
-        accountsPayableHelpText?.classList.add("is-error");
-      }
-    }
-    const hasInvalidFiles = monthlyInventoryInput?.files && monthlyInventoryInput.files[0] && !ALLOWED_FILE_TYPES.includes(monthlyInventoryInput.files[0].type) || accountsReceivableInput?.files && accountsReceivableInput.files[0] && !ALLOWED_FILE_TYPES.includes(accountsReceivableInput.files[0].type) || accountsPayableInput?.files && accountsPayableInput.files[0] && !ALLOWED_FILE_TYPES.includes(accountsPayableInput.files[0].type);
-    if (hasInvalidFiles) {
-      submitButton.classList.add("is-error");
-      submitButton.value = "Please upload only Excel (.xls or .xlsx) files";
-      return;
+    if (accountsPayableInput.files?.[0]) {
+      filesToUpload.push({
+        file: accountsPayableInput.files[0],
+        documentType: "accounts_payable_aging"
+      });
     }
     if (filesToUpload.length === 0) {
       submitButton.classList.add("is-error");
@@ -3573,36 +3243,24 @@ var initFinanceDocsAccountsInventoryPage = async () => {
     }
     try {
       submitButton.disabled = true;
-      submitButton.value = "Uploading...";
+      submitButton.value = "Uploading\u2026";
       await Promise.all(
         filesToUpload.map(({ file, documentType }) => uploadFile(file, documentType))
       );
       submitButton.classList.add("is-success");
       submitButton.value = "Documents uploaded successfully!";
-      if (monthlyInventoryInput) monthlyInventoryInput.value = "";
-      if (accountsReceivableInput) accountsReceivableInput.value = "";
-      if (accountsPayableInput) accountsPayableInput.value = "";
-      if (monthlyInventoryHelpText) {
-        monthlyInventoryHelpText.textContent = "";
-        monthlyInventoryHelpText.classList.remove("is-error");
-      }
-      if (accountsReceivableHelpText) {
-        accountsReceivableHelpText.textContent = "";
-        accountsReceivableHelpText.classList.remove("is-error");
-      }
-      if (accountsPayableHelpText) {
-        accountsPayableHelpText.textContent = "";
-        accountsPayableHelpText.classList.remove("is-error");
-      }
+      monthlyInventoryInput.value = "";
+      accountsReceivableInput.value = "";
+      accountsPayableInput.value = "";
+      monthlyInventoryHelpText.textContent = "";
+      accountsReceivableHelpText.textContent = "";
+      accountsPayableHelpText.textContent = "";
       setTimeout(() => {
-        submitButton.classList.remove("is-success");
-        submitButton.value = "UPLOAD DOCUMENTS";
-        submitButton.disabled = false;
-        navigateToPath("/finance-docs-ecommerce-performance");
+        navigateToPath("/warm/finance-docs-ecommerce-performance");
       }, 900);
     } catch (error) {
       const { message } = error;
-      console.error(message);
+      console.error(error);
       submitButton.classList.add("is-error");
       submitButton.value = message || "There was a problem uploading the documents";
       submitButton.disabled = false;
@@ -3611,10 +3269,6 @@ var initFinanceDocsAccountsInventoryPage = async () => {
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  try {
-    initFinanceDocsAccountsInventoryPage();
-  } catch (error) {
-    console.error(error);
-  }
+  initFinanceDocsAccountsInventoryPage().catch(console.error);
 });
 //# sourceMappingURL=index.js.map

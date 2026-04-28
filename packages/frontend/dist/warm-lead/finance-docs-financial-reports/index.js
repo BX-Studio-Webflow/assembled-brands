@@ -3169,24 +3169,19 @@ var initFinanceReportsPage = async () => {
       helperText.textContent = "Failed to delete file. Please try again.";
     }
   };
-  const balanceSheetTrash = queryElement('[dev-target="balance_trash-icon"]', form);
-  if (balanceSheetTrash) {
-    balanceSheetTrash.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleDeleteDocument("monthly_balance_sheet", balanceSheetHelpText);
-    });
-  }
-  const incomeStatementTrash = queryElement(
-    '[dev-target="income-statement-trash-icon"]',
-    form
-  );
-  if (incomeStatementTrash) {
-    incomeStatementTrash.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleDeleteDocument("monthly_income_statement", incomeStatementHelpText);
-    });
+  const trashHandlers = [
+    [balanceSheetBox, "monthly_balance_sheet", balanceSheetHelpText],
+    [incomeStatementBox, "monthly_income_statement", incomeStatementHelpText]
+  ];
+  for (const [box, documentType, helperText] of trashHandlers) {
+    const trash = queryElement('[dev-target="trash-icon"]', box);
+    if (trash) {
+      trash.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        void handleDeleteDocument(documentType, helperText);
+      });
+    }
   }
   const uploadFile = async (file, documentType) => {
     const assetPayload = {

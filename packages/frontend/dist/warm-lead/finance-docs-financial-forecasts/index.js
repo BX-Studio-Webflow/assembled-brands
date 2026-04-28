@@ -3169,27 +3169,19 @@ var initFinanceForecastsPage = async () => {
       helperText.textContent = "Failed to delete file. Please try again.";
     }
   };
-  const incomeForecastTrash = queryElement(
-    '[dev-target="income-forecast-trash-icon"]',
-    form
-  );
-  if (incomeForecastTrash) {
-    incomeForecastTrash.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleDeleteDocument("income_statement_forecast", incomeForecastHelpText);
-    });
-  }
-  const balanceForecastTrash = queryElement(
-    '[dev-target="balance-forecast-trash-icon"]',
-    form
-  );
-  if (balanceForecastTrash) {
-    balanceForecastTrash.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleDeleteDocument("balance_sheet_full_year_forecast", balanceForecastHelpText);
-    });
+  const trashHandlers = [
+    [incomeForecastBox, "income_statement_forecast", incomeForecastHelpText],
+    [balanceForecastBox, "balance_sheet_full_year_forecast", balanceForecastHelpText]
+  ];
+  for (const [box, documentType, helperText] of trashHandlers) {
+    const trash = queryElement('[dev-target="trash-icon"]', box);
+    if (trash) {
+      trash.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        void handleDeleteDocument(documentType, helperText);
+      });
+    }
   }
   const uploadFile = async (file, documentType) => {
     const assetPayload = {

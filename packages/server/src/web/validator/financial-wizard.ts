@@ -40,8 +40,11 @@ const documentUploadSchema = z.object({
 		'accounts_receivable_aging',
 		'accounts_payable_aging',
 		// E-Commerce Performance (Step 4)
-		'shopify_repeat_customers',
+		'shopify_sales_over_time',
+		'shopify_first_vs_returning_customers',
+		// Legacy cold-lead aliases (backward compatible)
 		'shopify_monthly_sales',
+		'shopify_repeat_customers',
 		// Team & Ownership (Step 5)
 		'management_bios',
 		'investor_deck',

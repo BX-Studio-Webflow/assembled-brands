@@ -202,25 +202,19 @@ const initFinanceReportsPage = async () => {
     }
   };
 
-  const balanceSheetTrash = queryElement<HTMLElement>('[dev-target="balance_trash-icon"]', form);
-  if (balanceSheetTrash) {
-    balanceSheetTrash.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleDeleteDocument('monthly_balance_sheet', balanceSheetHelpText);
-    });
-  }
-
-  const incomeStatementTrash = queryElement<HTMLElement>(
-    '[dev-target="income-statement-trash-icon"]',
-    form
-  );
-  if (incomeStatementTrash) {
-    incomeStatementTrash.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleDeleteDocument('monthly_income_statement', incomeStatementHelpText);
-    });
+  const trashHandlers: [HTMLElement, FinancialDocumentBody['document_type'], HTMLElement][] = [
+    [balanceSheetBox, 'monthly_balance_sheet', balanceSheetHelpText],
+    [incomeStatementBox, 'monthly_income_statement', incomeStatementHelpText],
+  ];
+  for (const [box, documentType, helperText] of trashHandlers) {
+    const trash = queryElement<HTMLElement>('[dev-target="trash-icon"]', box);
+    if (trash) {
+      trash.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        void handleDeleteDocument(documentType, helperText);
+      });
+    }
   }
 
   // --- Upload helper ---

@@ -2668,15 +2668,6 @@ var logoutUser = () => {
   localStorage.removeItem("user");
   navigateToPath("/login?error=logged-out");
 };
-var getUserRole = () => {
-  const admin = localStorage.getItem("user");
-  const user = admin && JSON.parse(admin);
-  return user && user?.role;
-};
-var isAdmin = () => {
-  const role = getUserRole();
-  return role === "admin";
-};
 
 // shared/services/axios/AxiosRequestIntrceptorConfigCallback.ts
 var AxiosRequestIntrceptorConfigCallback = (config) => {
@@ -2795,12 +2786,6 @@ var apiDeleteFinancialDocument = (id) => {
   return ApiService_default.fetchDataWithAxios({
     url: `/financial-wizard/document/${id}`,
     method: "delete"
-  });
-};
-var apiAdminGetApplications = () => {
-  return ApiService_default.fetchDataWithAxios({
-    url: `/financial-wizard/applications`,
-    method: "get"
   });
 };
 
@@ -2960,158 +2945,6 @@ var constructNavBarClasses = () => {
     });
   }
 };
-var constructModalFunctionality = () => {
-  const modalWrapper = queryElement('[dev-target="modal-wrapper"]');
-  const modalImage = queryElement('[dev-target="modal-image"]');
-  const modalClose = queryElement('[dev-target="close-button"]');
-  const modalTitle = queryElement('[dev-target="modal-title"]');
-  if (!modalClose) {
-    console.error('Ensure [dev-target="close-button"] is present.');
-    return;
-  }
-  if (!modalTitle) {
-    console.error('Ensure [dev-target="modal-title"] is present.');
-    return;
-  }
-  if (!modalWrapper) {
-    console.error('Ensure [dev-target="modal-wrapper"] is present.');
-    return;
-  }
-  if (!modalImage) {
-    console.error('Ensure [dev-target="modal-image"] is present.');
-    return;
-  }
-  const { pathname } = window.location;
-  modalClose.addEventListener("click", () => {
-    modalWrapper.classList.add("hide");
-  });
-  const modalData = {
-    "monthly-balance-sheet": {
-      title: "Monthly Balance Sheets ** Last 2 years of monthly balance sheets",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "monthly-income-statement": {
-      title: "Monthly Income Statements ** Last 2 years of monthly income statements",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "monthly-income-forecast": {
-      title: "Monthly Income Forecast ** 12-month income forecast projection",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "monthly-inventory-reports": {
-      title: "Monthly Inventory Reports ** Please provide inventory reports for at least the last 24 months, or longer if possible",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "ar-aging-reports": {
-      title: "Accounts Receivable Aging Reports ** Please provide AR aging reports for the last 24 months, or longer if available",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "ap-aging-reports": {
-      title: "Accounts Payable Aging Report ** Please provide the accounts payable aging report for the next 24 months, or longer if possible",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "repeat-customer-reports": {
-      title: "Shopify Repeat Customer Reports ** Please provide reports on repeat customers for at least the last 24 months, or longer if possible",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "monthly-sales-reports": {
-      title: "Shopify Monthly Sales Reports ** Please provide monthly sales reports from Shopify for the last 24 months, or longer if available",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "management-bios": {
-      title: "Management Bios ** Please upload the management bios for our team",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "investor-deck": {
-      title: "Investor Deck ** Please provide the most recent investor deck",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "cap-table": {
-      title: "Capitalization Table ** Please provide the most recent capitalization table",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    }
-  };
-  const showModal = (key) => {
-    const data = modalData[key];
-    modalWrapper.classList.toggle("hide");
-    modalImage.src = data.imageUrl;
-    modalTitle.textContent = data.title;
-  };
-  if (pathname.includes("/dev/finance-docs-financial-reports") || pathname.includes("/finance-docs-financial-reports")) {
-    const monthly_balance_sheet = queryElement('[dev-target="monthly-balance-sheet"]');
-    const monthly_income_statement = queryElement(
-      '[dev-target="monthly-income-statement"]'
-    );
-    const monthly_income_forecast = queryElement(
-      '[dev-target="monthly-income-forecast"]'
-    );
-    monthly_balance_sheet?.addEventListener("click", () => showModal("monthly-balance-sheet"));
-    monthly_income_statement?.addEventListener(
-      "click",
-      () => showModal("monthly-income-statement")
-    );
-    monthly_income_forecast?.addEventListener("click", () => showModal("monthly-income-forecast"));
-  }
-  if (pathname.includes("/dev/finance-docs-accounts-and-inventory") || pathname.includes("/finance-docs-accounts-and-inventory")) {
-    const monthly_inventory_reports = queryElement(
-      '[dev-target="monthly-inventory-reports"]'
-    );
-    const ar_aging_reports = queryElement('[dev-target="ar-aging-reports"]');
-    const ap_aging_reports = queryElement('[dev-target="ap-aging-reports"]');
-    monthly_inventory_reports?.addEventListener(
-      "click",
-      () => showModal("monthly-inventory-reports")
-    );
-    ar_aging_reports?.addEventListener("click", () => showModal("ar-aging-reports"));
-    ap_aging_reports?.addEventListener("click", () => showModal("ap-aging-reports"));
-  }
-  if (pathname.includes("/dev/finance-docs-ecommerce-performance") || pathname.includes("/finance-docs-ecommerce-performance")) {
-    const repeat_customer_reports = queryElement(
-      '[dev-target="repeat-customer-reports"]'
-    );
-    const monthly_sales_reports = queryElement('[dev-target="monthly-sales-reports"]');
-    repeat_customer_reports?.addEventListener("click", () => showModal("repeat-customer-reports"));
-    monthly_sales_reports?.addEventListener("click", () => showModal("monthly-sales-reports"));
-  }
-  if (pathname.includes("/dev/finance-docs-team-and-ownership") || pathname.includes("/finance-docs-team-and-ownership")) {
-    const management_bios = queryElement('[dev-target="management-bios"]');
-    const investor_deck = queryElement('[dev-target="investor-deck"]');
-    const cap_table = queryElement('[dev-target="cap-table"]');
-    management_bios?.addEventListener("click", () => showModal("management-bios"));
-    investor_deck?.addEventListener("click", () => showModal("investor-deck"));
-    cap_table?.addEventListener("click", () => showModal("cap-table"));
-  }
-};
-var constructAdminSelect = async (onChangeCallback) => {
-  const admin = isAdmin();
-  if (admin) {
-    const selectWrapper = queryElement('[dev-target="admin-select-wrapper"]');
-    const select = queryElement('[dev-target="admin-select"]');
-    selectWrapper?.classList.remove("hide");
-    if (!selectWrapper || !select) {
-      console.error(
-        'Ensure [dev-target="admin-select"] and  [dev-target="admin-select-wrapper"] is present.'
-      );
-      return;
-    }
-    const applications = await apiAdminGetApplications();
-    select.innerHTML = "";
-    applications.forEach((app) => {
-      const name = app.first_name || "" + app.last_name || "";
-      const option = document.createElement("option");
-      option.value = app.id.toString();
-      option.textContent = `${name || app.email}`;
-      select.appendChild(option);
-    });
-    select.addEventListener("change", async (e) => {
-      const target = e.target;
-      const { value } = target;
-      if (onChangeCallback) {
-        await onChangeCallback(value);
-      }
-    });
-  }
-};
 var fileToBase64 = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();
   reader.onload = () => {
@@ -3190,210 +3023,144 @@ var initCollapsibleSidebar = () => {
 };
 
 // warm-lead/finance-docs-ecommerce-performance/index.ts
+var ALLOWED_FILE_TYPES = [
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+];
 var initEcommercePerformancePage = async () => {
   constructNavBarClasses();
   processMiddleware();
   initCollapsibleSidebar();
-  constructModalFunctionality();
-  const ALLOWED_FILE_TYPES = [
-    "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-  ];
   const form = document.querySelector('[dev-target="ecommerce-performance-form"]');
   if (!form) {
     console.error(
-      'E-Commerce Performance form not found. Element: [dev-target="ecommerce-performance-form"] not found'
+      'E-Commerce Performance form not found: [dev-target="ecommerce-performance-form"]'
     );
     return;
   }
-  const shopifyRepeatBox = queryElement(
+  const salesOverTimeBox = queryElement(
     '[dev-target="shopify-repeat-upload-box"]',
     form
   );
-  const shopifyRepeatInput = queryElement(
-    '[dev-target="shopify-repeat-input"]',
-    form
+  const salesOverTimeInput = queryElement(
+    '[dev-target="file-input"]',
+    salesOverTimeBox ?? form
   );
-  const shopifyRepeatHelpText = queryElement(
+  const salesOverTimeHelpText = queryElement(
     '[dev-target="shopify-repeat-helper"]',
     form
   );
-  const shopifyMonthlyBox = queryElement(
-    '[dev-target="shopify-monthly-upload-box"]',
+  const firstVsReturningBox = queryElement(
+    '[dev-target="shopify-returning-upload-box"]',
     form
   );
-  const shopifyMonthlyInput = queryElement(
-    '[dev-target="shopify-monthly-input"]',
-    form
+  const firstVsReturningInput = queryElement(
+    '[dev-target="file-input"]',
+    firstVsReturningBox ?? form
   );
-  const shopifyMonthlyHelpText = queryElement(
-    '[dev-target="shopify-monthly-helper"]',
+  const firstVsReturningHelpText = queryElement(
+    '[dev-target="shopify-returning-helper"]',
     form
   );
   const submitButton = queryElement('[dev-target="submit-button"]', form);
-  if (!shopifyRepeatBox || !shopifyRepeatInput || !shopifyRepeatHelpText) {
-    console.error(
-      'Ensure [dev-target="shopify-repeat-upload-box"] and [dev-target="shopify-repeat-input"] and [dev-target="shopify-repeat-helper"] are present.'
-    );
-    return;
+  const requiredElements = [
+    ['[dev-target="shopify-repeat-upload-box"]', salesOverTimeBox],
+    ['[dev-target="file-input"] inside shopify-repeat-upload-box', salesOverTimeInput],
+    ['[dev-target="shopify-repeat-helper"]', salesOverTimeHelpText],
+    ['[dev-target="shopify-monthly-upload-box"]', firstVsReturningBox],
+    ['[dev-target="file-input"] inside shopify-monthly-upload-box', firstVsReturningInput],
+    ['[dev-target="shopify-monthly-helper"]', firstVsReturningHelpText],
+    ['[dev-target="submit-button"]', submitButton]
+  ];
+  let missingElements = false;
+  for (const [selector, el] of requiredElements) {
+    if (!el) {
+      console.error(`Missing required element: ${selector}`);
+      missingElements = true;
+    }
   }
-  if (!shopifyMonthlyBox || !shopifyMonthlyInput || !shopifyMonthlyHelpText) {
-    console.error(
-      'Ensure [dev-target="shopify-monthly-upload-box"] and [dev-target="shopify-monthly-input"] and [dev-target="shopify-monthly-helper"] are present.'
-    );
-    return;
-  }
-  if (!submitButton) {
-    console.error('Ensure [dev-target="submit-button"] is present.');
+  if (missingElements || !salesOverTimeBox || !salesOverTimeInput || !salesOverTimeHelpText || !firstVsReturningBox || !firstVsReturningInput || !firstVsReturningHelpText || !submitButton) {
     return;
   }
   const updateHelperTexts = (progress) => {
-    if (progress?.ecommerce_performance) {
-      const shopifyRepeat = progress.ecommerce_performance.find(
-        (document2) => document2.document_type === "shopify_repeat_customers"
-      );
-      if (shopifyRepeat) {
-        shopifyRepeatHelpText.textContent = shopifyRepeat.asset_name || "Supported formats: sheets. xcel";
-      } else {
-        shopifyRepeatHelpText.textContent = "Supported formats: sheets. xcel";
-      }
-      const shopifyMonthly = progress.ecommerce_performance.find(
-        (document2) => document2.document_type === "shopify_monthly_sales"
-      );
-      if (shopifyMonthly) {
-        shopifyMonthlyHelpText.textContent = shopifyMonthly.asset_name || "Supported formats: sheets. xcel";
-      } else {
-        shopifyMonthlyHelpText.textContent = "Supported formats: sheets. xcel";
-      }
-    } else {
-      shopifyRepeatHelpText.textContent = "Supported formats: sheets. xcel";
-      shopifyMonthlyHelpText.textContent = "Supported formats: sheets. xcel";
-    }
+    const placeholder = "Supported formats: sheets, excel";
+    salesOverTimeHelpText.textContent = progress?.ecommerce_performance?.find((d) => d.document_type === "shopify_sales_over_time")?.asset_name || placeholder;
+    firstVsReturningHelpText.textContent = progress?.ecommerce_performance?.find(
+      (d) => d.document_type === "shopify_first_vs_returning_customers"
+    )?.asset_name || placeholder;
   };
   let financialProgress;
-  const loadFinancialProgress = async (userId) => {
-    const result = await checkProgressUserAndTeams(userId);
+  const loadFinancialProgress = async () => {
+    const result = await checkProgressUserAndTeams();
     financialProgress = result?.financialProgress;
     updateHelperTexts(financialProgress);
   };
-  const getEcommerceDoc = (documentType) => {
-    if (!financialProgress?.ecommerce_performance) return void 0;
-    return financialProgress.ecommerce_performance.find(
-      (doc) => doc.document_type === documentType
-    );
-  };
+  const getDoc = (documentType) => financialProgress?.ecommerce_performance?.find((doc) => doc.document_type === documentType);
   await loadFinancialProgress();
-  constructAdminSelect(loadFinancialProgress);
   const updateHelperText = (input, helperText) => {
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-        input.value = "";
-        helperText.textContent = "Invalid file type. Please upload Excel (.xls or .xlsx) files only";
-        helperText.classList.add("is-error");
-        return;
-      }
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      helperText.textContent = "Invalid file type. Please upload Excel (.xls or .xlsx) files only";
+      helperText.classList.add("is-error");
+    } else {
       helperText.textContent = file.name;
       helperText.classList.remove("is-error");
-    } else {
-      helperText.textContent = "";
-      helperText.classList.remove("is-error");
     }
   };
-  if (shopifyRepeatBox && shopifyRepeatInput && shopifyRepeatHelpText) {
-    shopifyRepeatBox.addEventListener("click", () => shopifyRepeatInput.click());
-    shopifyRepeatBox.addEventListener("dragover", (e) => {
+  const setupDropZone = (box, input, helperText) => {
+    box.addEventListener("click", () => input.click());
+    box.addEventListener("dragover", (e) => {
       e.preventDefault();
-      shopifyRepeatBox.classList.add("drag");
+      box.classList.add("drag");
     });
-    shopifyRepeatBox.addEventListener("dragleave", () => {
-      shopifyRepeatBox.classList.remove("drag");
-    });
-    shopifyRepeatBox.addEventListener("drop", (e) => {
+    box.addEventListener("dragleave", () => box.classList.remove("drag"));
+    box.addEventListener("drop", (e) => {
       e.preventDefault();
-      shopifyRepeatBox.classList.remove("drag");
-      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-        shopifyRepeatInput.files = e.dataTransfer.files;
-        updateHelperText(shopifyRepeatInput, shopifyRepeatHelpText);
-        shopifyRepeatInput.dispatchEvent(new Event("change", { bubbles: true }));
+      box.classList.remove("drag");
+      if (e.dataTransfer?.files.length) {
+        input.files = e.dataTransfer.files;
+        updateHelperText(input, helperText);
+        input.dispatchEvent(new Event("change", { bubbles: true }));
       }
     });
-    shopifyRepeatInput.addEventListener("change", () => {
-      updateHelperText(shopifyRepeatInput, shopifyRepeatHelpText);
-    });
-  }
-  if (shopifyMonthlyBox && shopifyMonthlyInput && shopifyMonthlyHelpText) {
-    shopifyMonthlyBox.addEventListener("click", () => shopifyMonthlyInput.click());
-    shopifyMonthlyBox.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      shopifyMonthlyBox.classList.add("drag");
-    });
-    shopifyMonthlyBox.addEventListener("dragleave", () => {
-      shopifyMonthlyBox.classList.remove("drag");
-    });
-    shopifyMonthlyBox.addEventListener("drop", (e) => {
-      e.preventDefault();
-      shopifyMonthlyBox.classList.remove("drag");
-      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-        shopifyMonthlyInput.files = e.dataTransfer.files;
-        updateHelperText(shopifyMonthlyInput, shopifyMonthlyHelpText);
-        shopifyMonthlyInput.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-    });
-    shopifyMonthlyInput.addEventListener("change", () => {
-      updateHelperText(shopifyMonthlyInput, shopifyMonthlyHelpText);
-    });
-  }
-  const shopifyRepeatTrash = queryElement(
-    '[dev-target="shopifiy-repeat-trash-icon"]',
-    form
-  );
-  const shopifyMonthlyTrash = queryElement(
-    '[dev-target="shopify-monthly-trash-icon"]',
-    form
-  );
+    input.addEventListener("change", () => updateHelperText(input, helperText));
+  };
+  setupDropZone(salesOverTimeBox, salesOverTimeInput, salesOverTimeHelpText);
+  setupDropZone(firstVsReturningBox, firstVsReturningInput, firstVsReturningHelpText);
   const handleDeleteDocument = async (documentType, helperText) => {
-    const doc = getEcommerceDoc(documentType);
+    const doc = getDoc(documentType);
     if (!doc) {
-      if (helperText) {
-        helperText.textContent = "Supported formats: sheets. xcel";
-        helperText.classList.remove("is-error");
-      }
+      helperText.textContent = "Supported formats: sheets, excel";
+      helperText.classList.remove("is-error");
       return;
     }
-    if (helperText) {
-      helperText.classList.remove("is-error");
-      helperText.textContent = "Deleting...";
-    }
+    helperText.classList.remove("is-error");
+    helperText.textContent = "Deleting\u2026";
     try {
       await apiDeleteFinancialDocument(doc.id);
       await loadFinancialProgress();
     } catch (error) {
       console.error(error);
-      if (helperText) {
-        helperText.classList.add("is-error");
-        helperText.textContent = "Failed to delete file. Please try again.";
-      }
+      helperText.classList.add("is-error");
+      helperText.textContent = "Failed to delete file. Please try again.";
     }
   };
-  if (shopifyRepeatTrash) {
-    shopifyRepeatTrash.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleDeleteDocument("shopify_repeat_customers", shopifyRepeatHelpText);
-    });
-  }
-  if (shopifyMonthlyTrash) {
-    shopifyMonthlyTrash.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleDeleteDocument("shopify_monthly_sales", shopifyMonthlyHelpText);
-    });
+  const trashHandlers = [
+    [salesOverTimeBox, "shopify_sales_over_time", salesOverTimeHelpText],
+    [firstVsReturningBox, "shopify_first_vs_returning_customers", firstVsReturningHelpText]
+  ];
+  for (const [box, documentType, helperText] of trashHandlers) {
+    const trash = queryElement('[dev-target="trash-icon"]', box);
+    if (trash) {
+      trash.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        void handleDeleteDocument(documentType, helperText);
+      });
+    }
   }
   const uploadFile = async (file, documentType) => {
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      throw new Error("Invalid file type. Please upload Excel (.xls or .xlsx) files only");
-    }
     const assetPayload = {
       fileName: file.name,
       contentType: file.type,
@@ -3402,18 +3169,10 @@ var initEcommercePerformancePage = async () => {
       duration: 0
     };
     const assetResponse = await apiCreateAssetPresignedUrl(assetPayload);
-    const assetId = assetResponse.asset.id;
-    const { presignedUrl } = assetResponse;
-    if (!presignedUrl) {
-      throw new Error("Presigned URL not received from server");
-    }
+    const { presignedUrl, asset } = assetResponse;
+    if (!presignedUrl) throw new Error("Presigned URL not received from server");
     await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.upload.addEventListener("progress", (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.round(event.loaded / event.total * 100);
-        }
-      });
       xhr.addEventListener("load", () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve();
@@ -3421,66 +3180,39 @@ var initEcommercePerformancePage = async () => {
           reject(new Error("Failed to upload file to S3"));
         }
       });
-      xhr.addEventListener("error", (error) => {
-        console.error(error);
-        reject(new Error("Network error during upload"));
-      });
+      xhr.addEventListener("error", () => reject(new Error("Network error during upload")));
       xhr.open("PUT", presignedUrl);
       xhr.setRequestHeader("Content-Type", file.type);
       xhr.send(file);
     });
-    const base64 = await fileToBase64(file);
+    const base64Data = await fileToBase64(file);
     const documentPayload = {
       page: "ecommerce-performance",
       document_type: documentType,
-      asset_id: assetId,
-      file_data: base64,
+      asset_id: asset.id,
       file_name: file.name,
-      file_mime_type: file.type
+      file_mime_type: file.type,
+      file_data: base64Data
     };
     await apiUploadFinancialDocument(documentPayload);
   };
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     event.stopPropagation();
-    const resetErrors = () => {
-      shopifyRepeatBox?.classList.remove("is-error");
-      shopifyMonthlyBox?.classList.remove("is-error");
-      shopifyRepeatHelpText?.classList.remove("is-error");
-      shopifyMonthlyHelpText?.classList.remove("is-error");
-      submitButton.classList.remove("is-error");
-      submitButton.value = "UPLOAD DOCUMENTS";
-    };
-    shopifyRepeatInput?.addEventListener("change", resetErrors, { once: true });
-    shopifyMonthlyInput?.addEventListener("change", resetErrors, { once: true });
+    submitButton.classList.remove("is-error", "is-success");
+    submitButton.value = "UPLOAD DOCUMENTS";
     const filesToUpload = [];
-    if (shopifyRepeatInput?.files && shopifyRepeatInput.files[0]) {
-      const file = shopifyRepeatInput.files[0];
-      if (ALLOWED_FILE_TYPES.includes(file.type)) {
-        filesToUpload.push({
-          file,
-          documentType: "shopify_repeat_customers"
-        });
-      } else {
-        shopifyRepeatHelpText?.classList.add("is-error");
-      }
+    if (salesOverTimeInput.files?.[0]) {
+      filesToUpload.push({
+        file: salesOverTimeInput.files[0],
+        documentType: "shopify_sales_over_time"
+      });
     }
-    if (shopifyMonthlyInput?.files && shopifyMonthlyInput.files[0]) {
-      const file = shopifyMonthlyInput.files[0];
-      if (ALLOWED_FILE_TYPES.includes(file.type)) {
-        filesToUpload.push({
-          file,
-          documentType: "shopify_monthly_sales"
-        });
-      } else {
-        shopifyMonthlyHelpText?.classList.add("is-error");
-      }
-    }
-    const hasInvalidFiles = shopifyRepeatInput?.files && shopifyRepeatInput.files[0] && !ALLOWED_FILE_TYPES.includes(shopifyRepeatInput.files[0].type) || shopifyMonthlyInput?.files && shopifyMonthlyInput.files[0] && !ALLOWED_FILE_TYPES.includes(shopifyMonthlyInput.files[0].type);
-    if (hasInvalidFiles) {
-      submitButton.classList.add("is-error");
-      submitButton.value = "Please upload only Excel (.xls or .xlsx) files";
-      return;
+    if (firstVsReturningInput.files?.[0]) {
+      filesToUpload.push({
+        file: firstVsReturningInput.files[0],
+        documentType: "shopify_first_vs_returning_customers"
+      });
     }
     if (filesToUpload.length === 0) {
       submitButton.classList.add("is-error");
@@ -3489,31 +3221,22 @@ var initEcommercePerformancePage = async () => {
     }
     try {
       submitButton.disabled = true;
-      submitButton.value = "Uploading...";
+      submitButton.value = "Uploading\u2026";
       await Promise.all(
         filesToUpload.map(({ file, documentType }) => uploadFile(file, documentType))
       );
       submitButton.classList.add("is-success");
       submitButton.value = "Documents uploaded successfully!";
-      if (shopifyRepeatInput) shopifyRepeatInput.value = "";
-      if (shopifyMonthlyInput) shopifyMonthlyInput.value = "";
-      if (shopifyRepeatHelpText) {
-        shopifyRepeatHelpText.textContent = "";
-        shopifyRepeatHelpText.classList.remove("is-error");
-      }
-      if (shopifyMonthlyHelpText) {
-        shopifyMonthlyHelpText.textContent = "";
-        shopifyMonthlyHelpText.classList.remove("is-error");
-      }
+      salesOverTimeInput.value = "";
+      firstVsReturningInput.value = "";
+      salesOverTimeHelpText.textContent = "";
+      firstVsReturningHelpText.textContent = "";
       setTimeout(() => {
-        submitButton.classList.remove("is-success");
-        submitButton.value = "UPLOAD DOCUMENTS";
-        submitButton.disabled = false;
-        navigateToPath("/finance-docs-team-and-ownership");
+        navigateToPath("/dev/warm/finance-docs-team-and-ownership");
       }, 900);
     } catch (error) {
       const { message } = error;
-      console.error(message);
+      console.error(error);
       submitButton.classList.add("is-error");
       submitButton.value = message || "There was a problem uploading the documents";
       submitButton.disabled = false;
@@ -3522,10 +3245,6 @@ var initEcommercePerformancePage = async () => {
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  try {
-    initEcommercePerformancePage();
-  } catch (error) {
-    console.error(error);
-  }
+  initEcommercePerformancePage().catch(console.error);
 });
 //# sourceMappingURL=index.js.map
