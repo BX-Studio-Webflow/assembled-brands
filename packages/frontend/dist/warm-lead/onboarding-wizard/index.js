@@ -2807,16 +2807,22 @@ var initWarmLeadOnboardingPage = async () => {
     try {
       const result = await apiGetOnboardingProgress();
       const step1 = result?.progress?.step1;
-      if (!step1) return;
-      if (step1.legal_name) legalName.value = step1.legal_name;
-      if (step1.incorporation_state) companyHq.value = step1.incorporation_state;
-      if (step1.net_revenue_last_12_months) {
-        netRevenue.value = step1.net_revenue_last_12_months;
+      const progressData = result?.progress?.progress_data;
+      if (!step1 && !progressData) return;
+      const legalNameValue = step1?.legal_name ?? progressData?.legal_name ?? null;
+      const incorporationStateValue = step1?.incorporation_state ?? progressData?.incorporation_state ?? null;
+      const netRevenueValue = step1?.net_revenue_last_12_months ?? progressData?.net_revenue_last_12_months ?? null;
+      const workingWithTeamMemberValue = step1?.working_with_team_member ?? progressData?.working_with_team_member ?? false;
+      const teamMemberEmailValue = step1?.team_member_email ?? progressData?.team_member_email ?? null;
+      if (legalNameValue) legalName.value = legalNameValue;
+      if (incorporationStateValue) companyHq.value = incorporationStateValue;
+      if (netRevenueValue) {
+        netRevenue.value = netRevenueValue;
       }
-      if (step1.working_with_team_member) {
+      if (workingWithTeamMemberValue) {
         const yes = memberRadios.find((r) => r.value === "yes");
         if (yes) yes.checked = true;
-        if (step1.team_member_email) memberSelect.value = step1.team_member_email;
+        if (teamMemberEmailValue) memberSelect.value = teamMemberEmailValue;
       } else {
         const no = memberRadios.find((r) => r.value === "no");
         if (no) no.checked = true;

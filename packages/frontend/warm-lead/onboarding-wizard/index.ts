@@ -84,19 +84,48 @@ const initWarmLeadOnboardingPage = async () => {
     }
     try {
       const result = await apiGetOnboardingProgress();
-      const step1 = result?.progress?.step1;
-      if (!step1) return;
+      const step1 = result?.progress?.step1 as
+        | {
+            legal_name?: string | null;
+            employee_count?: string | null;
+            website?: string | null;
+            incorporation_state?: string | null;
+            net_revenue_last_12_months?: string | null;
+            working_with_team_member?: boolean;
+            team_member_email?: string | null;
+          }
+        | undefined;
+      const progressData = result?.progress?.progress_data as
+        | {
+            legal_name?: string | null;
+            incorporation_state?: string | null;
+            net_revenue_last_12_months?: string | null;
+            working_with_team_member?: boolean;
+            team_member_email?: string | null;
+          }
+        | undefined;
+      if (!step1 && !progressData) return;
 
-      if (step1.legal_name) legalName.value = step1.legal_name;
-      if (step1.incorporation_state) companyHq.value = step1.incorporation_state;
-      if (step1.net_revenue_last_12_months) {
-        netRevenue.value = step1.net_revenue_last_12_months;
+      const legalNameValue = step1?.legal_name ?? progressData?.legal_name ?? null;
+      const incorporationStateValue =
+        step1?.incorporation_state ?? progressData?.incorporation_state ?? null;
+      const netRevenueValue =
+        step1?.net_revenue_last_12_months ?? progressData?.net_revenue_last_12_months ?? null;
+      const workingWithTeamMemberValue =
+        step1?.working_with_team_member ?? progressData?.working_with_team_member ?? false;
+      const teamMemberEmailValue =
+        step1?.team_member_email ?? progressData?.team_member_email ?? null;
+
+      if (legalNameValue) legalName.value = legalNameValue;
+      if (incorporationStateValue) companyHq.value = incorporationStateValue;
+      if (netRevenueValue) {
+        netRevenue.value = netRevenueValue;
       }
 
-      if (step1.working_with_team_member) {
+      if (workingWithTeamMemberValue) {
         const yes = memberRadios.find((r) => r.value === 'yes');
         if (yes) yes.checked = true;
-        if (step1.team_member_email) memberSelect.value = step1.team_member_email;
+        if (teamMemberEmailValue) memberSelect.value = teamMemberEmailValue;
       } else {
         const no = memberRadios.find((r) => r.value === 'no');
         if (no) no.checked = true;

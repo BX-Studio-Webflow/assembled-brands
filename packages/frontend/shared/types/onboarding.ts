@@ -31,6 +31,10 @@ export type OnboardingProgressResponse = {
     legal_name: string | null;
     employee_count: string | null;
     website: string | null;
+    incorporation_state: string | null;
+    net_revenue_last_12_months: string | null;
+    working_with_team_member: boolean;
+    team_member_email: string | null;
   };
   step2: {
     years_in_business: string | null;
@@ -41,6 +45,13 @@ export type OnboardingProgressResponse = {
     company_type: string | null;
     company_type_other: string | null;
     revenue_qualification: string | null;
+  };
+  progress_data?: {
+    legal_name: string | null;
+    incorporation_state: string | null;
+    net_revenue_last_12_months: string | null;
+    working_with_team_member: boolean;
+    team_member_email: string | null;
   };
 };
 
