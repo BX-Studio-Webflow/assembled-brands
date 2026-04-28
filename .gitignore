@@ -24,5 +24,8 @@ typings/
 # dotenv environment variables file
 .env
 
+# Wrangler local config
+wrangler.jsonc
+packages/server/wrangler.jsonc
 
 
