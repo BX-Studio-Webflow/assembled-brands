@@ -6,19 +6,23 @@ import { join, sep } from 'path';
 const BUILD_DIRECTORY = 'dist';
 const PRODUCTION = process.env.NODE_ENV === 'production';
 
-// Get all page entry points
+// Get all page entry points under pages/ and warm-lead/
 function getPageEntryPoints() {
   const entryPoints = {};
-  const pagesDir = 'pages';
+  const roots = [
+    { dir: 'pages', keyPrefix: 'pages' },
+    { dir: 'warm-lead', keyPrefix: 'warm-lead' },
+  ];
 
-  if (existsSync(pagesDir)) {
-    const pages = readdirSync(pagesDir, { withFileTypes: true });
+  for (const { dir, keyPrefix } of roots) {
+    if (!existsSync(dir)) continue;
 
-    for (const page of pages) {
+    const subdirs = readdirSync(dir, { withFileTypes: true });
+    for (const page of subdirs) {
       if (page.isDirectory()) {
-        const indexPath = join(pagesDir, page.name, 'index.ts');
+        const indexPath = join(dir, page.name, 'index.ts');
         if (existsSync(indexPath)) {
-          entryPoints[`pages/${page.name}/index`] = indexPath;
+          entryPoints[`${keyPrefix}/${page.name}/index`] = indexPath;
         }
       }
     }

@@ -10,6 +10,7 @@ import { BusinessRepository } from '../repository/business.ts';
 import { EmailRepository } from '../repository/email.ts';
 import { FinancialWizardRepository } from '../repository/financial-wizard.ts';
 import { HubspotContactWebhookRepository } from '../repository/hubspot-contact-webhook.ts';
+import { HubspotDealWebhookRepository } from '../repository/hubspot-deal-webhook.ts';
 import { NotificationRepository } from '../repository/notification.ts';
 import { OnboardingWizardRepository } from '../repository/onboarding-wizard.ts';
 import { TeamRepository } from '../repository/team.ts';
@@ -29,6 +30,7 @@ import { AssetController } from './controller/asset.js';
 import { AuthController } from './controller/auth.js';
 import { BusinessController } from './controller/business.js';
 import { FinancialWizardController } from './controller/financial-wizard.ts';
+import { HubSpotController } from './controller/hubspot.ts';
 import { OnboardingWizardController } from './controller/onboarding-wizard.ts';
 import { ERRORS, serveInternalServerError, serveNotFound } from './controller/resp/error.js';
 import { TeamController } from './controller/team.js';
@@ -96,6 +98,7 @@ export class Server {
 		// Setup repos
 		const userRepo = new UserRepository(db);
 		const hubspotContactWebhookRepo = new HubspotContactWebhookRepository(db);
+		const hubspotDealWebhookRepo = new HubspotDealWebhookRepository(db);
 		const assetRepo = new AssetRepository(db);
 		const teamRepo = new TeamRepository(db);
 		const businessRepo = new BusinessRepository(db);
@@ -111,7 +114,7 @@ export class Server {
 		const userService = new UserService(userRepo);
 		const teamService = new TeamService(teamRepo, userService);
 		const financialWizardService = new FinancialWizardService(financialWizardRepo, assetService);
-		const hubSpotService = new HubSpotService(hubspotContactWebhookRepo);
+		const hubSpotService = new HubSpotService(hubspotContactWebhookRepo, hubspotDealWebhookRepo);
 		const onboardingWizardService = new OnboardingWizardService(onboardingWizardRepo, hubSpotService, userService);
 		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService, financialWizardService);
 		const emailService = new EmailService(emailRepo);
@@ -137,12 +140,12 @@ export class Server {
 		// Add team service and controller
 
 		const teamController = new TeamController(teamService, userService, businessService);
-
-		// Setup controllers
+		const hubSpotController = new HubSpotController(hubSpotService, userService);
 
 		// Register routes
 
 		this.registerUserRoutes(api, authController);
+		this.registerHubspotWebhookRoutes(api, hubSpotController);
 		this.registerAssetRoutes(api, assetController, teamService);
 		this.registerBusinessRoutes(api, businessController);
 		this.registerTeamRoutes(api, teamController);
@@ -157,7 +160,6 @@ export class Server {
 
 		user.get('/me', authCheck, authCtrl.me);
 		user.post('/login', loginValidator, authCtrl.login);
-		user.post('/hubspot/new-lead', authCtrl.handleNewHubspotLeads);
 
 		user.post('/cold-lead-register', registrationValidator, authCtrl.coldRegister);
 		user.post('/verify-registration', verifyEmailAndSetPasswordValidator, authCtrl.verifyEmailAndSetPassword);
@@ -172,6 +174,11 @@ export class Server {
 		user.put('/details', authCheck, updateUserDetailsValidator, authCtrl.updateUserDetails);
 
 		api.route('/user', user);
+	}
+	private registerHubspotWebhookRoutes(api: Hono, hubSpotCtrl: HubSpotController) {
+		const hubspotWebhook = new Hono();
+		hubspotWebhook.post('/webhook', hubSpotCtrl.handleWebhook);
+		api.route('/hubspot', hubspotWebhook);
 	}
 
 	private registerAssetRoutes(api: Hono, assetCtrl: AssetController, teamService: TeamService) {

@@ -87,20 +87,26 @@ const updateUserDetailsSchema = z.object({
 const updateUserDetailsValidator = validator('json', (value, c) => {
 	return validateSchema(c, updateUserDetailsSchema, value);
 });
-const hubspotNewLeadSchema = z.array(
-	z.object({
-		appId: z.number(),
-		eventId: z.number(),
-		subscriptionId: z.number(),
-		portalId: z.number(),
-		occurredAt: z.number(),
-		subscriptionType: z.string(),
-		attemptNumber: z.number(),
-		objectId: z.number(),
-		changeSource: z.string(),
-		changeFlag: z.string(),
-	}),
-);
+/**
+ * Shared envelope for HubSpot CRM subscription webhooks (contacts, deals, etc.).
+ * HubSpot POSTs a JSON array of events. Example deal webhook item:
+ * `{ "subscriptionType": "deal.creation", "objectId": 123, ... }`
+ */
+const hubspotCrmWebhookEventSchema = z.object({
+	appId: z.number(),
+	eventId: z.number(),
+	subscriptionId: z.number(),
+	portalId: z.number(),
+	occurredAt: z.number(),
+	subscriptionType: z.string(),
+	attemptNumber: z.number(),
+	objectId: z.number(),
+	changeSource: z.string(),
+	changeFlag: z.string(),
+});
+
+const hubspotNewLeadSchema = z.array(hubspotCrmWebhookEventSchema);
+const hubspotNewDealSchema = z.array(hubspotCrmWebhookEventSchema);
 
 type LoginBody = z.infer<typeof loginSchema>;
 type RegistrationBody = z.infer<typeof registrationSchema>;
@@ -113,12 +119,18 @@ type ClaimYourAccountBody = z.infer<typeof claimYourAccountSchema>;
 type UpdateUserDetailsBody = z.infer<typeof updateUserDetailsSchema>;
 
 type HubspotNewLeadBody = z.infer<typeof hubspotNewLeadSchema>;
+type HubspotNewDealBody = z.infer<typeof hubspotNewDealSchema>;
+type HubspotCrmWebhookEvent = z.infer<typeof hubspotCrmWebhookEventSchema>;
 
 export {
 	type ClaimYourAccountBody,
 	claimYourAccountValidator,
 	type EmailVerificationBody,
 	emailVerificationValidator,
+	type HubspotCrmWebhookEvent,
+	hubspotCrmWebhookEventSchema,
+	type HubspotNewDealBody,
+	hubspotNewDealSchema,
 	type HubspotNewLeadBody,
 	hubspotNewLeadSchema,
 	type LoginBody,

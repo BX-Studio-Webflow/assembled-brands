@@ -1,487 +1,169 @@
 import type { AxiosError } from 'axios';
-import {
-  apiSaveOnboardingStep1,
-  apiSaveOnboardingStep2,
-  apiSaveOnboardingStep3,
-} from 'shared/services/OnboardingService';
-import type {
-  OnboardingProgressResponse,
-  OnboardingStep1Body,
-  OnboardingStep2Body,
-  OnboardingStep3Body,
-} from 'shared/types/onboarding';
+import ApiService from 'shared/services/ApiService';
 
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
 import { fetchProgressData } from '$utils/helpers';
-import { queryAllElements, queryElement } from '$utils/selectors';
+import { queryElement } from '$utils/selectors';
 
-const initOnboardingStep1Page = async () => {
+/** Warm-lead onboarding fields — align with API when backend is ready */
+type WarmLeadOnboardingPayload = Record<string, unknown>;
+
+const initWarmLeadOnboardingPage = async () => {
   processMiddleware();
 
-  const form = document.querySelector('[dev-target="onboarding-step1-form"]');
-  if (!form) {
-    console.error(
-      'Onboarding Step 1 form not found. Element: [dev-target="onboarding-step1-form"] not found'
-    );
+  const form = document.querySelector('[dev-target="onboarding-form"]');
+  if (!form || !(form instanceof HTMLFormElement)) {
+    console.error('Warm-lead onboarding form not found: [dev-target="onboarding-form"]');
     return;
   }
 
-  let currentStep = 1;
-
-  // Step containers
-  const step1Wrapper = queryElement<HTMLElement>('[dev-target="step-1"]', form);
-  const step2Wrapper = queryElement<HTMLElement>('[dev-target="step-2"]', form);
-  const step3Wrapper = queryElement<HTMLElement>('[dev-target="step-3"]', form);
-  const progressBar = queryElement<HTMLElement>('[dev-target="step-indicator"]');
-  const stepText = queryElement<HTMLElement>('[dev-target="step-text"]');
-
-  // Buttons
-  const submitButton = queryElement<HTMLButtonElement>('[dev-target="submit-button"]', form);
-  const backButton = queryElement<HTMLButtonElement>('[dev-target="back-button"]', form);
-  // Step 1 elements
+  const submitButton = queryElement<HTMLInputElement>('[dev-target="submit-button"]', form);
+  const backButton = queryElement<HTMLInputElement>('[dev-target="back-button"]', form);
   const legalName = queryElement<HTMLInputElement>('[dev-target="legal-name-input"]', form);
-  const employeeCountInputs = queryAllElements<HTMLInputElement>(
-    'input[name="employee_options"]',
-    form
+  const companyHq = queryElement<HTMLSelectElement>('select[dev-target="company-hq"]', form);
+  const netRevenue = queryElement<HTMLInputElement>('[dev-target="company-net-revenue"]', form);
+  const memberRadios = Array.from(
+    form.querySelectorAll<HTMLInputElement>('input[name="working-with-member"]')
   );
-  const website = queryElement<HTMLInputElement>('[dev-target="website-input"]', form);
+  const memberSelect = queryElement<HTMLSelectElement>('select[dev-target="which-member"]', form);
+  const memberFieldWrapper = memberSelect?.closest('.input-onboarding_wrapper');
 
-  // Step 2 elements
-  const yearsInBusiness = queryElement<HTMLInputElement>(
-    '[dev-target="years-in-business-input"]',
-    form
-  );
-  const assetTypeInputs = queryAllElements<HTMLInputElement>('input[name="asset_type"]', form);
-  const desiredLoanAmount = queryElement<HTMLInputElement>(
-    '[dev-target="desired-loan-amount-input"]',
-    form
-  );
-
-  // Step 3 elements
-  const companyTypeInputs = queryAllElements<HTMLInputElement>('input[name="company_type"]', form);
-  const companyTypeOther = queryElement<HTMLInputElement>(
-    '[dev-target="company-type-other-input"]',
-    form
-  );
-  const companyTypeOtherWrapper = queryElement<HTMLDivElement>(
-    '[dev-target="company-type-other-input-wrapper"]',
-    form
-  );
-  const revenueQualification = queryElement<HTMLSelectElement>(
-    '[dev-target="revenue-qualification-input"]',
-    form
-  );
-
-  // Validation
-  if (!step1Wrapper || !step2Wrapper || !step3Wrapper) {
-    console.error('Step wrappers not found');
-    return;
-  }
-  if (!submitButton || !backButton) {
-    console.error('Navigation buttons not found');
-    return;
-  }
-  if (!stepText) {
-    console.error('Step text element not found');
-    return;
-  }
-  //validate all inputs exist
   if (
+    !submitButton ||
+    !backButton ||
     !legalName ||
-    employeeCountInputs.length === 0 ||
-    !website ||
-    !yearsInBusiness ||
-    assetTypeInputs.length === 0 ||
-    !desiredLoanAmount ||
-    companyTypeInputs.length === 0 ||
-    !revenueQualification ||
-    !companyTypeOther
+    !companyHq ||
+    !netRevenue ||
+    memberRadios.length === 0 ||
+    !memberSelect
   ) {
-    console.error('One or more form inputs not found');
+    console.error('Required onboarding controls not found');
     return;
   }
 
-  // Show/hide company type other field
-  companyTypeInputs.forEach((radio) => {
-    radio.addEventListener('change', () => {
-      if (radio.value === 'other') {
-        companyTypeOtherWrapper?.classList.remove('hide');
-      } else {
-        companyTypeOtherWrapper?.classList.add('hide');
-      }
-    });
-  });
+  form.querySelector('[dev-target="step-2"]')?.classList.add('hide');
+  form.querySelector('[dev-target="step-3"]')?.classList.add('hide');
 
-  // Trigger clicks on radio labels for visual state updates
-  const triggerRadioLabelClicks = (step: number) => {
-    if (step === 1) {
-      const checkedEmployeeInput = employeeCountInputs.find((input) => input.checked);
-      if (checkedEmployeeInput?.nextSibling) {
-        (checkedEmployeeInput.nextSibling as HTMLElement).click();
-      }
-    } else if (step === 2) {
-      const checkedAssetInput = assetTypeInputs.find((input) => input.checked);
-      if (checkedAssetInput?.nextSibling) {
-        (checkedAssetInput.nextSibling as HTMLElement).click();
-      }
-    } else if (step === 3) {
-      const checkedCompanyTypeInput = companyTypeInputs.find((input) => input.checked);
-      if (checkedCompanyTypeInput?.nextSibling) {
-        (checkedCompanyTypeInput.nextSibling as HTMLElement).click();
-      }
+  const toggleMemberField = () => {
+    const checked = form.querySelector<HTMLInputElement>(
+      'input[name="working-with-member"]:checked'
+    );
+    if (!memberFieldWrapper) return;
+    if (checked?.value === 'yes') {
+      memberFieldWrapper.classList.remove('hide');
+    } else {
+      memberFieldWrapper.classList.add('hide');
     }
   };
 
-  // Show specific step
-  const showStep = (step: number) => {
-    step1Wrapper.classList.remove('is-active');
-    step2Wrapper.classList.remove('is-active');
-    step3Wrapper.classList.remove('is-active');
+  memberRadios.forEach((radio) => radio.addEventListener('change', toggleMemberField));
+  toggleMemberField();
 
-    if (step === 1) step1Wrapper.classList.add('is-active');
-    if (step === 2) step2Wrapper.classList.add('is-active');
-    if (step === 3) step3Wrapper.classList.add('is-active');
-
-    // Update progress bar
-    if (progressBar) {
-      const percentage = (step / 3) * 100;
-      progressBar.style.width = `${percentage}%`;
+  try {
+    const result = await fetchProgressData();
+    const progress = result?.onboardingProgress?.progress;
+    if (progress?.step1?.legal_name) {
+      legalName.value = progress.step1.legal_name;
     }
-
-    // Update step text
-    if (stepText) {
-      stepText.textContent = `Step ${step} of 3`;
-    }
-
-    // Update button text
-    submitButton.value = step === 3 ? 'FINISH' : 'NEXT';
-
-    currentStep = step;
-
-    // Trigger radio label clicks for visual state updates
-    triggerRadioLabelClicks(step);
-  };
-
-  //if onboarding step is specified in URL, go to that step
-  const urlParams = new URLSearchParams(window.location.search);
-  const stepParam = urlParams.get('step');
-  if (stepParam) {
-    const stepNumber = parseInt(stepParam, 10);
-    if (stepNumber >= 1 && stepNumber <= 3) {
-      showStep(stepNumber);
-    }
-  } else {
-    showStep(1);
+  } catch {
+    // non-blocking
   }
 
-  // Load and prefill onboarding progress
-  const loadOnboardingProgress = async () => {
-    try {
-      const result = await fetchProgressData();
-      if (!result) {
-        console.error('No result from fetchProgressData');
-        return;
-      }
-      const data = result.onboardingProgress;
-      if (!data || !data.progress) {
-        console.error('No onboarding progress data found');
-        return;
-      }
-
-      prefillFormFields(data.progress);
-    } catch (error) {
-      console.error('Failed to load onboarding progress:', error);
-    }
-  };
-
-  // Prefill form fields with saved data
-  const prefillFormFields = (progress: OnboardingProgressResponse) => {
-    // Step 1 fields
-    if (progress.step1) {
-      if (progress.step1.legal_name) {
-        legalName.value = progress.step1.legal_name;
-      }
-      if (progress.step1.employee_count) {
-        const matchingEmployeeInput = employeeCountInputs.find(
-          (input) => input.value === progress.step1.employee_count
-        );
-        if (matchingEmployeeInput) {
-          matchingEmployeeInput.checked = true;
-          triggerRadioLabelClicks(1);
-        }
-      }
-      if (progress.step1.website) {
-        website.value = progress.step1.website;
-      }
-    }
-
-    // Step 2 fields
-    if (progress.step2) {
-      if (progress.step2.years_in_business) {
-        yearsInBusiness.value = progress.step2.years_in_business;
-      }
-      if (progress.step2.asset_type) {
-        const matchingAssetInput = assetTypeInputs.find(
-          (input) => input.value === progress.step2.asset_type
-        );
-        if (matchingAssetInput) {
-          matchingAssetInput.checked = true;
-          triggerRadioLabelClicks(2);
-        }
-      }
-      if (progress.step2.desired_loan_amount) {
-        desiredLoanAmount.value = progress.step2.desired_loan_amount;
-      }
-    }
-
-    // Step 3 fields
-    if (progress.step3) {
-      if (progress.step3.company_type) {
-        const matchingCompanyTypeInput = companyTypeInputs.find(
-          (input) => input.value === progress.step3.company_type
-        );
-        if (matchingCompanyTypeInput) {
-          matchingCompanyTypeInput.checked = true;
-          // Show other input if needed
-          if (progress.step3.company_type === 'other') {
-            companyTypeOtherWrapper?.classList.remove('hide');
-          }
-
-          triggerRadioLabelClicks(3);
-        }
-      }
-      if (progress.step3.company_type_other) {
-        companyTypeOther.value = progress.step3.company_type_other;
-      }
-      if (progress.step3.revenue_qualification) {
-        revenueQualification.value = progress.step3.revenue_qualification;
-        // Trigger change event to update Webflow custom select visual state
-        revenueQualification.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    }
-  };
-
-  await loadOnboardingProgress();
-
-  // Back button handler
   backButton.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
-
-    if (currentStep === 1) {
-      navigateToPath('/login');
-    } else {
-      showStep(currentStep - 1);
-    }
+    navigateToPath('/login');
   });
 
-  // Form submit handler
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (currentStep === 1) {
-      await handleStep1Submit();
-    } else if (currentStep === 2) {
-      await handleStep2Submit();
-    } else if (currentStep === 3) {
-      await handleStep3Submit();
+    const submitter = (event as SubmitEvent).submitter as HTMLInputElement | null;
+    if (submitter?.getAttribute('dev-target') === 'back-button') {
+      navigateToPath('/login');
+      return;
     }
+
+    await handleSubmit();
   });
 
-  const isValidWebsite = (value: string) => {
-    const trimmed = value.trim();
-    const websitePattern = /^(https?:\/\/)?(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+$/i;
-    return websitePattern.test(trimmed);
-  };
-
-  // Step 1 submit handler
-  const handleStep1Submit = async () => {
+  const handleSubmit = async () => {
     const resetErrors = () => {
-      legalName?.classList.remove('is-error');
-      employeeCountInputs.forEach((input) => input.classList.remove('is-error'));
-      website?.classList.remove('is-error');
+      legalName.classList.remove('is-error');
+      companyHq.classList.remove('is-error');
+      netRevenue.classList.remove('is-error');
+      memberRadios.forEach((r) => r.classList.remove('is-error'));
+      memberSelect.classList.remove('is-error');
       submitButton.classList.remove('is-error');
       submitButton.value = 'NEXT';
     };
 
-    legalName?.addEventListener('input', resetErrors, { once: true });
-    employeeCountInputs.forEach((input) =>
-      input.addEventListener('change', resetErrors, { once: true })
-    );
-    website?.addEventListener('input', resetErrors, { once: true });
+    legalName.addEventListener('input', resetErrors, { once: true });
+    companyHq.addEventListener('change', resetErrors, { once: true });
+    netRevenue.addEventListener('input', resetErrors, { once: true });
+    memberRadios.forEach((r) => r.addEventListener('change', resetErrors, { once: true }));
+    memberSelect.addEventListener('change', resetErrors, { once: true });
 
-    if (!legalName?.value) {
-      legalName?.classList.add('is-error');
+    const workingWith = form.querySelector<HTMLInputElement>(
+      'input[name="working-with-member"]:checked'
+    );
+
+    if (!legalName.value.trim()) {
+      legalName.classList.add('is-error');
       submitButton.classList.add('is-error');
       submitButton.value = 'Legal name is required';
       return;
     }
 
-    const selectedEmployeeCount = employeeCountInputs.find((input) => input.checked);
-    if (!selectedEmployeeCount) {
+    if (!companyHq.value) {
+      companyHq.classList.add('is-error');
       submitButton.classList.add('is-error');
-      submitButton.value = 'Employee count is required';
+      submitButton.value = 'State is required';
       return;
     }
 
-    if (!website?.value) {
-      website?.classList.add('is-error');
+    if (netRevenue.value === '' || Number.isNaN(Number(netRevenue.value))) {
+      netRevenue.classList.add('is-error');
       submitButton.classList.add('is-error');
-      submitButton.value = 'Website is required';
+      submitButton.value = 'Net revenue is required';
       return;
     }
 
-    if (!isValidWebsite(website.value)) {
-      website?.classList.add('is-error');
+    if (!workingWith) {
+      memberRadios.forEach((r) => r.classList.add('is-error'));
       submitButton.classList.add('is-error');
-      submitButton.value = 'Enter a valid website address';
+      submitButton.value = 'Please answer this question';
       return;
     }
 
-    const payload: OnboardingStep1Body = {
-      legal_name: legalName.value,
-      employee_count: selectedEmployeeCount.value as OnboardingStep1Body['employee_count'],
-      website: website.value,
+    if (workingWith.value === 'yes' && !memberSelect.value) {
+      memberSelect.classList.add('is-error');
+      submitButton.classList.add('is-error');
+      submitButton.value = 'Choose a team member';
+      return;
+    }
+
+    const payload: WarmLeadOnboardingPayload = {
+      legal_name: legalName.value.trim(),
+      incorporation_state: companyHq.value,
+      net_revenue_last_12_months: netRevenue.value,
+      working_with_team_member: workingWith.value,
+      team_member_slug: workingWith.value === 'yes' ? memberSelect.value : null,
     };
 
     try {
-      await apiSaveOnboardingStep1(payload);
+      await ApiService.fetchDataWithAxios({
+        url: '/onboarding-wizard/step1',
+        method: 'post',
+        data: payload,
+      });
       submitButton.classList.add('is-success');
       submitButton.value = 'Saved!';
-
-      setTimeout(() => {
-        submitButton.classList.remove('is-success');
-        showStep(2);
-      }, 300);
-    } catch (error) {
-      const { message } = error as AxiosError;
-      console.error(message);
-      submitButton.classList.add('is-error');
-      submitButton.value = message || 'There was a problem saving your information';
-    }
-  };
-
-  // Step 2 submit handler
-  const handleStep2Submit = async () => {
-    const resetErrors = () => {
-      yearsInBusiness?.classList.remove('is-error');
-      assetTypeInputs.forEach((input) => input.classList.remove('is-error'));
-      desiredLoanAmount?.classList.remove('is-error');
-      submitButton.classList.remove('is-error');
-      submitButton.value = 'NEXT';
-    };
-
-    yearsInBusiness?.addEventListener('input', resetErrors, { once: true });
-    assetTypeInputs.forEach((input) =>
-      input.addEventListener('change', resetErrors, { once: true })
-    );
-    desiredLoanAmount?.addEventListener('input', resetErrors, { once: true });
-
-    if (!yearsInBusiness?.value) {
-      yearsInBusiness?.classList.add('is-error');
-      submitButton.classList.add('is-error');
-      submitButton.value = 'Years in business is required';
-      return;
-    }
-
-    const selectedAssetType = assetTypeInputs.find((input) => input.checked);
-    if (!selectedAssetType) {
-      submitButton.classList.add('is-error');
-      submitButton.value = 'Asset type is required';
-      return;
-    }
-
-    if (!desiredLoanAmount?.value) {
-      desiredLoanAmount?.classList.add('is-error');
-      submitButton.classList.add('is-error');
-      submitButton.value = 'Desired loan amount is required';
-      return;
-    }
-
-    const payload: OnboardingStep2Body = {
-      years_in_business: yearsInBusiness.value,
-      asset_type: selectedAssetType.value as OnboardingStep2Body['asset_type'],
-      desired_loan_amount: desiredLoanAmount.value,
-    };
-
-    try {
-      await apiSaveOnboardingStep2(payload);
-      submitButton.classList.add('is-success');
-      submitButton.value = 'Saved!';
-
-      setTimeout(() => {
-        submitButton.classList.remove('is-success');
-        showStep(3);
-      }, 300);
-    } catch (error) {
-      const { message } = error as AxiosError;
-      console.error(message);
-      submitButton.classList.add('is-error');
-      submitButton.value = message || 'There was a problem saving your information';
-    }
-  };
-
-  // Step 3 submit handler
-  const handleStep3Submit = async () => {
-    const resetErrors = () => {
-      companyTypeInputs.forEach((input) => input.classList.remove('is-error'));
-      companyTypeOther?.classList.remove('is-error');
-      revenueQualification?.classList.remove('is-error');
-      submitButton.classList.remove('is-error');
-      submitButton.value = 'FINISH';
-    };
-
-    companyTypeInputs.forEach((input) =>
-      input.addEventListener('change', resetErrors, { once: true })
-    );
-    companyTypeOther?.addEventListener('input', resetErrors, { once: true });
-    revenueQualification?.addEventListener('change', resetErrors, { once: true });
-
-    const selectedCompanyType = companyTypeInputs.find((input) => input.checked);
-    if (!selectedCompanyType) {
-      submitButton.classList.add('is-error');
-      submitButton.value = 'Company type is required';
-      return;
-    }
-
-    if (selectedCompanyType.value === 'other' && !companyTypeOther?.value) {
-      companyTypeOther?.classList.add('is-error');
-      submitButton.classList.add('is-error');
-      submitButton.value = 'Please specify the company type';
-      return;
-    }
-
-    if (!revenueQualification?.value) {
-      revenueQualification?.classList.add('is-error');
-      submitButton.classList.add('is-error');
-      submitButton.value = 'Revenue qualification is required';
-      return;
-    }
-
-    const payload: OnboardingStep3Body = {
-      company_type: selectedCompanyType.value as OnboardingStep3Body['company_type'],
-      revenue_qualification:
-        revenueQualification.value as OnboardingStep3Body['revenue_qualification'],
-      ...(selectedCompanyType.value === 'other' && companyTypeOther?.value
-        ? { company_type_other: companyTypeOther.value }
-        : {}),
-    };
-
-    try {
-      await apiSaveOnboardingStep3(payload);
-      submitButton.classList.add('is-success');
-      submitButton.value = 'Complete!';
-
-      if (revenueQualification.value === 'no') {
-        navigateToPath('/onboarding-step-not-fit');
-        return;
-      }
-
       setTimeout(() => {
         navigateToPath('/finance-company-profile');
-      }, 500);
+      }, 400);
     } catch (error) {
       const { message } = error as AxiosError;
       console.error(message);
@@ -494,7 +176,7 @@ const initOnboardingStep1Page = async () => {
 window.Webflow ||= [];
 window.Webflow.push(async () => {
   try {
-    await initOnboardingStep1Page();
+    await initWarmLeadOnboardingPage();
   } catch (error) {
     console.error(error);
   }

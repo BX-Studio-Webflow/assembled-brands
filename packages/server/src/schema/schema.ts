@@ -164,6 +164,39 @@ export const hubspotContactWebhookSchema = sqliteTable(
 	(t) => [uniqueIndex('hubspot_webhook_portal_event_subscription_unique').on(t.portal_id, t.event_id, t.subscription_id)],
 );
 
+export const hubspotDealWebhookSchema = sqliteTable(
+	'hubspot_deal_webhook_events',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		// Webhook envelope
+		app_id: integer('app_id').notNull(),
+		event_id: integer('event_id').notNull(),
+		subscription_id: integer('subscription_id').notNull(),
+		portal_id: integer('portal_id').notNull(),
+		occurred_at: integer('occurred_at').notNull(),
+		subscription_type: text('subscription_type').notNull(),
+		attempt_number: integer('attempt_number').notNull(),
+		object_id: integer('object_id').notNull(),
+		change_source: text('change_source').notNull(),
+		change_flag: text('change_flag').notNull(),
+		// Deal properties fetched from HubSpot
+		deal_name: text('deal_name'),
+		amount: text('amount'),
+		deal_stage: text('deal_stage'),
+		pipeline: text('pipeline'),
+		close_date: text('close_date'),
+		hubspot_owner_id: text('hubspot_owner_id'),
+		// Processing state
+		status: text('status', { enum: ['pending', 'processed', 'failed', 'skipped'] })
+			.notNull()
+			.default('pending'),
+		error_message: text('error_message'),
+		created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+		updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+	},
+	(t) => [uniqueIndex('hubspot_deal_webhook_portal_event_subscription_unique').on(t.portal_id, t.event_id, t.subscription_id)],
+);
+
 export const emailsSchema = sqliteTable('emails', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	email: text('email').notNull(),
@@ -402,6 +435,8 @@ export type Notification = typeof notificationsSchema.$inferSelect;
 export type NewNotification = typeof notificationsSchema.$inferInsert;
 export type HubspotContactWebhook = typeof hubspotContactWebhookSchema.$inferSelect;
 export type NewHubspotContactWebhook = typeof hubspotContactWebhookSchema.$inferInsert;
+export type HubspotDealWebhook = typeof hubspotDealWebhookSchema.$inferSelect;
+export type NewHubspotDealWebhook = typeof hubspotDealWebhookSchema.$inferInsert;
 export type Asset = typeof assetsSchema.$inferSelect;
 export type NewAsset = typeof assetsSchema.$inferInsert;
 export type User = typeof userSchema.$inferSelect & {
@@ -480,6 +515,7 @@ export const schema = {
 	teamInvitationSchema,
 	notificationsSchema,
 	hubspotContactWebhookSchema,
+	hubspotDealWebhookSchema,
 	emailsSchema,
 	onboardingApplicationSchema,
 	financialWizardApplicationSchema,
