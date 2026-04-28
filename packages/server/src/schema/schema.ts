@@ -191,11 +191,19 @@ export const hubspotDealWebhookSchema = sqliteTable(
 			.notNull()
 			.default('pending'),
 		error_message: text('error_message'),
+		user_id: integer('user_id').references(() => userSchema.id),
 		created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 		updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 	},
 	(t) => [uniqueIndex('hubspot_deal_webhook_portal_event_subscription_unique').on(t.portal_id, t.event_id, t.subscription_id)],
 );
+
+export const hubspotDealWebhookRelations = relations(hubspotDealWebhookSchema, ({ one }) => ({
+	user: one(userSchema, {
+		fields: [hubspotDealWebhookSchema.user_id],
+		references: [userSchema.id],
+	}),
+}));
 
 export const emailsSchema = sqliteTable('emails', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
@@ -525,6 +533,7 @@ export const schema = {
 	userRelations,
 	notificationRelations,
 	hubspotContactWebhookRelations,
+	hubspotDealWebhookRelations,
 	businessRelations,
 	teamRelations,
 	teamMemberRelations,

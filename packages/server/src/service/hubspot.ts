@@ -1,15 +1,20 @@
 import { env } from 'cloudflare:workers';
 
+import { sendTemplateEmail } from '../lib/email-processor.ts';
 import { logger } from '../lib/logger.ts';
 import { HubspotContactWebhookRepository } from '../repository/hubspot-contact-webhook.ts';
 import { HubspotDealWebhookRepository } from '../repository/hubspot-deal-webhook.ts';
-import type { NewHubspotContactWebhook, NewHubspotDealWebhook, OnboardingApplication, User } from '../schema/schema.ts';
+import type { NewHubspotContactWebhook, NewHubspotDealWebhook, NewUser, OnboardingApplication, User } from '../schema/schema.ts';
+import { generateSecurePassword } from '../util/string.ts';
 import type { HubspotCrmWebhookEvent, HubspotNewLeadBody } from '../web/validator/user.js';
+import type { UserService } from './user.ts';
 
 const HUBSPOT_CONTACTS_URL = 'https://api.hubapi.com/crm/v3/objects/contacts';
 const HUBSPOT_DEALS_URL = 'https://api.hubapi.com/crm/v3/objects/deals';
 /** Deal properties to request from the HubSpot API */
 const DEAL_PROPERTIES = ['dealname', 'amount', 'dealstage', 'pipeline', 'closedate', 'hubspot_owner_id'].join(',');
+
+const WARM_LEAD_ONBOARDING_URL = 'https://bx-assembled.webflow.io/dev/warm/onboarding-warm-lead';
 
 export interface HubSpotContactProperties {
 	email: string;
@@ -60,6 +65,10 @@ export interface HubSpotDeal {
 	archived: boolean;
 }
 
+interface HubSpotAssociationsResponse {
+	results: { id: string; type: string }[];
+}
+
 const eventToContactRow = (e: HubspotNewLeadBody[number]): NewHubspotContactWebhook => ({
 	app_id: e.appId,
 	event_id: e.eventId,
@@ -93,10 +102,16 @@ export class HubSpotService {
 	private apiKey: string;
 	private contactWebhookRepo: HubspotContactWebhookRepository;
 	private dealWebhookRepo: HubspotDealWebhookRepository;
+	private userService: UserService;
 
-	constructor(contactWebhookRepo: HubspotContactWebhookRepository, dealWebhookRepo: HubspotDealWebhookRepository) {
+	constructor(
+		contactWebhookRepo: HubspotContactWebhookRepository,
+		dealWebhookRepo: HubspotDealWebhookRepository,
+		userService: UserService,
+	) {
 		this.contactWebhookRepo = contactWebhookRepo;
 		this.dealWebhookRepo = dealWebhookRepo;
+		this.userService = userService;
 		this.apiKey = env.HUBSPOT_API_KEY || '';
 		if (!this.apiKey) {
 			logger.warn('HubSpot API key not configured');
@@ -104,12 +119,13 @@ export class HubSpotService {
 	}
 
 	/**
-	 * Idempotently records a deal webhook event, fetches the deal from HubSpot,
-	 * and persists the deal properties to the database.
+	 * Idempotently records a deal webhook event, fetches the deal and its associated
+	 * contact from HubSpot, persists everything to the database, and emails the
+	 * contact with the warm-lead onboarding link.
 	 * @returns The inserted/loaded deal webhook row id.
 	 */
 	public async processNewDealWebhook(event: HubspotCrmWebhookEvent): Promise<{ rowId: number }> {
-		// Idempotency: return early if already recorded
+		// Idempotency: return early if this event was already recorded
 		const existing = await this.dealWebhookRepo.findByPortalEventSubscription(event.portalId, event.eventId, event.subscriptionId);
 		if (existing) {
 			logger.info({ rowId: existing.id }, 'Deal webhook event already recorded, skipping');
@@ -125,8 +141,11 @@ export class HubSpotService {
 		logger.info({ objectId: event.objectId, eventId: event.eventId, rowId }, 'HubSpot deal webhook received, fetching deal');
 
 		try {
+			// 1. Fetch deal details
 			const deal = await this.getDealById(event.objectId);
 			const { dealname, amount, dealstage, pipeline, closedate, hubspot_owner_id } = deal.properties;
+
+			// 2. Persist deal properties
 			await this.dealWebhookRepo.update(rowId, {
 				deal_name: dealname ?? undefined,
 				amount: amount ?? undefined,
@@ -137,6 +156,55 @@ export class HubSpotService {
 				status: 'processed',
 			});
 			logger.info({ rowId, dealId: deal.id, dealname }, 'Deal logged to database');
+
+			// 3. Fetch associated contacts and email each one
+			const contactIds = await this.getDealAssociatedContactIds(event.objectId);
+			logger.info({ dealId: deal.id, contactCount: contactIds.length }, 'Fetched deal associations');
+
+			for (const contactId of contactIds) {
+				try {
+					const contact = await this.getContactById(Number(contactId));
+					const { email, firstname, lastname, phone } = contact.properties;
+					if (!email) {
+						logger.warn({ contactId }, 'Associated contact has no email, skipping');
+						continue;
+					}
+
+					let userId: number;
+					const existingUser = await this.userService.findByEmail(email);
+
+					if (existingUser) {
+						userId = existingUser.id;
+						logger.info({ userId, email }, 'User already exists for deal contact');
+					} else {
+						const password = generateSecurePassword(8);
+						const newUser: NewUser = {
+							email,
+							password,
+							role: 'user',
+							dial_code: '+1',
+							phone: phone || '',
+							first_name: firstname,
+							last_name: lastname,
+						};
+						const [created] = await this.userService.create(newUser);
+						if (!created) {
+							logger.error({ email }, 'Failed to create user for deal contact');
+							continue;
+						}
+						userId = created.id;
+						logger.info({ userId, email }, 'Created user for deal contact');
+					}
+
+					// Associate this user with the deal webhook row
+					await this.dealWebhookRepo.update(rowId, { user_id: userId });
+
+					await this.sendWarmLeadInvite(email, firstname || 'there', dealname);
+				} catch (contactErr) {
+					// Non-fatal: log and continue with remaining contacts
+					logger.error({ contactId, err: contactErr }, 'Failed to process deal contact');
+				}
+			}
 		} catch (err) {
 			const message = err instanceof Error ? err.message : String(err);
 			await this.dealWebhookRepo.update(rowId, { status: 'failed', error_message: message });
@@ -144,6 +212,47 @@ export class HubSpotService {
 		}
 
 		return { rowId };
+	}
+
+	/**
+	 * Returns the HubSpot contact IDs associated with a deal.
+	 * Uses the CRM associations endpoint: GET /crm/v3/objects/deals/{id}/associations/contacts
+	 */
+	public async getDealAssociatedContactIds(dealId: number): Promise<string[]> {
+		if (!this.apiKey) {
+			throw new Error('HubSpot API key not configured');
+		}
+		const url = `${HUBSPOT_DEALS_URL}/${dealId}/associations/contacts`;
+		const response = await fetch(url, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${this.apiKey}`,
+			},
+		});
+		if (!response.ok) {
+			const error = await response.json();
+			logger.error({ error }, 'HubSpot associations API error');
+			throw new Error(`HubSpot associations API error: ${JSON.stringify(error)}`);
+		}
+		const data = (await response.json()) as HubSpotAssociationsResponse;
+		return data.results.map((r) => r.id);
+	}
+
+	/**
+	 * Sends the warm-lead onboarding invite email to a deal contact.
+	 */
+	private async sendWarmLeadInvite(email: string, firstName: string, dealName: string | null): Promise<void> {
+		await sendTemplateEmail(email, firstName, env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
+			subject: "You've been invited to apply to Assembled Brands",
+			title: 'Complete your profile',
+			subtitle: 'Assembled Brands - Warm Lead Application',
+			name: firstName,
+			body: `Hi ${firstName}, we have received a referral for you${dealName ? ` (${dealName})` : ''}. Please click the button below to fill in your company profile and start your application with Assembled Brands.`,
+			buttonText: 'Start my application',
+			buttonLink: WARM_LEAD_ONBOARDING_URL,
+		});
+		logger.info({ email }, 'Warm-lead invite sent');
 	}
 
 	/**

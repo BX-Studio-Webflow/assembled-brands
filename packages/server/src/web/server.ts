@@ -114,7 +114,7 @@ export class Server {
 		const userService = new UserService(userRepo);
 		const teamService = new TeamService(teamRepo, userService);
 		const financialWizardService = new FinancialWizardService(financialWizardRepo, assetService);
-		const hubSpotService = new HubSpotService(hubspotContactWebhookRepo, hubspotDealWebhookRepo);
+		const hubSpotService = new HubSpotService(hubspotContactWebhookRepo, hubspotDealWebhookRepo, userService);
 		const onboardingWizardService = new OnboardingWizardService(onboardingWizardRepo, hubSpotService, userService);
 		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService, financialWizardService);
 		const emailService = new EmailService(emailRepo);

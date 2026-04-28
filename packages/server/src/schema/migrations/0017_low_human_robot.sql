@@ -1,0 +1,1 @@
+ALTER TABLE `hubspot_deal_webhook_events` ADD `user_id` integer REFERENCES user(id);
