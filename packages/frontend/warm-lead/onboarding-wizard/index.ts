@@ -124,11 +124,21 @@ const initWarmLeadOnboardingPage = async () => {
 
       if (workingWithTeamMemberValue) {
         const yes = memberRadios.find((r) => r.value === 'yes');
-        if (yes) yes.checked = true;
-        if (teamMemberEmailValue) memberSelect.value = teamMemberEmailValue;
+        if (yes) {
+          yes.checked = true;
+          yes.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        if (teamMemberEmailValue) {
+          memberSelect.value = teamMemberEmailValue;
+          // Keep custom select UI in sync with prefilled value.
+          memberSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
       } else {
         const no = memberRadios.find((r) => r.value === 'no');
-        if (no) no.checked = true;
+        if (no) {
+          no.checked = true;
+          no.dispatchEvent(new Event('change', { bubbles: true }));
+        }
       }
       toggleMemberField();
     } catch (error) {
