@@ -2829,9 +2829,11 @@ var fetchProgressData = async (userId) => {
 // pages/onboarding-wizard/index.ts
 var initOnboardingStep1Page = async () => {
   processMiddleware();
-  const form = document.querySelector('[dev-target="onboarding-form"]');
+  const form = document.querySelector('[dev-target="onboarding-step1-form"]');
   if (!form) {
-    console.error('Onboarding form not found. Element: [dev-target="onboarding-form"] not found.');
+    console.error(
+      'Onboarding Step 1 form not found. Element: [dev-target="onboarding-step1-form"] not found'
+    );
     return;
   }
   let currentStep = 1;
@@ -2871,25 +2873,15 @@ var initOnboardingStep1Page = async () => {
     form
   );
   if (!step1Wrapper || !step2Wrapper || !step3Wrapper) {
-    console.error(
-      'Step wrappers not found. Elements: [dev-target="step-1"], [dev-target="step-2"], [dev-target="step-3"] not found.'
-    );
+    console.error("Step wrappers not found");
     return;
   }
-  if (!submitButton) {
-    console.error(
-      'Navigation submit button not found. Element: [dev-target="submit-button"] not found.'
-    );
-    return;
-  }
-  if (!backButton) {
-    console.error(
-      'Navigation back button not found. Element: [dev-target="back-button"] not found.'
-    );
+  if (!submitButton || !backButton) {
+    console.error("Navigation buttons not found");
     return;
   }
   if (!stepText) {
-    console.error('Step text element not found. Element: [dev-target="step-text"] not found.');
+    console.error("Step text element not found");
     return;
   }
   if (!legalName || employeeCountInputs.length === 0 || !website || !yearsInBusiness || assetTypeInputs.length === 0 || !desiredLoanAmount || companyTypeInputs.length === 0 || !revenueQualification || !companyTypeOther) {
@@ -2930,11 +2922,6 @@ var initOnboardingStep1Page = async () => {
     if (step === 1) step1Wrapper.classList.add("is-active");
     if (step === 2) step2Wrapper.classList.add("is-active");
     if (step === 3) step3Wrapper.classList.add("is-active");
-    if (step === 1) {
-      backButton.classList.add("hide");
-    } else {
-      backButton.classList.remove("hide");
-    }
     if (progressBar) {
       const percentage = step / 3 * 100;
       progressBar.style.width = `${percentage}%`;
@@ -3006,7 +2993,6 @@ var initOnboardingStep1Page = async () => {
       }
       if (progress.step2.desired_loan_amount) {
         desiredLoanAmount.value = progress.step2.desired_loan_amount;
-        desiredLoanAmount.dispatchEvent(new Event("change", { bubbles: true }));
       }
     }
     if (progress.step3) {
@@ -3050,18 +3036,6 @@ var initOnboardingStep1Page = async () => {
       await handleStep2Submit();
     } else if (currentStep === 3) {
       await handleStep3Submit();
-    }
-  });
-  form.addEventListener("keydown", async (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      if (currentStep === 1) {
-        await handleStep1Submit();
-      } else if (currentStep === 2) {
-        await handleStep2Submit();
-      } else if (currentStep === 3) {
-        await handleStep3Submit();
-      }
     }
   });
   const isValidWebsite = (value) => {
@@ -3138,21 +3112,11 @@ var initOnboardingStep1Page = async () => {
     assetTypeInputs.forEach(
       (input) => input.addEventListener("change", resetErrors, { once: true })
     );
-    desiredLoanAmount?.addEventListener("change", resetErrors, { once: true });
+    desiredLoanAmount?.addEventListener("input", resetErrors, { once: true });
     if (!yearsInBusiness?.value) {
       yearsInBusiness?.classList.add("is-error");
       submitButton.classList.add("is-error");
       submitButton.value = "Years in business is required";
-      return;
-    }
-    const yearTrimmed = yearsInBusiness.value.trim();
-    const yearPattern = /^\d{4}$/;
-    const currentYear = (/* @__PURE__ */ new Date()).getFullYear();
-    const parsedYear = Number.parseInt(yearTrimmed, 10);
-    if (!yearPattern.test(yearTrimmed) || Number.isNaN(parsedYear) || parsedYear > currentYear) {
-      yearsInBusiness.classList.add("is-error");
-      submitButton.classList.add("is-error");
-      submitButton.value = `Enter a valid year (\u2264 ${currentYear})`;
       return;
     }
     const selectedAssetType = assetTypeInputs.find((input) => input.checked);

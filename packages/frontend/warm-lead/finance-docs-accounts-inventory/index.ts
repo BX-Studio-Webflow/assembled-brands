@@ -1,0 +1,557 @@
+import type { AxiosError } from 'axios';
+import { apiCreateAssetPresignedUrl } from 'shared/services/AssetService';
+import {
+  apiDeleteFinancialDocument,
+  apiUploadFinancialDocument,
+} from 'shared/services/FinancialWizardService';
+import type { CreateAssetBody } from 'shared/types/asset';
+import type {
+  FinancialDocumentBody,
+  FinancialWizardProgressResponse,
+} from 'shared/types/financial-wizard';
+
+import { processMiddleware } from '$utils/auth';
+import { navigateToPath } from '$utils/config';
+import {
+  checkProgressUserAndTeams,
+  constructAdminSelect,
+  constructModalFunctionality,
+  constructNavBarClasses,
+  fileToBase64,
+  initCollapsibleSidebar,
+} from '$utils/helpers';
+import { queryElement } from '$utils/selectors';
+
+const initFinanceDocsAccountsInventoryPage = async () => {
+  constructNavBarClasses();
+  processMiddleware();
+  initCollapsibleSidebar();
+  constructModalFunctionality();
+
+  //ONLY SHEET AND XLSX ALLOWED
+  const ALLOWED_FILE_TYPES = [
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ];
+  const form = document.querySelector('[dev-target="accounts-inventory-reports-form"]');
+  if (!form) {
+    console.error(
+      'Accounts & Inventory form not found. Element: [dev-target="accounts-inventory-reports-form"] not found'
+    );
+    return;
+  }
+
+  // Get the three upload boxes and file inputs
+  const monthlyInventoryBox = queryElement<HTMLElement>(
+    '[dev-target="monthly-inventory-upload-box"]',
+    form
+  );
+  const monthlyInventoryInput = queryElement<HTMLInputElement>(
+    '[dev-target="monthly-inventory-input"]',
+    form
+  );
+  const monthlyInventoryHelpText = queryElement<HTMLElement>(
+    '[dev-target="monthly-inventory-helper"]',
+    form
+  );
+
+  const accountsReceivableBox = queryElement<HTMLElement>(
+    '[dev-target="accounts-receivable-upload-box"]',
+    form
+  );
+  const accountsReceivableInput = queryElement<HTMLInputElement>(
+    '[dev-target="accounts-receivable-input"]',
+    form
+  );
+  const accountsReceivableHelpText = queryElement<HTMLElement>(
+    '[dev-target="accounts-receivable-helper"]',
+    form
+  );
+
+  const accountsPayableBox = queryElement<HTMLElement>(
+    '[dev-target="accounts-payable-upload-box"]',
+    form
+  );
+  const accountsPayableInput = queryElement<HTMLInputElement>(
+    '[dev-target="accounts-payable-input"]',
+    form
+  );
+  const accountsPayableHelpText = queryElement<HTMLElement>(
+    '[dev-target="accounts-payable-helper"]',
+    form
+  );
+
+  const submitButton = queryElement<HTMLButtonElement>('[dev-target="submit-button"]', form);
+
+  if (!monthlyInventoryBox || !monthlyInventoryInput || !monthlyInventoryHelpText) {
+    console.error(
+      'Ensure [dev-target="monthly-inventory-upload-box"] and [dev-target="monthly-inventory-input"] and [dev-target="monthly-inventory-helper"] are present.'
+    );
+    return;
+  }
+  if (!accountsReceivableBox) {
+    console.error('Ensure [dev-target="accounts-receivable-upload-box"] is present.');
+    return;
+  }
+  if (!accountsReceivableInput) {
+    console.error('Ensure [dev-target="accounts-receivable-input"] is present.');
+    return;
+  }
+  if (!accountsReceivableHelpText) {
+    console.error('Ensure [dev-target="accounts-receivable-helper"] is present.');
+    return;
+  }
+  if (!accountsPayableBox) {
+    console.error('Ensure [dev-target="accounts-payable-upload-box"] is present.');
+    return;
+  }
+  if (!accountsPayableInput) {
+    console.error('Ensure [dev-target="accounts-payable-input"] is present.');
+    return;
+  }
+  if (!accountsPayableHelpText) {
+    console.error('Ensure [dev-target="accounts-payable-helper"] is present.');
+    return;
+  }
+  if (!submitButton) {
+    console.error('Ensure [dev-target="submit-button"] is present.');
+    return;
+  }
+
+  // Function to update helper texts based on financial progress
+  const updateHelperTexts = (progress: FinancialWizardProgressResponse | undefined) => {
+    if (progress?.accounts_inventory) {
+      const monthlyInventory = progress.accounts_inventory.find(
+        (document) => document.document_type === 'monthly_inventory_report'
+      );
+      if (monthlyInventory) {
+        monthlyInventoryHelpText.textContent = monthlyInventory.asset_name || '';
+      } else {
+        monthlyInventoryHelpText.textContent = 'Supported formats: sheets. xcel';
+      }
+      const accountsReceivable = progress.accounts_inventory.find(
+        (document) => document.document_type === 'accounts_receivable_aging'
+      );
+      if (accountsReceivable) {
+        accountsReceivableHelpText.textContent = accountsReceivable.asset_name || '';
+      } else {
+        accountsReceivableHelpText.textContent = 'Supported formats: sheets. xcel';
+      }
+      const accountsPayable = progress.accounts_inventory.find(
+        (document) => document.document_type === 'accounts_payable_aging'
+      );
+      if (accountsPayable) {
+        accountsPayableHelpText.textContent = accountsPayable.asset_name || '';
+      } else {
+        accountsPayableHelpText.textContent = 'Supported formats: sheets. xcel';
+      }
+    } else {
+      monthlyInventoryHelpText.textContent = 'Supported formats: sheets. xcel';
+      accountsReceivableHelpText.textContent = 'Supported formats: sheets. xcel';
+      accountsPayableHelpText.textContent = 'Supported formats: sheets. xcel';
+    }
+  };
+
+  let financialProgress: FinancialWizardProgressResponse | undefined;
+  const loadFinancialProgress = async (userId?: string) => {
+    const result = await checkProgressUserAndTeams(userId);
+    financialProgress = result?.financialProgress;
+    updateHelperTexts(financialProgress);
+  };
+
+  const getAccountsInventoryDoc = (documentType: FinancialDocumentBody['document_type']) => {
+    if (!financialProgress?.accounts_inventory) return undefined;
+    return financialProgress.accounts_inventory.find((doc) => doc.document_type === documentType);
+  };
+
+  await loadFinancialProgress();
+  constructAdminSelect(loadFinancialProgress);
+
+  // Helper function to update helper text with file name and validate file type
+  const updateHelperText = (input: HTMLInputElement, helperText: HTMLElement) => {
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+
+      // Validate file type - fail first
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+        // Invalid file - clear input and show error
+        input.value = '';
+        helperText.textContent =
+          'Invalid file type. Please upload Excel (.xls or .xlsx) files only';
+        helperText.classList.add('is-error');
+        return;
+      }
+
+      // Valid file - show file name
+      helperText.textContent = file.name || 'Supported formats: sheets. xcel';
+      helperText.classList.remove('is-error');
+    } else {
+      helperText.textContent = 'Supported formats: sheets. xcel';
+      helperText.classList.remove('is-error');
+    }
+  };
+
+  // Setup drag-and-drop for Monthly Inventory
+  if (monthlyInventoryBox && monthlyInventoryInput && monthlyInventoryHelpText) {
+    monthlyInventoryBox.addEventListener('click', () => monthlyInventoryInput.click());
+
+    monthlyInventoryBox.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      monthlyInventoryBox.classList.add('drag');
+    });
+
+    monthlyInventoryBox.addEventListener('dragleave', () => {
+      monthlyInventoryBox.classList.remove('drag');
+    });
+
+    monthlyInventoryBox.addEventListener('drop', (e) => {
+      e.preventDefault();
+      monthlyInventoryBox.classList.remove('drag');
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+        monthlyInventoryInput.files = e.dataTransfer.files;
+        updateHelperText(monthlyInventoryInput, monthlyInventoryHelpText);
+        monthlyInventoryInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+
+    // Update helper text when file is selected via file picker
+    monthlyInventoryInput.addEventListener('change', () => {
+      updateHelperText(monthlyInventoryInput, monthlyInventoryHelpText);
+    });
+  }
+
+  // Setup drag-and-drop for Accounts Receivable
+  if (accountsReceivableBox && accountsReceivableInput && accountsReceivableHelpText) {
+    accountsReceivableBox.addEventListener('click', () => accountsReceivableInput.click());
+
+    accountsReceivableBox.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      accountsReceivableBox.classList.add('drag');
+    });
+
+    accountsReceivableBox.addEventListener('dragleave', () => {
+      accountsReceivableBox.classList.remove('drag');
+    });
+
+    accountsReceivableBox.addEventListener('drop', (e) => {
+      e.preventDefault();
+      accountsReceivableBox.classList.remove('drag');
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+        accountsReceivableInput.files = e.dataTransfer.files;
+        updateHelperText(accountsReceivableInput, accountsReceivableHelpText);
+        accountsReceivableInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+
+    // Update helper text when file is selected via file picker
+    accountsReceivableInput.addEventListener('change', () => {
+      updateHelperText(accountsReceivableInput, accountsReceivableHelpText);
+    });
+  }
+
+  // Setup drag-and-drop for Accounts Payable
+  if (accountsPayableBox && accountsPayableInput && accountsPayableHelpText) {
+    accountsPayableBox.addEventListener('click', () => accountsPayableInput.click());
+
+    accountsPayableBox.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      accountsPayableBox.classList.add('drag');
+    });
+
+    accountsPayableBox.addEventListener('dragleave', () => {
+      accountsPayableBox.classList.remove('drag');
+    });
+
+    accountsPayableBox.addEventListener('drop', (e) => {
+      e.preventDefault();
+      accountsPayableBox.classList.remove('drag');
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+        accountsPayableInput.files = e.dataTransfer.files;
+        updateHelperText(accountsPayableInput, accountsPayableHelpText);
+        accountsPayableInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+
+    // Update helper text when file is selected via file picker
+    accountsPayableInput.addEventListener('change', () => {
+      updateHelperText(accountsPayableInput, accountsPayableHelpText);
+    });
+  }
+
+  // Delete actions for existing accounts & inventory documents
+  const monthlyInventoryTrash = queryElement<HTMLElement>(
+    '[dev-target="monthly-inventory-trash-icon"]',
+    form
+  );
+  const accountsReceivableTrash = queryElement<HTMLElement>(
+    '[dev-target="accounts-receivable-trash-icon"]',
+    form
+  );
+  const accountsPayableTrash = queryElement<HTMLElement>(
+    '[dev-target="accounts-payable-trash-icon"]',
+    form
+  );
+
+  const handleDeleteDocument = async (
+    documentType: FinancialDocumentBody['document_type'],
+    helperText?: HTMLElement | null
+  ) => {
+    const doc = getAccountsInventoryDoc(documentType);
+
+    // If no saved document, reset helper text and return
+    if (!doc) {
+      if (helperText) {
+        helperText.textContent = 'Supported formats: sheets. xcel';
+        helperText.classList.remove('is-error');
+      }
+      return;
+    }
+
+    if (helperText) {
+      helperText.classList.remove('is-error');
+      helperText.textContent = 'Deleting...';
+    }
+
+    try {
+      await apiDeleteFinancialDocument(doc.id);
+      await loadFinancialProgress();
+    } catch (error) {
+      console.error(error);
+      if (helperText) {
+        helperText.classList.add('is-error');
+        helperText.textContent = 'Failed to delete file. Please try again.';
+      }
+    }
+  };
+
+  if (monthlyInventoryTrash) {
+    monthlyInventoryTrash.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument('monthly_inventory_report', monthlyInventoryHelpText);
+    });
+  }
+
+  if (accountsReceivableTrash) {
+    accountsReceivableTrash.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument('accounts_receivable_aging', accountsReceivableHelpText);
+    });
+  }
+
+  if (accountsPayableTrash) {
+    accountsPayableTrash.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleDeleteDocument('accounts_payable_aging', accountsPayableHelpText);
+    });
+  }
+
+  const uploadFile = async (
+    file: File,
+    documentType: FinancialDocumentBody['document_type']
+  ): Promise<void> => {
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      throw new Error('Invalid file type. Please upload Excel (.xls or .xlsx) files only');
+    }
+
+    // Step 1: Create asset
+    const assetPayload: CreateAssetBody = {
+      fileName: file.name,
+      contentType: file.type,
+      assetType: 'document',
+      fileSize: file.size,
+      duration: 0,
+    };
+
+    const assetResponse = await apiCreateAssetPresignedUrl(assetPayload);
+    const assetId = assetResponse.asset.id;
+
+    const { presignedUrl } = assetResponse;
+
+    if (!presignedUrl) {
+      throw new Error('Presigned URL not received from server');
+    }
+
+    // Step 2: Upload file to the presigned URL
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          void percent;
+        }
+      });
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          reject(new Error('Failed to upload file to S3'));
+        }
+      });
+      xhr.addEventListener('error', (error) => {
+        console.error(error);
+        reject(new Error('Network error during upload'));
+      });
+      xhr.open('PUT', presignedUrl);
+      xhr.setRequestHeader('Content-Type', file.type);
+      xhr.send(file);
+    });
+
+    const base64 = await fileToBase64(file);
+
+    // Step 3: Create financial document record
+    const documentPayload: FinancialDocumentBody = {
+      page: 'accounts-inventory',
+      document_type: documentType,
+      asset_id: assetId,
+      file_data: base64,
+      file_name: file.name,
+      file_mime_type: file.type,
+    };
+
+    await apiUploadFinancialDocument(documentPayload);
+  };
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const resetErrors = () => {
+      monthlyInventoryBox?.classList.remove('is-error');
+      accountsReceivableBox?.classList.remove('is-error');
+      accountsPayableBox?.classList.remove('is-error');
+      monthlyInventoryHelpText?.classList.remove('is-error');
+      accountsReceivableHelpText?.classList.remove('is-error');
+      accountsPayableHelpText?.classList.remove('is-error');
+      submitButton.classList.remove('is-error');
+      submitButton.value = 'UPLOAD DOCUMENTS';
+    };
+
+    // Reset errors on file change
+    monthlyInventoryInput?.addEventListener('change', resetErrors, { once: true });
+    accountsReceivableInput?.addEventListener('change', resetErrors, { once: true });
+    accountsPayableInput?.addEventListener('change', resetErrors, { once: true });
+
+    const filesToUpload: Array<{
+      file: File;
+      documentType: FinancialDocumentBody['document_type'];
+    }> = [];
+
+    // Collect all files (only valid file types)
+    if (monthlyInventoryInput?.files && monthlyInventoryInput.files[0]) {
+      const file = monthlyInventoryInput.files[0];
+      if (ALLOWED_FILE_TYPES.includes(file.type)) {
+        filesToUpload.push({
+          file: file,
+          documentType: 'monthly_inventory_report',
+        });
+      } else {
+        monthlyInventoryHelpText?.classList.add('is-error');
+      }
+    }
+
+    if (accountsReceivableInput?.files && accountsReceivableInput.files[0]) {
+      const file = accountsReceivableInput.files[0];
+      if (ALLOWED_FILE_TYPES.includes(file.type)) {
+        filesToUpload.push({
+          file: file,
+          documentType: 'accounts_receivable_aging',
+        });
+      } else {
+        accountsReceivableHelpText?.classList.add('is-error');
+      }
+    }
+
+    if (accountsPayableInput?.files && accountsPayableInput.files[0]) {
+      const file = accountsPayableInput.files[0];
+      if (ALLOWED_FILE_TYPES.includes(file.type)) {
+        filesToUpload.push({
+          file: file,
+          documentType: 'accounts_payable_aging',
+        });
+      } else {
+        accountsPayableHelpText?.classList.add('is-error');
+      }
+    }
+
+    // Check if there are any invalid files
+    const hasInvalidFiles =
+      (monthlyInventoryInput?.files &&
+        monthlyInventoryInput.files[0] &&
+        !ALLOWED_FILE_TYPES.includes(monthlyInventoryInput.files[0].type)) ||
+      (accountsReceivableInput?.files &&
+        accountsReceivableInput.files[0] &&
+        !ALLOWED_FILE_TYPES.includes(accountsReceivableInput.files[0].type)) ||
+      (accountsPayableInput?.files &&
+        accountsPayableInput.files[0] &&
+        !ALLOWED_FILE_TYPES.includes(accountsPayableInput.files[0].type));
+
+    if (hasInvalidFiles) {
+      submitButton.classList.add('is-error');
+      submitButton.value = 'Please upload only Excel (.xls or .xlsx) files';
+      return;
+    }
+
+    if (filesToUpload.length === 0) {
+      submitButton.classList.add('is-error');
+      submitButton.value = 'Please select at least one file to upload';
+      return;
+    }
+
+    try {
+      submitButton.disabled = true;
+      submitButton.value = 'Uploading...';
+
+      // Upload all files
+      await Promise.all(
+        filesToUpload.map(({ file, documentType }) => uploadFile(file, documentType))
+      );
+
+      submitButton.classList.add('is-success');
+      submitButton.value = 'Documents uploaded successfully!';
+
+      // Reset form
+      if (monthlyInventoryInput) monthlyInventoryInput.value = '';
+      if (accountsReceivableInput) accountsReceivableInput.value = '';
+      if (accountsPayableInput) accountsPayableInput.value = '';
+
+      // Reset helper text
+      if (monthlyInventoryHelpText) {
+        monthlyInventoryHelpText.textContent = '';
+        monthlyInventoryHelpText.classList.remove('is-error');
+      }
+      if (accountsReceivableHelpText) {
+        accountsReceivableHelpText.textContent = '';
+        accountsReceivableHelpText.classList.remove('is-error');
+      }
+      if (accountsPayableHelpText) {
+        accountsPayableHelpText.textContent = '';
+        accountsPayableHelpText.classList.remove('is-error');
+      }
+
+      setTimeout(() => {
+        submitButton.classList.remove('is-success');
+        submitButton.value = 'UPLOAD DOCUMENTS';
+        submitButton.disabled = false;
+        navigateToPath('/finance-docs-ecommerce-performance');
+      }, 900);
+    } catch (error) {
+      const { message } = error as AxiosError;
+      console.error(message);
+      submitButton.classList.add('is-error');
+      submitButton.value = message || 'There was a problem uploading the documents';
+      submitButton.disabled = false;
+    }
+  });
+};
+
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  try {
+    initFinanceDocsAccountsInventoryPage();
+  } catch (error) {
+    console.error(error);
+  }
+});
