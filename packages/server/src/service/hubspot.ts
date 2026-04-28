@@ -14,8 +14,6 @@ const HUBSPOT_DEALS_URL = 'https://api.hubapi.com/crm/v3/objects/deals';
 /** Deal properties to request from the HubSpot API */
 const DEAL_PROPERTIES = ['dealname', 'amount', 'dealstage', 'pipeline', 'closedate', 'hubspot_owner_id'].join(',');
 
-const WARM_LEAD_ONBOARDING_URL = 'https://bx-assembled.webflow.io/dev/warm/onboarding-warm-lead';
-
 export interface HubSpotContactProperties {
 	email: string;
 	firstname?: string;
@@ -199,7 +197,7 @@ export class HubSpotService {
 					// Associate this user with the deal webhook row
 					await this.dealWebhookRepo.update(rowId, { user_id: userId });
 
-					await this.sendWarmLeadInvite(email, firstname || 'there', dealname);
+					await this.sendWarmLeadInvite(email, firstname || 'there', dealname, event.objectId);
 				} catch (contactErr) {
 					// Non-fatal: log and continue with remaining contacts
 					logger.error({ contactId, err: contactErr }, 'Failed to process deal contact');
@@ -242,7 +240,7 @@ export class HubSpotService {
 	/**
 	 * Sends the warm-lead onboarding invite email to a deal contact.
 	 */
-	private async sendWarmLeadInvite(email: string, firstName: string, dealName: string | null): Promise<void> {
+	private async sendWarmLeadInvite(email: string, firstName: string, dealName: string | null, dealId: number): Promise<void> {
 		await sendTemplateEmail(email, firstName, env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 			subject: "You've been invited to apply to Assembled Brands",
 			title: 'Complete your profile',
@@ -250,7 +248,7 @@ export class HubSpotService {
 			name: firstName,
 			body: `Hi ${firstName}, we have received a referral for you${dealName ? ` (${dealName})` : ''}. Please click the button below to fill in your company profile and start your application with Assembled Brands.`,
 			buttonText: 'Start my application',
-			buttonLink: WARM_LEAD_ONBOARDING_URL,
+			buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/warm-lead/onboarding-warm-lead?deal-id=${dealId}`,
 		});
 		logger.info({ email }, 'Warm-lead invite sent');
 	}
