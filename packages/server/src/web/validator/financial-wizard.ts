@@ -31,6 +31,10 @@ const documentUploadSchema = z.object({
 		'monthly_balance_sheet',
 		'monthly_income_statement',
 		'monthly_income_forecast',
+		'monthly_balance_sheet_forecast',
+		// Annual forecasts (warm-lead: next full year projections)
+		'income_statement_forecast',
+		'balance_sheet_full_year_forecast',
 		// Accounts & Inventory (Step 3)
 		'monthly_inventory_report',
 		'accounts_receivable_aging',
