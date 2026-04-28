@@ -387,6 +387,20 @@ export class OnboardingWizardService {
 		}
 	}
 
+	public async saveWarmLeadDetailsForUser(
+		userId: number,
+		body: Omit<WarmLeadDetailsBody, 'deal_id'>,
+	): Promise<{ application: OnboardingApplication; user: User }> {
+		const dealRow = await this.hubSpotService.findProcessedDealByUserId(userId);
+		if (!dealRow) {
+			throw new Error(`No processed deal found for user ${userId}`);
+		}
+		return this.saveWarmLeadDetails({
+			deal_id: dealRow.object_id,
+			...body,
+		});
+	}
+
 	/**
 	 * Deletes an application
 	 * @param {number} id - ID of the application to delete

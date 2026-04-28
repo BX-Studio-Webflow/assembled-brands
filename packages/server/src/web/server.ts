@@ -47,6 +47,7 @@ import {
 	onboardingStep1Validator,
 	onboardingStep2Validator,
 	onboardingStep3Validator,
+	warmLeadDetailsForUserValidator,
 	warmLeadDetailsValidator,
 } from './validator/onboarding.ts';
 import { createTeamValidator, inviteMemberValidator, revokeAccessValidator, teamQueryValidator } from './validator/team.ts';
@@ -280,6 +281,7 @@ export class Server {
 		// All routes below require authentication
 		onboardingWizard.use(authCheck);
 		onboardingWizard.use(teamAccess(teamService));
+		onboardingWizard.post('/warm-lead/me', warmLeadDetailsForUserValidator, onboardingWizardCtrl.submitWarmLeadDetailsForLoggedInUser);
 
 		onboardingWizard.post('/step1', onboardingStep1Validator, onboardingWizardCtrl.saveStep1);
 		onboardingWizard.post('/step2', onboardingStep2Validator, onboardingWizardCtrl.saveStep2);

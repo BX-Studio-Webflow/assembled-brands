@@ -71,6 +71,10 @@ const warmLeadDetailsSchema = z
 export const warmLeadDetailsValidator = zValidator('json', warmLeadDetailsSchema);
 export type WarmLeadDetailsBody = z.infer<typeof warmLeadDetailsSchema>;
 
+const warmLeadDetailsForUserSchema = warmLeadDetailsSchema.omit({ deal_id: true });
+export const warmLeadDetailsForUserValidator = zValidator('json', warmLeadDetailsForUserSchema);
+export type WarmLeadDetailsForUserBody = z.infer<typeof warmLeadDetailsForUserSchema>;
+
 // Progress Response Type
 export type OnboardingProgressResponse = {
 	current_step: number;

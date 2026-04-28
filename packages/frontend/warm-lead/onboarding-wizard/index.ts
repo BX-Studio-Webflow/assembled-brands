@@ -1,7 +1,8 @@
 import type { AxiosError } from 'axios';
 import ApiService from 'shared/services/ApiService';
+import { apiGetOnboardingProgress } from 'shared/services/OnboardingService';
 
-import { setCookie } from '$utils/auth';
+import { getCookie, setCookie } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
 import { queryElement } from '$utils/selectors';
 
@@ -20,6 +21,8 @@ const initWarmLeadOnboardingPage = async () => {
     console.error('Warm-lead onboarding form not found: [dev-target="onboarding-form"]');
     return;
   }
+
+  const isLoggedIn = getCookie('accessToken');
 
   // deal_id comes from the invite link: ?deal_id=123
   const dealIdParam = new URLSearchParams(window.location.search).get('deal_id');
@@ -49,7 +52,9 @@ const initWarmLeadOnboardingPage = async () => {
     return;
   }
 
-  if (!dealId || Number.isNaN(dealId)) {
+  // First-time invite flow requires deal_id. Returning logged-in users can continue
+  // from saved progress even if URL no longer has query params.
+  if (!isLoggedIn && (!dealId || Number.isNaN(dealId))) {
     submitButton.classList.add('is-error');
     submitButton.value = 'Invalid invite link — deal ID missing';
     submitButton.disabled = true;
@@ -69,6 +74,40 @@ const initWarmLeadOnboardingPage = async () => {
 
   memberRadios.forEach((radio) => radio.addEventListener('change', toggleMemberField));
   toggleMemberField();
+
+  const loadWarmLeadProgress = async () => {
+    // Warm lead can arrive unauthenticated from invite link; prefill only after
+    // first save/login when accessToken exists.
+    if (!getCookie('accessToken')) {
+      console.error('No access token found, skipping warm-lead progress load');
+      return;
+    }
+    try {
+      const result = await apiGetOnboardingProgress();
+      const step1 = result?.progress?.step1;
+      if (!step1) return;
+
+      if (step1.legal_name) legalName.value = step1.legal_name;
+      if (step1.incorporation_state) companyHq.value = step1.incorporation_state;
+      if (step1.net_revenue_last_12_months) {
+        netRevenue.value = step1.net_revenue_last_12_months;
+      }
+
+      if (step1.working_with_team_member) {
+        const yes = memberRadios.find((r) => r.value === 'yes');
+        if (yes) yes.checked = true;
+        if (step1.team_member_email) memberSelect.value = step1.team_member_email;
+      } else {
+        const no = memberRadios.find((r) => r.value === 'no');
+        if (no) no.checked = true;
+      }
+      toggleMemberField();
+    } catch (error) {
+      console.error('Failed to preload warm-lead onboarding progress:', error);
+    }
+  };
+
+  await loadWarmLeadProgress();
 
   backButton.addEventListener('click', (event) => {
     event.preventDefault();
@@ -147,8 +186,7 @@ const initWarmLeadOnboardingPage = async () => {
       return;
     }
 
-    const payload: WarmLeadPayload = {
-      deal_id: dealId,
+    const commonPayload = {
       legal_name: legalName.value.trim(),
       incorporation_state: companyHq.value,
       net_revenue_last_12_months: netRevenue.value,
@@ -163,18 +201,30 @@ const initWarmLeadOnboardingPage = async () => {
     };
 
     try {
-      const response = await ApiService.fetchDataWithAxios<WarmLeadResponse>({
-        url: '/onboarding-wizard/warm-lead',
-        method: 'post',
-        data: payload,
-      });
+      if (isLoggedIn) {
+        await ApiService.fetchDataWithAxios({
+          url: '/onboarding-wizard/warm-lead/me',
+          method: 'post',
+          data: commonPayload,
+        });
+      } else {
+        const payload: WarmLeadPayload = {
+          deal_id: dealId as number,
+          ...commonPayload,
+        };
+        const response = await ApiService.fetchDataWithAxios<WarmLeadResponse>({
+          url: '/onboarding-wizard/warm-lead',
+          method: 'post',
+          data: payload,
+        });
 
-      setCookie('accessToken', response.token, 10);
-      localStorage.setItem('user', JSON.stringify(response.user));
+        setCookie('accessToken', response.token, 10);
+        localStorage.setItem('user', JSON.stringify(response.user));
 
-      const team = response.teams?.[0];
-      if (team) {
-        localStorage.setItem('x-team-id', team.team_id.toString());
+        const team = response.teams?.[0];
+        if (team) {
+          localStorage.setItem('x-team-id', team.team_id.toString());
+        }
       }
 
       submitButton.classList.add('is-success');

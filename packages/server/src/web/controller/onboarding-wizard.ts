@@ -8,7 +8,13 @@ import type { OnboardingWizardService } from '../../service/onboarding-wizard.js
 import type { TeamService } from '../../service/team.js';
 import type { UserService } from '../../service/user.js';
 import type { UpdateStepBody } from '../validator/financial-wizard.js';
-import type { OnboardingStep1Body, OnboardingStep2Body, OnboardingStep3Body, WarmLeadDetailsBody } from '../validator/onboarding.ts';
+import type {
+	OnboardingStep1Body,
+	OnboardingStep2Body,
+	OnboardingStep3Body,
+	WarmLeadDetailsBody,
+	WarmLeadDetailsForUserBody,
+} from '../validator/onboarding.ts';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { serveData } from './resp/resp.js';
 import { serializeUser } from './serializer/user.js';
@@ -301,6 +307,27 @@ export class OnboardingWizardController {
 			}
 			if (error instanceof Error && error.message.includes('no associated user')) {
 				return serveBadRequest(c, 'No account linked to this deal yet. Please wait for your invite email.');
+			}
+			return serveInternalServerError(c, error);
+		}
+	};
+
+	public submitWarmLeadDetailsForLoggedInUser = async (c: Context) => {
+		try {
+			const user = await this.getUser(c);
+			if (!user) {
+				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+			}
+			const body: WarmLeadDetailsForUserBody = await c.req.json();
+			const { application } = await this.service.saveWarmLeadDetailsForUser(user.id, body);
+			return serveData(c, {
+				message: 'Details saved successfully',
+				application,
+			});
+		} catch (error) {
+			logger.error(error);
+			if (error instanceof Error && error.message.includes('No processed deal')) {
+				return serveBadRequest(c, 'No HubSpot deal linked to this account yet. Please use your invite link first.');
 			}
 			return serveInternalServerError(c, error);
 		}

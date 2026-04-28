@@ -1,6 +1,3269 @@
-var hr=Object.defineProperty;var gr=(e,t)=>{for(var r in t)hr(e,r,{get:t[r],enumerable:!0})};function ne(e,t){return function(){return e.apply(t,arguments)}}var{toString:yr}=Object.prototype,{getPrototypeOf:ke}=Object,{iterator:xe,toStringTag:mt}=Symbol,ve=(e=>t=>{let r=yr.call(t);return e[r]||(e[r]=r.slice(8,-1).toLowerCase())})(Object.create(null)),U=e=>(e=e.toLowerCase(),t=>ve(t)===e),Re=e=>t=>typeof t===e,{isArray:Q}=Array,X=Re("undefined");function oe(e){return e!==null&&!X(e)&&e.constructor!==null&&!X(e.constructor)&&D(e.constructor.isBuffer)&&e.constructor.isBuffer(e)}var ht=U("ArrayBuffer");function br(e){let t;return typeof ArrayBuffer<"u"&&ArrayBuffer.isView?t=ArrayBuffer.isView(e):t=e&&e.buffer&&ht(e.buffer),t}var Er=Re("string"),D=Re("function"),gt=Re("number"),se=e=>e!==null&&typeof e=="object",xr=e=>e===!0||e===!1,Ee=e=>{if(ve(e)!=="object")return!1;let t=ke(e);return(t===null||t===Object.prototype||Object.getPrototypeOf(t)===null)&&!(mt in e)&&!(xe in e)},vr=e=>{if(!se(e)||oe(e))return!1;try{return Object.keys(e).length===0&&Object.getPrototypeOf(e)===Object.prototype}catch{return!1}},Rr=U("Date"),wr=U("File"),Ar=U("Blob"),Sr=U("FileList"),Tr=e=>se(e)&&D(e.pipe),_r=e=>{let t;return e&&(typeof FormData=="function"&&e instanceof FormData||D(e.append)&&((t=ve(e))==="formdata"||t==="object"&&D(e.toString)&&e.toString()==="[object FormData]"))},Lr=U("URLSearchParams"),[Cr,Or,Dr,Pr]=["ReadableStream","Request","Response","Headers"].map(U),Ur=e=>e.trim?e.trim():e.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,"");function ie(e,t,{allOwnKeys:r=!1}={}){if(e===null||typeof e>"u")return;let n,o;if(typeof e!="object"&&(e=[e]),Q(e))for(n=0,o=e.length;n<o;n++)t.call(null,e[n],n,e);else{if(oe(e))return;let s=r?Object.getOwnPropertyNames(e):Object.keys(e),i=s.length,c;for(n=0;n<i;n++)c=s[n],t.call(null,e[c],c,e)}}function yt(e,t){if(oe(e))return null;t=t.toLowerCase();let r=Object.keys(e),n=r.length,o;for(;n-- >0;)if(o=r[n],t===o.toLowerCase())return o;return null}var z=typeof globalThis<"u"?globalThis:typeof self<"u"?self:typeof window<"u"?window:global,bt=e=>!X(e)&&e!==z;function Me(){let{caseless:e,skipUndefined:t}=bt(this)&&this||{},r={},n=(o,s)=>{let i=e&&yt(r,s)||s;Ee(r[i])&&Ee(o)?r[i]=Me(r[i],o):Ee(o)?r[i]=Me({},o):Q(o)?r[i]=o.slice():(!t||!X(o))&&(r[i]=o)};for(let o=0,s=arguments.length;o<s;o++)arguments[o]&&ie(arguments[o],n);return r}var Fr=(e,t,r,{allOwnKeys:n}={})=>(ie(t,(o,s)=>{r&&D(o)?e[s]=ne(o,r):e[s]=o},{allOwnKeys:n}),e),Br=e=>(e.charCodeAt(0)===65279&&(e=e.slice(1)),e),Mr=(e,t,r,n)=>{e.prototype=Object.create(t.prototype,n),e.prototype.constructor=e,Object.defineProperty(e,"super",{value:t.prototype}),r&&Object.assign(e.prototype,r)},kr=(e,t,r,n)=>{let o,s,i,c={};if(t=t||{},e==null)return t;do{for(o=Object.getOwnPropertyNames(e),s=o.length;s-- >0;)i=o[s],(!n||n(i,e,t))&&!c[i]&&(t[i]=e[i],c[i]=!0);e=r!==!1&&ke(e)}while(e&&(!r||r(e,t))&&e!==Object.prototype);return t},Nr=(e,t,r)=>{e=String(e),(r===void 0||r>e.length)&&(r=e.length),r-=t.length;let n=e.indexOf(t,r);return n!==-1&&n===r},Hr=e=>{if(!e)return null;if(Q(e))return e;let t=e.length;if(!gt(t))return null;let r=new Array(t);for(;t-- >0;)r[t]=e[t];return r},Ir=(e=>t=>e&&t instanceof e)(typeof Uint8Array<"u"&&ke(Uint8Array)),Wr=(e,t)=>{let n=(e&&e[xe]).call(e),o;for(;(o=n.next())&&!o.done;){let s=o.value;t.call(e,s[0],s[1])}},qr=(e,t)=>{let r,n=[];for(;(r=e.exec(t))!==null;)n.push(r);return n},jr=U("HTMLFormElement"),zr=e=>e.toLowerCase().replace(/[-_\s]([a-z\d])(\w*)/g,function(r,n,o){return n.toUpperCase()+o}),ft=(({hasOwnProperty:e})=>(t,r)=>e.call(t,r))(Object.prototype),$r=U("RegExp"),Et=(e,t)=>{let r=Object.getOwnPropertyDescriptors(e),n={};ie(r,(o,s)=>{let i;(i=t(o,s,e))!==!1&&(n[s]=i||o)}),Object.defineProperties(e,n)},Gr=e=>{Et(e,(t,r)=>{if(D(e)&&["arguments","caller","callee"].indexOf(r)!==-1)return!1;let n=e[r];if(D(n)){if(t.enumerable=!1,"writable"in t){t.writable=!1;return}t.set||(t.set=()=>{throw Error("Can not rewrite read-only method '"+r+"'")})}})},Vr=(e,t)=>{let r={},n=o=>{o.forEach(s=>{r[s]=!0})};return Q(e)?n(e):n(String(e).split(t)),r},Jr=()=>{},Kr=(e,t)=>e!=null&&Number.isFinite(e=+e)?e:t;function Xr(e){return!!(e&&D(e.append)&&e[mt]==="FormData"&&e[xe])}var Qr=e=>{let t=new Array(10),r=(n,o)=>{if(se(n)){if(t.indexOf(n)>=0)return;if(oe(n))return n;if(!("toJSON"in n)){t[o]=n;let s=Q(n)?[]:{};return ie(n,(i,c)=>{let d=r(i,o+1);!X(d)&&(s[c]=d)}),t[o]=void 0,s}}return n};return r(e,0)},Yr=U("AsyncFunction"),Zr=e=>e&&(se(e)||D(e))&&D(e.then)&&D(e.catch),xt=((e,t)=>e?setImmediate:t?((r,n)=>(z.addEventListener("message",({source:o,data:s})=>{o===z&&s===r&&n.length&&n.shift()()},!1),o=>{n.push(o),z.postMessage(r,"*")}))(`axios@${Math.random()}`,[]):r=>setTimeout(r))(typeof setImmediate=="function",D(z.postMessage)),en=typeof queueMicrotask<"u"?queueMicrotask.bind(z):typeof process<"u"&&process.nextTick||xt,tn=e=>e!=null&&D(e[xe]),a={isArray:Q,isArrayBuffer:ht,isBuffer:oe,isFormData:_r,isArrayBufferView:br,isString:Er,isNumber:gt,isBoolean:xr,isObject:se,isPlainObject:Ee,isEmptyObject:vr,isReadableStream:Cr,isRequest:Or,isResponse:Dr,isHeaders:Pr,isUndefined:X,isDate:Rr,isFile:wr,isBlob:Ar,isRegExp:$r,isFunction:D,isStream:Tr,isURLSearchParams:Lr,isTypedArray:Ir,isFileList:Sr,forEach:ie,merge:Me,extend:Fr,trim:Ur,stripBOM:Br,inherits:Mr,toFlatObject:kr,kindOf:ve,kindOfTest:U,endsWith:Nr,toArray:Hr,forEachEntry:Wr,matchAll:qr,isHTMLForm:jr,hasOwnProperty:ft,hasOwnProp:ft,reduceDescriptors:Et,freezeMethods:Gr,toObjectSet:Vr,toCamelCase:zr,noop:Jr,toFiniteNumber:Kr,findKey:yt,global:z,isContextDefined:bt,isSpecCompliantForm:Xr,toJSONObject:Qr,isAsyncFn:Yr,isThenable:Zr,setImmediate:xt,asap:en,isIterable:tn};function Y(e,t,r,n,o){Error.call(this),Error.captureStackTrace?Error.captureStackTrace(this,this.constructor):this.stack=new Error().stack,this.message=e,this.name="AxiosError",t&&(this.code=t),r&&(this.config=r),n&&(this.request=n),o&&(this.response=o,this.status=o.status?o.status:null)}a.inherits(Y,Error,{toJSON:function(){return{message:this.message,name:this.name,description:this.description,number:this.number,fileName:this.fileName,lineNumber:this.lineNumber,columnNumber:this.columnNumber,stack:this.stack,config:a.toJSONObject(this.config),code:this.code,status:this.status}}});var vt=Y.prototype,Rt={};["ERR_BAD_OPTION_VALUE","ERR_BAD_OPTION","ECONNABORTED","ETIMEDOUT","ERR_NETWORK","ERR_FR_TOO_MANY_REDIRECTS","ERR_DEPRECATED","ERR_BAD_RESPONSE","ERR_BAD_REQUEST","ERR_CANCELED","ERR_NOT_SUPPORT","ERR_INVALID_URL"].forEach(e=>{Rt[e]={value:e}});Object.defineProperties(Y,Rt);Object.defineProperty(vt,"isAxiosError",{value:!0});Y.from=(e,t,r,n,o,s)=>{let i=Object.create(vt);a.toFlatObject(e,i,function(l){return l!==Error.prototype},u=>u!=="isAxiosError");let c=e&&e.message?e.message:"Error",d=t==null&&e?e.code:t;return Y.call(i,c,d,r,n,o),e&&i.cause==null&&Object.defineProperty(i,"cause",{value:e,configurable:!0}),i.name=e&&e.name||"Error",s&&Object.assign(i,s),i};var b=Y;var we=null;function Ne(e){return a.isPlainObject(e)||a.isArray(e)}function At(e){return a.endsWith(e,"[]")?e.slice(0,-2):e}function wt(e,t,r){return e?e.concat(t).map(function(o,s){return o=At(o),!r&&s?"["+o+"]":o}).join(r?".":""):t}function rn(e){return a.isArray(e)&&!e.some(Ne)}var nn=a.toFlatObject(a,{},null,function(t){return/^is[A-Z]/.test(t)});function on(e,t,r){if(!a.isObject(e))throw new TypeError("target must be an object");t=t||new(we||FormData),r=a.toFlatObject(r,{metaTokens:!0,dots:!1,indexes:!1},!1,function(y,f){return!a.isUndefined(f[y])});let n=r.metaTokens,o=r.visitor||l,s=r.dots,i=r.indexes,d=(r.Blob||typeof Blob<"u"&&Blob)&&a.isSpecCompliantForm(t);if(!a.isFunction(o))throw new TypeError("visitor must be a function");function u(p){if(p===null)return"";if(a.isDate(p))return p.toISOString();if(a.isBoolean(p))return p.toString();if(!d&&a.isBlob(p))throw new b("Blob is not supported. Use a Buffer instead.");return a.isArrayBuffer(p)||a.isTypedArray(p)?d&&typeof Blob=="function"?new Blob([p]):Buffer.from(p):p}function l(p,y,f){let A=p;if(p&&!f&&typeof p=="object"){if(a.endsWith(y,"{}"))y=n?y:y.slice(0,-2),p=JSON.stringify(p);else if(a.isArray(p)&&rn(p)||(a.isFileList(p)||a.endsWith(y,"[]"))&&(A=a.toArray(p)))return y=At(y),A.forEach(function(h,g){!(a.isUndefined(h)||h===null)&&t.append(i===!0?wt([y],g,s):i===null?y:y+"[]",u(h))}),!1}return Ne(p)?!0:(t.append(wt(f,y,s),u(p)),!1)}let m=[],E=Object.assign(nn,{defaultVisitor:l,convertValue:u,isVisitable:Ne});function L(p,y){if(!a.isUndefined(p)){if(m.indexOf(p)!==-1)throw Error("Circular reference detected in "+y.join("."));m.push(p),a.forEach(p,function(A,O){(!(a.isUndefined(A)||A===null)&&o.call(t,A,a.isString(O)?O.trim():O,y,E))===!0&&L(A,y?y.concat(O):[O])}),m.pop()}}if(!a.isObject(e))throw new TypeError("data must be an object");return L(e),t}var q=on;function St(e){let t={"!":"%21","'":"%27","(":"%28",")":"%29","~":"%7E","%20":"+","%00":"\0"};return encodeURIComponent(e).replace(/[!'()~]|%20|%00/g,function(n){return t[n]})}function Tt(e,t){this._pairs=[],e&&q(e,this,t)}var _t=Tt.prototype;_t.append=function(t,r){this._pairs.push([t,r])};_t.toString=function(t){let r=t?function(n){return t.call(this,n,St)}:St;return this._pairs.map(function(o){return r(o[0])+"="+r(o[1])},"").join("&")};var Ae=Tt;function sn(e){return encodeURIComponent(e).replace(/%3A/gi,":").replace(/%24/g,"$").replace(/%2C/gi,",").replace(/%20/g,"+")}function ae(e,t,r){if(!t)return e;let n=r&&r.encode||sn;a.isFunction(r)&&(r={serialize:r});let o=r&&r.serialize,s;if(o?s=o(t,r):s=a.isURLSearchParams(t)?t.toString():new Ae(t,r).toString(n),s){let i=e.indexOf("#");i!==-1&&(e=e.slice(0,i)),e+=(e.indexOf("?")===-1?"?":"&")+s}return e}var He=class{constructor(){this.handlers=[]}use(t,r,n){return this.handlers.push({fulfilled:t,rejected:r,synchronous:n?n.synchronous:!1,runWhen:n?n.runWhen:null}),this.handlers.length-1}eject(t){this.handlers[t]&&(this.handlers[t]=null)}clear(){this.handlers&&(this.handlers=[])}forEach(t){a.forEach(this.handlers,function(n){n!==null&&t(n)})}},Ie=He;var Se={silentJSONParsing:!0,forcedJSONParsing:!0,clarifyTimeoutError:!1};var Lt=typeof URLSearchParams<"u"?URLSearchParams:Ae;var Ct=typeof FormData<"u"?FormData:null;var Ot=typeof Blob<"u"?Blob:null;var Dt={isBrowser:!0,classes:{URLSearchParams:Lt,FormData:Ct,Blob:Ot},protocols:["http","https","file","blob","url","data"]};var je={};gr(je,{hasBrowserEnv:()=>qe,hasStandardBrowserEnv:()=>an,hasStandardBrowserWebWorkerEnv:()=>cn,navigator:()=>We,origin:()=>ln});var qe=typeof window<"u"&&typeof document<"u",We=typeof navigator=="object"&&navigator||void 0,an=qe&&(!We||["ReactNative","NativeScript","NS"].indexOf(We.product)<0),cn=typeof WorkerGlobalScope<"u"&&self instanceof WorkerGlobalScope&&typeof self.importScripts=="function",ln=qe&&window.location.href||"http://localhost";var w={...je,...Dt};function ze(e,t){return q(e,new w.classes.URLSearchParams,{visitor:function(r,n,o,s){return w.isNode&&a.isBuffer(r)?(this.append(n,r.toString("base64")),!1):s.defaultVisitor.apply(this,arguments)},...t})}function un(e){return a.matchAll(/\w+|\[(\w*)]/g,e).map(t=>t[0]==="[]"?"":t[1]||t[0])}function pn(e){let t={},r=Object.keys(e),n,o=r.length,s;for(n=0;n<o;n++)s=r[n],t[s]=e[s];return t}function dn(e){function t(r,n,o,s){let i=r[s++];if(i==="__proto__")return!0;let c=Number.isFinite(+i),d=s>=r.length;return i=!i&&a.isArray(o)?o.length:i,d?(a.hasOwnProp(o,i)?o[i]=[o[i],n]:o[i]=n,!c):((!o[i]||!a.isObject(o[i]))&&(o[i]=[]),t(r,n,o[i],s)&&a.isArray(o[i])&&(o[i]=pn(o[i])),!c)}if(a.isFormData(e)&&a.isFunction(e.entries)){let r={};return a.forEachEntry(e,(n,o)=>{t(un(n),o,r,0)}),r}return null}var Te=dn;function fn(e,t,r){if(a.isString(e))try{return(t||JSON.parse)(e),a.trim(e)}catch(n){if(n.name!=="SyntaxError")throw n}return(r||JSON.stringify)(e)}var $e={transitional:Se,adapter:["xhr","http","fetch"],transformRequest:[function(t,r){let n=r.getContentType()||"",o=n.indexOf("application/json")>-1,s=a.isObject(t);if(s&&a.isHTMLForm(t)&&(t=new FormData(t)),a.isFormData(t))return o?JSON.stringify(Te(t)):t;if(a.isArrayBuffer(t)||a.isBuffer(t)||a.isStream(t)||a.isFile(t)||a.isBlob(t)||a.isReadableStream(t))return t;if(a.isArrayBufferView(t))return t.buffer;if(a.isURLSearchParams(t))return r.setContentType("application/x-www-form-urlencoded;charset=utf-8",!1),t.toString();let c;if(s){if(n.indexOf("application/x-www-form-urlencoded")>-1)return ze(t,this.formSerializer).toString();if((c=a.isFileList(t))||n.indexOf("multipart/form-data")>-1){let d=this.env&&this.env.FormData;return q(c?{"files[]":t}:t,d&&new d,this.formSerializer)}}return s||o?(r.setContentType("application/json",!1),fn(t)):t}],transformResponse:[function(t){let r=this.transitional||$e.transitional,n=r&&r.forcedJSONParsing,o=this.responseType==="json";if(a.isResponse(t)||a.isReadableStream(t))return t;if(t&&a.isString(t)&&(n&&!this.responseType||o)){let i=!(r&&r.silentJSONParsing)&&o;try{return JSON.parse(t,this.parseReviver)}catch(c){if(i)throw c.name==="SyntaxError"?b.from(c,b.ERR_BAD_RESPONSE,this,null,this.response):c}}return t}],timeout:0,xsrfCookieName:"XSRF-TOKEN",xsrfHeaderName:"X-XSRF-TOKEN",maxContentLength:-1,maxBodyLength:-1,env:{FormData:w.classes.FormData,Blob:w.classes.Blob},validateStatus:function(t){return t>=200&&t<300},headers:{common:{Accept:"application/json, text/plain, */*","Content-Type":void 0}}};a.forEach(["delete","get","head","post","put","patch"],e=>{$e.headers[e]={}});var Z=$e;var mn=a.toObjectSet(["age","authorization","content-length","content-type","etag","expires","from","host","if-modified-since","if-unmodified-since","last-modified","location","max-forwards","proxy-authorization","referer","retry-after","user-agent"]),Pt=e=>{let t={},r,n,o;return e&&e.split(`
-`).forEach(function(i){o=i.indexOf(":"),r=i.substring(0,o).trim().toLowerCase(),n=i.substring(o+1).trim(),!(!r||t[r]&&mn[r])&&(r==="set-cookie"?t[r]?t[r].push(n):t[r]=[n]:t[r]=t[r]?t[r]+", "+n:n)}),t};var Ut=Symbol("internals");function ce(e){return e&&String(e).trim().toLowerCase()}function _e(e){return e===!1||e==null?e:a.isArray(e)?e.map(_e):String(e)}function hn(e){let t=Object.create(null),r=/([^\s,;=]+)\s*(?:=\s*([^,;]+))?/g,n;for(;n=r.exec(e);)t[n[1]]=n[2];return t}var gn=e=>/^[-_a-zA-Z0-9^`|~,!#$%&'*+.]+$/.test(e.trim());function Ge(e,t,r,n,o){if(a.isFunction(n))return n.call(this,t,r);if(o&&(t=r),!!a.isString(t)){if(a.isString(n))return t.indexOf(n)!==-1;if(a.isRegExp(n))return n.test(t)}}function yn(e){return e.trim().toLowerCase().replace(/([a-z\d])(\w*)/g,(t,r,n)=>r.toUpperCase()+n)}function bn(e,t){let r=a.toCamelCase(" "+t);["get","set","has"].forEach(n=>{Object.defineProperty(e,n+r,{value:function(o,s,i){return this[n].call(this,t,o,s,i)},configurable:!0})})}var ee=class{constructor(t){t&&this.set(t)}set(t,r,n){let o=this;function s(c,d,u){let l=ce(d);if(!l)throw new Error("header name must be a non-empty string");let m=a.findKey(o,l);(!m||o[m]===void 0||u===!0||u===void 0&&o[m]!==!1)&&(o[m||d]=_e(c))}let i=(c,d)=>a.forEach(c,(u,l)=>s(u,l,d));if(a.isPlainObject(t)||t instanceof this.constructor)i(t,r);else if(a.isString(t)&&(t=t.trim())&&!gn(t))i(Pt(t),r);else if(a.isObject(t)&&a.isIterable(t)){let c={},d,u;for(let l of t){if(!a.isArray(l))throw TypeError("Object iterator must return a key-value pair");c[u=l[0]]=(d=c[u])?a.isArray(d)?[...d,l[1]]:[d,l[1]]:l[1]}i(c,r)}else t!=null&&s(r,t,n);return this}get(t,r){if(t=ce(t),t){let n=a.findKey(this,t);if(n){let o=this[n];if(!r)return o;if(r===!0)return hn(o);if(a.isFunction(r))return r.call(this,o,n);if(a.isRegExp(r))return r.exec(o);throw new TypeError("parser must be boolean|regexp|function")}}}has(t,r){if(t=ce(t),t){let n=a.findKey(this,t);return!!(n&&this[n]!==void 0&&(!r||Ge(this,this[n],n,r)))}return!1}delete(t,r){let n=this,o=!1;function s(i){if(i=ce(i),i){let c=a.findKey(n,i);c&&(!r||Ge(n,n[c],c,r))&&(delete n[c],o=!0)}}return a.isArray(t)?t.forEach(s):s(t),o}clear(t){let r=Object.keys(this),n=r.length,o=!1;for(;n--;){let s=r[n];(!t||Ge(this,this[s],s,t,!0))&&(delete this[s],o=!0)}return o}normalize(t){let r=this,n={};return a.forEach(this,(o,s)=>{let i=a.findKey(n,s);if(i){r[i]=_e(o),delete r[s];return}let c=t?yn(s):String(s).trim();c!==s&&delete r[s],r[c]=_e(o),n[c]=!0}),this}concat(...t){return this.constructor.concat(this,...t)}toJSON(t){let r=Object.create(null);return a.forEach(this,(n,o)=>{n!=null&&n!==!1&&(r[o]=t&&a.isArray(n)?n.join(", "):n)}),r}[Symbol.iterator](){return Object.entries(this.toJSON())[Symbol.iterator]()}toString(){return Object.entries(this.toJSON()).map(([t,r])=>t+": "+r).join(`
-`)}getSetCookie(){return this.get("set-cookie")||[]}get[Symbol.toStringTag](){return"AxiosHeaders"}static from(t){return t instanceof this?t:new this(t)}static concat(t,...r){let n=new this(t);return r.forEach(o=>n.set(o)),n}static accessor(t){let n=(this[Ut]=this[Ut]={accessors:{}}).accessors,o=this.prototype;function s(i){let c=ce(i);n[c]||(bn(o,i),n[c]=!0)}return a.isArray(t)?t.forEach(s):s(t),this}};ee.accessor(["Content-Type","Content-Length","Accept","Accept-Encoding","User-Agent","Authorization"]);a.reduceDescriptors(ee.prototype,({value:e},t)=>{let r=t[0].toUpperCase()+t.slice(1);return{get:()=>e,set(n){this[r]=n}}});a.freezeMethods(ee);var T=ee;function le(e,t){let r=this||Z,n=t||r,o=T.from(n.headers),s=n.data;return a.forEach(e,function(c){s=c.call(r,s,o.normalize(),t?t.status:void 0)}),o.normalize(),s}function ue(e){return!!(e&&e.__CANCEL__)}function Ft(e,t,r){b.call(this,e??"canceled",b.ERR_CANCELED,t,r),this.name="CanceledError"}a.inherits(Ft,b,{__CANCEL__:!0});var M=Ft;function pe(e,t,r){let n=r.config.validateStatus;!r.status||!n||n(r.status)?e(r):t(new b("Request failed with status code "+r.status,[b.ERR_BAD_REQUEST,b.ERR_BAD_RESPONSE][Math.floor(r.status/100)-4],r.config,r.request,r))}function Ve(e){let t=/^([-+\w]{1,25})(:?\/\/|:)/.exec(e);return t&&t[1]||""}function En(e,t){e=e||10;let r=new Array(e),n=new Array(e),o=0,s=0,i;return t=t!==void 0?t:1e3,function(d){let u=Date.now(),l=n[s];i||(i=u),r[o]=d,n[o]=u;let m=s,E=0;for(;m!==o;)E+=r[m++],m=m%e;if(o=(o+1)%e,o===s&&(s=(s+1)%e),u-i<t)return;let L=l&&u-l;return L?Math.round(E*1e3/L):void 0}}var Bt=En;function xn(e,t){let r=0,n=1e3/t,o,s,i=(u,l=Date.now())=>{r=l,o=null,s&&(clearTimeout(s),s=null),e(...u)};return[(...u)=>{let l=Date.now(),m=l-r;m>=n?i(u,l):(o=u,s||(s=setTimeout(()=>{s=null,i(o)},n-m)))},()=>o&&i(o)]}var Mt=xn;var te=(e,t,r=3)=>{let n=0,o=Bt(50,250);return Mt(s=>{let i=s.loaded,c=s.lengthComputable?s.total:void 0,d=i-n,u=o(d),l=i<=c;n=i;let m={loaded:i,total:c,progress:c?i/c:void 0,bytes:d,rate:u||void 0,estimated:u&&c&&l?(c-i)/u:void 0,event:s,lengthComputable:c!=null,[t?"download":"upload"]:!0};e(m)},r)},Je=(e,t)=>{let r=e!=null;return[n=>t[0]({lengthComputable:r,total:e,loaded:n}),t[1]]},Ke=e=>(...t)=>a.asap(()=>e(...t));var kt=w.hasStandardBrowserEnv?((e,t)=>r=>(r=new URL(r,w.origin),e.protocol===r.protocol&&e.host===r.host&&(t||e.port===r.port)))(new URL(w.origin),w.navigator&&/(msie|trident)/i.test(w.navigator.userAgent)):()=>!0;var Nt=w.hasStandardBrowserEnv?{write(e,t,r,n,o,s,i){if(typeof document>"u")return;let c=[`${e}=${encodeURIComponent(t)}`];a.isNumber(r)&&c.push(`expires=${new Date(r).toUTCString()}`),a.isString(n)&&c.push(`path=${n}`),a.isString(o)&&c.push(`domain=${o}`),s===!0&&c.push("secure"),a.isString(i)&&c.push(`SameSite=${i}`),document.cookie=c.join("; ")},read(e){if(typeof document>"u")return null;let t=document.cookie.match(new RegExp("(?:^|; )"+e+"=([^;]*)"));return t?decodeURIComponent(t[1]):null},remove(e){this.write(e,"",Date.now()-864e5,"/")}}:{write(){},read(){return null},remove(){}};function Xe(e){return/^([a-z][a-z\d+\-.]*:)?\/\//i.test(e)}function Qe(e,t){return t?e.replace(/\/?\/$/,"")+"/"+t.replace(/^\/+/,""):e}function de(e,t,r){let n=!Xe(t);return e&&(n||r==!1)?Qe(e,t):t}var Ht=e=>e instanceof T?{...e}:e;function F(e,t){t=t||{};let r={};function n(u,l,m,E){return a.isPlainObject(u)&&a.isPlainObject(l)?a.merge.call({caseless:E},u,l):a.isPlainObject(l)?a.merge({},l):a.isArray(l)?l.slice():l}function o(u,l,m,E){if(a.isUndefined(l)){if(!a.isUndefined(u))return n(void 0,u,m,E)}else return n(u,l,m,E)}function s(u,l){if(!a.isUndefined(l))return n(void 0,l)}function i(u,l){if(a.isUndefined(l)){if(!a.isUndefined(u))return n(void 0,u)}else return n(void 0,l)}function c(u,l,m){if(m in t)return n(u,l);if(m in e)return n(void 0,u)}let d={url:s,method:s,data:s,baseURL:i,transformRequest:i,transformResponse:i,paramsSerializer:i,timeout:i,timeoutMessage:i,withCredentials:i,withXSRFToken:i,adapter:i,responseType:i,xsrfCookieName:i,xsrfHeaderName:i,onUploadProgress:i,onDownloadProgress:i,decompress:i,maxContentLength:i,maxBodyLength:i,beforeRedirect:i,transport:i,httpAgent:i,httpsAgent:i,cancelToken:i,socketPath:i,responseEncoding:i,validateStatus:c,headers:(u,l,m)=>o(Ht(u),Ht(l),m,!0)};return a.forEach(Object.keys({...e,...t}),function(l){let m=d[l]||o,E=m(e[l],t[l],l);a.isUndefined(E)&&m!==c||(r[l]=E)}),r}var Le=e=>{let t=F({},e),{data:r,withXSRFToken:n,xsrfHeaderName:o,xsrfCookieName:s,headers:i,auth:c}=t;if(t.headers=i=T.from(i),t.url=ae(de(t.baseURL,t.url,t.allowAbsoluteUrls),e.params,e.paramsSerializer),c&&i.set("Authorization","Basic "+btoa((c.username||"")+":"+(c.password?unescape(encodeURIComponent(c.password)):""))),a.isFormData(r)){if(w.hasStandardBrowserEnv||w.hasStandardBrowserWebWorkerEnv)i.setContentType(void 0);else if(a.isFunction(r.getHeaders)){let d=r.getHeaders(),u=["content-type","content-length"];Object.entries(d).forEach(([l,m])=>{u.includes(l.toLowerCase())&&i.set(l,m)})}}if(w.hasStandardBrowserEnv&&(n&&a.isFunction(n)&&(n=n(t)),n||n!==!1&&kt(t.url))){let d=o&&s&&Nt.read(s);d&&i.set(o,d)}return t};var vn=typeof XMLHttpRequest<"u",It=vn&&function(e){return new Promise(function(r,n){let o=Le(e),s=o.data,i=T.from(o.headers).normalize(),{responseType:c,onUploadProgress:d,onDownloadProgress:u}=o,l,m,E,L,p;function y(){L&&L(),p&&p(),o.cancelToken&&o.cancelToken.unsubscribe(l),o.signal&&o.signal.removeEventListener("abort",l)}let f=new XMLHttpRequest;f.open(o.method.toUpperCase(),o.url,!0),f.timeout=o.timeout;function A(){if(!f)return;let h=T.from("getAllResponseHeaders"in f&&f.getAllResponseHeaders()),x={data:!c||c==="text"||c==="json"?f.responseText:f.response,status:f.status,statusText:f.statusText,headers:h,config:e,request:f};pe(function(R){r(R),y()},function(R){n(R),y()},x),f=null}"onloadend"in f?f.onloadend=A:f.onreadystatechange=function(){!f||f.readyState!==4||f.status===0&&!(f.responseURL&&f.responseURL.indexOf("file:")===0)||setTimeout(A)},f.onabort=function(){f&&(n(new b("Request aborted",b.ECONNABORTED,e,f)),f=null)},f.onerror=function(g){let x=g&&g.message?g.message:"Network Error",v=new b(x,b.ERR_NETWORK,e,f);v.event=g||null,n(v),f=null},f.ontimeout=function(){let g=o.timeout?"timeout of "+o.timeout+"ms exceeded":"timeout exceeded",x=o.transitional||Se;o.timeoutErrorMessage&&(g=o.timeoutErrorMessage),n(new b(g,x.clarifyTimeoutError?b.ETIMEDOUT:b.ECONNABORTED,e,f)),f=null},s===void 0&&i.setContentType(null),"setRequestHeader"in f&&a.forEach(i.toJSON(),function(g,x){f.setRequestHeader(x,g)}),a.isUndefined(o.withCredentials)||(f.withCredentials=!!o.withCredentials),c&&c!=="json"&&(f.responseType=o.responseType),u&&([E,p]=te(u,!0),f.addEventListener("progress",E)),d&&f.upload&&([m,L]=te(d),f.upload.addEventListener("progress",m),f.upload.addEventListener("loadend",L)),(o.cancelToken||o.signal)&&(l=h=>{f&&(n(!h||h.type?new M(null,e,f):h),f.abort(),f=null)},o.cancelToken&&o.cancelToken.subscribe(l),o.signal&&(o.signal.aborted?l():o.signal.addEventListener("abort",l)));let O=Ve(o.url);if(O&&w.protocols.indexOf(O)===-1){n(new b("Unsupported protocol "+O+":",b.ERR_BAD_REQUEST,e));return}f.send(s||null)})};var Rn=(e,t)=>{let{length:r}=e=e?e.filter(Boolean):[];if(t||r){let n=new AbortController,o,s=function(u){if(!o){o=!0,c();let l=u instanceof Error?u:this.reason;n.abort(l instanceof b?l:new M(l instanceof Error?l.message:l))}},i=t&&setTimeout(()=>{i=null,s(new b(`timeout ${t} of ms exceeded`,b.ETIMEDOUT))},t),c=()=>{e&&(i&&clearTimeout(i),i=null,e.forEach(u=>{u.unsubscribe?u.unsubscribe(s):u.removeEventListener("abort",s)}),e=null)};e.forEach(u=>u.addEventListener("abort",s));let{signal:d}=n;return d.unsubscribe=()=>a.asap(c),d}},Wt=Rn;var wn=function*(e,t){let r=e.byteLength;if(!t||r<t){yield e;return}let n=0,o;for(;n<r;)o=n+t,yield e.slice(n,o),n=o},An=async function*(e,t){for await(let r of Sn(e))yield*wn(r,t)},Sn=async function*(e){if(e[Symbol.asyncIterator]){yield*e;return}let t=e.getReader();try{for(;;){let{done:r,value:n}=await t.read();if(r)break;yield n}}finally{await t.cancel()}},Ye=(e,t,r,n)=>{let o=An(e,t),s=0,i,c=d=>{i||(i=!0,n&&n(d))};return new ReadableStream({async pull(d){try{let{done:u,value:l}=await o.next();if(u){c(),d.close();return}let m=l.byteLength;if(r){let E=s+=m;r(E)}d.enqueue(new Uint8Array(l))}catch(u){throw c(u),u}},cancel(d){return c(d),o.return()}},{highWaterMark:2})};var qt=64*1024,{isFunction:Ce}=a,Tn=(({Request:e,Response:t})=>({Request:e,Response:t}))(a.global),{ReadableStream:jt,TextEncoder:zt}=a.global,$t=(e,...t)=>{try{return!!e(...t)}catch{return!1}},_n=e=>{e=a.merge.call({skipUndefined:!0},Tn,e);let{fetch:t,Request:r,Response:n}=e,o=t?Ce(t):typeof fetch=="function",s=Ce(r),i=Ce(n);if(!o)return!1;let c=o&&Ce(jt),d=o&&(typeof zt=="function"?(p=>y=>p.encode(y))(new zt):async p=>new Uint8Array(await new r(p).arrayBuffer())),u=s&&c&&$t(()=>{let p=!1,y=new r(w.origin,{body:new jt,method:"POST",get duplex(){return p=!0,"half"}}).headers.has("Content-Type");return p&&!y}),l=i&&c&&$t(()=>a.isReadableStream(new n("").body)),m={stream:l&&(p=>p.body)};o&&["text","arrayBuffer","blob","formData","stream"].forEach(p=>{!m[p]&&(m[p]=(y,f)=>{let A=y&&y[p];if(A)return A.call(y);throw new b(`Response type '${p}' is not supported`,b.ERR_NOT_SUPPORT,f)})});let E=async p=>{if(p==null)return 0;if(a.isBlob(p))return p.size;if(a.isSpecCompliantForm(p))return(await new r(w.origin,{method:"POST",body:p}).arrayBuffer()).byteLength;if(a.isArrayBufferView(p)||a.isArrayBuffer(p))return p.byteLength;if(a.isURLSearchParams(p)&&(p=p+""),a.isString(p))return(await d(p)).byteLength},L=async(p,y)=>{let f=a.toFiniteNumber(p.getContentLength());return f??E(y)};return async p=>{let{url:y,method:f,data:A,signal:O,cancelToken:h,timeout:g,onDownloadProgress:x,onUploadProgress:v,responseType:R,headers:G,withCredentials:V="same-origin",fetchOptions:ge}=Le(p),ye=t||fetch;R=R?(R+"").toLowerCase():"text";let J=Wt([O,h&&h.toAbortSignal()],g),H=null,C=J&&J.unsubscribe&&(()=>{J.unsubscribe()}),lt;try{if(v&&u&&f!=="get"&&f!=="head"&&(lt=await L(G,A))!==0){let W=new r(y,{method:"POST",body:A,duplex:"half"}),K;if(a.isFormData(A)&&(K=W.headers.get("content-type"))&&G.setContentType(K),W.body){let[Be,be]=Je(lt,te(Ke(v)));A=Ye(W.body,qt,Be,be)}}a.isString(V)||(V=V?"include":"omit");let B=s&&"credentials"in r.prototype,ut={...ge,signal:J,method:f.toUpperCase(),headers:G.normalize().toJSON(),body:A,duplex:"half",credentials:B?V:void 0};H=s&&new r(y,ut);let I=await(s?ye(H,ge):ye(y,ut)),pt=l&&(R==="stream"||R==="response");if(l&&(x||pt&&C)){let W={};["status","statusText","headers"].forEach(dt=>{W[dt]=I[dt]});let K=a.toFiniteNumber(I.headers.get("content-length")),[Be,be]=x&&Je(K,te(Ke(x),!0))||[];I=new n(Ye(I.body,qt,Be,()=>{be&&be(),C&&C()}),W)}R=R||"text";let mr=await m[a.findKey(m,R)||"text"](I,p);return!pt&&C&&C(),await new Promise((W,K)=>{pe(W,K,{data:mr,headers:T.from(I.headers),status:I.status,statusText:I.statusText,config:p,request:H})})}catch(B){throw C&&C(),B&&B.name==="TypeError"&&/Load failed|fetch/i.test(B.message)?Object.assign(new b("Network Error",b.ERR_NETWORK,p,H),{cause:B.cause||B}):b.from(B,B&&B.code,p,H)}}},Ln=new Map,Ze=e=>{let t=e&&e.env||{},{fetch:r,Request:n,Response:o}=t,s=[n,o,r],i=s.length,c=i,d,u,l=Ln;for(;c--;)d=s[c],u=l.get(d),u===void 0&&l.set(d,u=c?new Map:_n(t)),l=u;return u},Ks=Ze();var et={http:we,xhr:It,fetch:{get:Ze}};a.forEach(et,(e,t)=>{if(e){try{Object.defineProperty(e,"name",{value:t})}catch{}Object.defineProperty(e,"adapterName",{value:t})}});var Gt=e=>`- ${e}`,On=e=>a.isFunction(e)||e===null||e===!1;function Dn(e,t){e=a.isArray(e)?e:[e];let{length:r}=e,n,o,s={};for(let i=0;i<r;i++){n=e[i];let c;if(o=n,!On(n)&&(o=et[(c=String(n)).toLowerCase()],o===void 0))throw new b(`Unknown adapter '${c}'`);if(o&&(a.isFunction(o)||(o=o.get(t))))break;s[c||"#"+i]=o}if(!o){let i=Object.entries(s).map(([d,u])=>`adapter ${d} `+(u===!1?"is not supported by the environment":"is not available in the build")),c=r?i.length>1?`since :
-`+i.map(Gt).join(`
-`):" "+Gt(i[0]):"as no adapter specified";throw new b("There is no suitable adapter to dispatch the request "+c,"ERR_NOT_SUPPORT")}return o}var Oe={getAdapter:Dn,adapters:et};function tt(e){if(e.cancelToken&&e.cancelToken.throwIfRequested(),e.signal&&e.signal.aborted)throw new M(null,e)}function De(e){return tt(e),e.headers=T.from(e.headers),e.data=le.call(e,e.transformRequest),["post","put","patch"].indexOf(e.method)!==-1&&e.headers.setContentType("application/x-www-form-urlencoded",!1),Oe.getAdapter(e.adapter||Z.adapter,e)(e).then(function(n){return tt(e),n.data=le.call(e,e.transformResponse,n),n.headers=T.from(n.headers),n},function(n){return ue(n)||(tt(e),n&&n.response&&(n.response.data=le.call(e,e.transformResponse,n.response),n.response.headers=T.from(n.response.headers))),Promise.reject(n)})}var Pe="1.13.2";var Ue={};["object","boolean","number","function","string","symbol"].forEach((e,t)=>{Ue[e]=function(n){return typeof n===e||"a"+(t<1?"n ":" ")+e}});var Vt={};Ue.transitional=function(t,r,n){function o(s,i){return"[Axios v"+Pe+"] Transitional option '"+s+"'"+i+(n?". "+n:"")}return(s,i,c)=>{if(t===!1)throw new b(o(i," has been removed"+(r?" in "+r:"")),b.ERR_DEPRECATED);return r&&!Vt[i]&&(Vt[i]=!0,console.warn(o(i," has been deprecated since v"+r+" and will be removed in the near future"))),t?t(s,i,c):!0}};Ue.spelling=function(t){return(r,n)=>(console.warn(`${n} is likely a misspelling of ${t}`),!0)};function Pn(e,t,r){if(typeof e!="object")throw new b("options must be an object",b.ERR_BAD_OPTION_VALUE);let n=Object.keys(e),o=n.length;for(;o-- >0;){let s=n[o],i=t[s];if(i){let c=e[s],d=c===void 0||i(c,s,e);if(d!==!0)throw new b("option "+s+" must be "+d,b.ERR_BAD_OPTION_VALUE);continue}if(r!==!0)throw new b("Unknown option "+s,b.ERR_BAD_OPTION)}}var fe={assertOptions:Pn,validators:Ue};var k=fe.validators,re=class{constructor(t){this.defaults=t||{},this.interceptors={request:new Ie,response:new Ie}}async request(t,r){try{return await this._request(t,r)}catch(n){if(n instanceof Error){let o={};Error.captureStackTrace?Error.captureStackTrace(o):o=new Error;let s=o.stack?o.stack.replace(/^.+\n/,""):"";try{n.stack?s&&!String(n.stack).endsWith(s.replace(/^.+\n.+\n/,""))&&(n.stack+=`
-`+s):n.stack=s}catch{}}throw n}}_request(t,r){typeof t=="string"?(r=r||{},r.url=t):r=t||{},r=F(this.defaults,r);let{transitional:n,paramsSerializer:o,headers:s}=r;n!==void 0&&fe.assertOptions(n,{silentJSONParsing:k.transitional(k.boolean),forcedJSONParsing:k.transitional(k.boolean),clarifyTimeoutError:k.transitional(k.boolean)},!1),o!=null&&(a.isFunction(o)?r.paramsSerializer={serialize:o}:fe.assertOptions(o,{encode:k.function,serialize:k.function},!0)),r.allowAbsoluteUrls!==void 0||(this.defaults.allowAbsoluteUrls!==void 0?r.allowAbsoluteUrls=this.defaults.allowAbsoluteUrls:r.allowAbsoluteUrls=!0),fe.assertOptions(r,{baseUrl:k.spelling("baseURL"),withXsrfToken:k.spelling("withXSRFToken")},!0),r.method=(r.method||this.defaults.method||"get").toLowerCase();let i=s&&a.merge(s.common,s[r.method]);s&&a.forEach(["delete","get","head","post","put","patch","common"],p=>{delete s[p]}),r.headers=T.concat(i,s);let c=[],d=!0;this.interceptors.request.forEach(function(y){typeof y.runWhen=="function"&&y.runWhen(r)===!1||(d=d&&y.synchronous,c.unshift(y.fulfilled,y.rejected))});let u=[];this.interceptors.response.forEach(function(y){u.push(y.fulfilled,y.rejected)});let l,m=0,E;if(!d){let p=[De.bind(this),void 0];for(p.unshift(...c),p.push(...u),E=p.length,l=Promise.resolve(r);m<E;)l=l.then(p[m++],p[m++]);return l}E=c.length;let L=r;for(;m<E;){let p=c[m++],y=c[m++];try{L=p(L)}catch(f){y.call(this,f);break}}try{l=De.call(this,L)}catch(p){return Promise.reject(p)}for(m=0,E=u.length;m<E;)l=l.then(u[m++],u[m++]);return l}getUri(t){t=F(this.defaults,t);let r=de(t.baseURL,t.url,t.allowAbsoluteUrls);return ae(r,t.params,t.paramsSerializer)}};a.forEach(["delete","get","head","options"],function(t){re.prototype[t]=function(r,n){return this.request(F(n||{},{method:t,url:r,data:(n||{}).data}))}});a.forEach(["post","put","patch"],function(t){function r(n){return function(s,i,c){return this.request(F(c||{},{method:t,headers:n?{"Content-Type":"multipart/form-data"}:{},url:s,data:i}))}}re.prototype[t]=r(),re.prototype[t+"Form"]=r(!0)});var me=re;var rt=class e{constructor(t){if(typeof t!="function")throw new TypeError("executor must be a function.");let r;this.promise=new Promise(function(s){r=s});let n=this;this.promise.then(o=>{if(!n._listeners)return;let s=n._listeners.length;for(;s-- >0;)n._listeners[s](o);n._listeners=null}),this.promise.then=o=>{let s,i=new Promise(c=>{n.subscribe(c),s=c}).then(o);return i.cancel=function(){n.unsubscribe(s)},i},t(function(s,i,c){n.reason||(n.reason=new M(s,i,c),r(n.reason))})}throwIfRequested(){if(this.reason)throw this.reason}subscribe(t){if(this.reason){t(this.reason);return}this._listeners?this._listeners.push(t):this._listeners=[t]}unsubscribe(t){if(!this._listeners)return;let r=this._listeners.indexOf(t);r!==-1&&this._listeners.splice(r,1)}toAbortSignal(){let t=new AbortController,r=n=>{t.abort(n)};return this.subscribe(r),t.signal.unsubscribe=()=>this.unsubscribe(r),t.signal}static source(){let t;return{token:new e(function(o){t=o}),cancel:t}}},Jt=rt;function nt(e){return function(r){return e.apply(null,r)}}function ot(e){return a.isObject(e)&&e.isAxiosError===!0}var st={Continue:100,SwitchingProtocols:101,Processing:102,EarlyHints:103,Ok:200,Created:201,Accepted:202,NonAuthoritativeInformation:203,NoContent:204,ResetContent:205,PartialContent:206,MultiStatus:207,AlreadyReported:208,ImUsed:226,MultipleChoices:300,MovedPermanently:301,Found:302,SeeOther:303,NotModified:304,UseProxy:305,Unused:306,TemporaryRedirect:307,PermanentRedirect:308,BadRequest:400,Unauthorized:401,PaymentRequired:402,Forbidden:403,NotFound:404,MethodNotAllowed:405,NotAcceptable:406,ProxyAuthenticationRequired:407,RequestTimeout:408,Conflict:409,Gone:410,LengthRequired:411,PreconditionFailed:412,PayloadTooLarge:413,UriTooLong:414,UnsupportedMediaType:415,RangeNotSatisfiable:416,ExpectationFailed:417,ImATeapot:418,MisdirectedRequest:421,UnprocessableEntity:422,Locked:423,FailedDependency:424,TooEarly:425,UpgradeRequired:426,PreconditionRequired:428,TooManyRequests:429,RequestHeaderFieldsTooLarge:431,UnavailableForLegalReasons:451,InternalServerError:500,NotImplemented:501,BadGateway:502,ServiceUnavailable:503,GatewayTimeout:504,HttpVersionNotSupported:505,VariantAlsoNegotiates:506,InsufficientStorage:507,LoopDetected:508,NotExtended:510,NetworkAuthenticationRequired:511,WebServerIsDown:521,ConnectionTimedOut:522,OriginIsUnreachable:523,TimeoutOccurred:524,SslHandshakeFailed:525,InvalidSslCertificate:526};Object.entries(st).forEach(([e,t])=>{st[t]=e});var Kt=st;function Xt(e){let t=new me(e),r=ne(me.prototype.request,t);return a.extend(r,me.prototype,t,{allOwnKeys:!0}),a.extend(r,t,null,{allOwnKeys:!0}),r.create=function(o){return Xt(F(e,o))},r}var S=Xt(Z);S.Axios=me;S.CanceledError=M;S.CancelToken=Jt;S.isCancel=ue;S.VERSION=Pe;S.toFormData=q;S.AxiosError=b;S.Cancel=S.CanceledError;S.all=function(t){return Promise.all(t)};S.spread=nt;S.isAxiosError=ot;S.mergeConfig=F;S.AxiosHeaders=T;S.formToJSON=e=>Te(a.isHTMLForm(e)?new FormData(e):e);S.getAdapter=Oe.getAdapter;S.HttpStatusCode=Kt;S.default=S;var Fe=S;var{Axios:Gi,AxiosError:Vi,CanceledError:Ji,isCancel:Ki,CancelToken:Xi,VERSION:Qi,all:Yi,Cancel:Zi,isAxiosError:ea,spread:ta,toFormData:ra,AxiosHeaders:na,HttpStatusCode:oa,formToJSON:sa,getAdapter:ia,mergeConfig:aa}=Fe;var Un=localStorage.getItem("api-mode"),Fn="http://127.0.0.1:8787",Bn="https://assembled-brands-dev.crystal-e8a.workers.dev",N={apiBaseUrl:Un==="local"?Fn:Bn,apiVersion:"/api/v1",accessTokenPersistStrategy:"cookie",TOKEN_NAME_IN_STORAGE:"accessToken",TOKEN_TYPE:"Bearer",REQUEST_HEADER_AUTH_KEY:"Authorization"},$=e=>{if(!e){console.error("navigateToPath: path is empty or undefined");return}let t=e.replace(/^\/+/,""),r=t;r=`dev/${t}`;let n=`${window.location.origin}/${r}`;window.location.assign(n)};var Mn=(e,t,r)=>{let n=new Date;n.setTime(n.getTime()+r*24*60*60*1e3);let o="expires="+n.toUTCString();document.cookie=`${e}=${encodeURIComponent(t)}; ${o}; path=/`},it=e=>{let t=document.cookie.split("; ");for(let r of t){let[n,o]=r.split("=");if(n===e)return decodeURIComponent(o)}return null},at=e=>{Mn(e,"",-1)},Qt=()=>{let e=it("accessToken");return e||$("/login?error=unauthorized"),e},Yt=()=>{at("accessToken"),localStorage.removeItem("x-team-id"),localStorage.removeItem("user"),$("/login?error=logged-out")};var kn=e=>{let t=N.accessTokenPersistStrategy;if(t==="localStorage"||t==="sessionStorage"||t==="cookie"){let n="";t==="localStorage"&&(n=localStorage.getItem(N.TOKEN_NAME_IN_STORAGE)||""),t==="sessionStorage"&&(n=sessionStorage.getItem(N.TOKEN_NAME_IN_STORAGE)||""),t==="cookie"&&(n=it(N.TOKEN_NAME_IN_STORAGE)||""),n&&(e.headers[N.REQUEST_HEADER_AUTH_KEY]=`${N.TOKEN_TYPE} ${n}`)}let r=localStorage.getItem("x-team-id");return r&&(e.headers["X-Team-Id"]=r),e},Zt=kn;var Nn=[401,419,440],Hn=e=>{let{response:t}=e;if(window.location.pathname.includes("/login"))return Promise.reject(e);t&&Nn.includes(t.status)&&(at("accessToken"),$("/login?error=unauthorized"))},er=Hn;var ct=Fe.create({timeout:6e4,baseURL:N.apiBaseUrl+N.apiVersion});ct.interceptors.request.use(e=>Zt(e),e=>Promise.reject(e));ct.interceptors.response.use(e=>e,e=>(er(e),Promise.reject(e)));var tr=ct;var In={fetchDataWithAxios(e){return new Promise((t,r)=>{tr(e).then(n=>{t(n.data)}).catch(n=>{let o="An unknown error occurred";if(n.response&&n.response.data){let s=n.response.data;typeof s.message=="string"?o=s.message:typeof s.error=="string"?o=s.error:o=JSON.stringify(s)}else n.message&&(o=n.message);r({...n,message:o})})})}},P=In;var rr=e=>P.fetchDataWithAxios({url:"/asset",method:"post",data:e});var nr=e=>P.fetchDataWithAxios({url:"/financial-wizard/document",method:"post",data:e}),or=e=>P.fetchDataWithAxios({url:"/financial-wizard/progress",method:"get",params:e?{user_id:e}:void 0});var sr=e=>P.fetchDataWithAxios({url:`/financial-wizard/document/${e}`,method:"delete"});async function ir(){return P.fetchDataWithAxios({url:"/user/me",method:"get"})}var ar=()=>P.fetchDataWithAxios({url:"/onboarding-wizard/progress",method:"get"});var cr=()=>P.fetchDataWithAxios({url:"/team/my-teams",method:"get"});var _=(e,t=document)=>t.querySelector(e),lr=(e,t=document)=>{let r=t.querySelectorAll(e);return[...Array.from(r)]};var Wn={"/dev/finance-company-profile":{nav_attr:"nav-company-profile-link",nav_class:"is-active"},"/finance-company-profile":{nav_attr:"nav-company-profile-link",nav_class:"is-active"},"/dev/finance-financial-overview":{nav_attr:"nav-financial-overview-link",nav_class:"is-active"},"/finance-financial-overview":{nav_attr:"nav-financial-overview-link",nav_class:"is-active"},"/dev/finance-docs-financial-reports":{nav_attr:"nav-financial-reports-link",nav_class:"is-active-financial"},"/finance-docs-financial-reports":{nav_attr:"nav-financial-reports-link",nav_class:"is-active-financial"},"/dev/finance-docs-accounts-and-inventory":{nav_attr:"nav-accounts-inventory-link",nav_class:"is-active-financial"},"/finance-docs-accounts-and-inventory":{nav_attr:"nav-accounts-inventory-link",nav_class:"is-active-financial"},"/dev/finance-docs-ecommerce-performance":{nav_attr:"nav-eccomerce-performance-link",nav_class:"is-active-financial"},"/finance-docs-ecommerce-performance":{nav_attr:"nav-eccomerce-performance-link",nav_class:"is-active-financial"},"/dev/finance-docs-team-and-ownership":{nav_attr:"nav-team-ownership-link",nav_class:"is-active-financial"},"/finance-docs-team-and-ownership":{nav_attr:"nav-team-ownership-link",nav_class:"is-active-financial"},"/invite-team-members":{nav_attr:"nav-team-member-link",nav_class:"is-active-financial"},"/dev/invite-team-members":{nav_attr:"nav-team-member-link",nav_class:"is-active-financial"}};var qn=async e=>{let[t,r,n,o]=await Promise.all([or(e),ir(),cr(),ar()]);return{financialProgress:t,user:r,teams:n,onboardingProgress:o}},ur=async e=>{try{let{financialProgress:t,user:r,teams:n,onboardingProgress:o}=await qn(e),s=t?.percentage||0,i=_('[dev-target="progress-percentage-fill"]'),c=lr('[dev-target="progress-percentage-label"]'),d=_('[dev-target="user-name"]'),u=_('[dev-target="user-email"]'),l=_('[dev-target="logout"]');if(!i||!c||!l||!d||!u){console.error('Ensure [dev-target="progress-percentage-fill"], [dev-target="progress-percentage-label"], [dev-target="user-name"], [dev-target="user-email"], and [dev-target="logout"] are present.');return}return i.style.width=`${s}%`,c[0].textContent=`Progress ${s}%`,c[1].textContent=`${s}%`,l.addEventListener("click",()=>{Yt()}),d.innerText=t.business?.legal_name||(r.first_name||"Full")+" "+(r.last_name||"Name"),u.innerText=t.business?.email||r.email||"hello@company.com",{financialProgress:t,user:r,teams:n,onboardingProgress:o}}catch(t){console.error("Failed to load financial wizard progress:",t)}},pr=()=>{if(!_('[dev-target="sidebar-menu"]')){console.error('Ensure [dev-target="sidebar-menu"] is present.');return}let t=window.location.pathname,r=Wn[t],n=document.querySelectorAll('[dev-attr="nav"]');if(r){n.forEach(s=>{s.classList.remove("is-active"),s.classList.remove("is-active-financial")});let o=_(`[dev-target="${r.nav_attr}"]`);o&&o.classList.add(r.nav_class)}else n.forEach(o=>{o.classList.remove("is-active"),o.classList.remove("is-active-financial")})};var dr=e=>new Promise((t,r)=>{let n=new FileReader;n.onload=()=>{let s=n.result.split(",");t(s.length>1?s[1]:s[0])},n.onerror=()=>r(new Error("Failed to read file as base64")),n.readAsDataURL(e)}),fr=()=>{let e=_('[dev-target="sidebar-menu"]'),t=e?.querySelector(".sidebar"),r=_('[dev-target="collapsible-trigger"]');if(!e||!t||!r){console.error('Ensure [dev-target="sidebar-menu"] and [dev-target="collapsible-trigger"] and  [dev-target="sidebar-inner"] are present.');return}let n=!1,o=()=>{n=!n;let s=document.querySelectorAll('[sidebar="collapsible-content"], [dev-target="collapsible-content"]'),i=_('[dev-target="sidebar-logo-text-wrapper"]'),c=e.querySelector('[dev-target="sidebar-bottom-collapsed"]'),d=e.querySelector('[dev-target="sidenav-close"]'),u=e.querySelector('[dev-target="sidebar-bottom"]'),l=e.querySelector(".user-profile_wrapper"),m=l?.querySelector(".flex-horizontal_auth.gap-15");n?(e.classList.add("collapsed"),t?.classList.add("mobile"),i?.classList.add("hide"),l?.classList.add("image-overlay"),m?.classList.add("overlay"),u?.classList.add("hide"),c?.classList.remove("hide"),d?.classList.add("is-collapsed"),s.forEach(E=>{E.style.opacity="0",E.style.transition="opacity 0.2s ease",setTimeout(()=>{E.classList.add("hide")},200)}),e.style.width="80px",e.style.width="auto"):(e.classList.remove("collapsed"),t?.classList.remove("mobile"),i?.classList.remove("hide"),l?.classList.remove("image-overlay"),m?.classList.remove("overlay"),u?.classList.remove("hide"),c?.classList.add("hide"),d?.classList.remove("is-collapsed"),s.forEach(E=>{E.classList.remove("hide"),setTimeout(()=>{E.style.opacity="1"},10)}))};r.addEventListener("click",o),e.style.transition="width 0.3s ease"};var j={pdf:"application/pdf",xls:"application/vnd.ms-excel",xlsx:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",doc:"application/msword",docx:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",ppt:"application/vnd.ms-powerpoint",pptx:"application/vnd.openxmlformats-officedocument.presentationml.presentation"},he={instore_velocity_reports:{allowed:[j.doc,j.docx,j.pdf,j.xls,j.xlsx],message:"Invalid file type. Allowed: WORD, PDF, or EXCEL",placeholder:"Supported formats: WORD, PDF, EXCEL"},business_plan:{allowed:[j.pdf,j.ppt,j.pptx],message:"Invalid file type. Allowed: PPT or PDF",placeholder:"Supported formats: PPT, PDF"}},jn=async()=>{pr(),Qt(),fr();let e=document.querySelector('[dev-target="optional-docs-form"]');if(!e){console.error('Optional docs form not found: [dev-target="optional-docs-form"]');return}let t=_('[dev-target="instore-velocity-upload-box"]',e),r=_('[dev-target="file-input"]',t??e),n=_('[dev-target="instore-velocity-helper"]',e),o=_('[dev-target="business-plan-upload-box"]',e),s=_('[dev-target="file-input"]',o??e),i=_('[dev-target="business-plan-helper"]',e),c=_('[dev-target="submit-button"]',e),d=[['[dev-target="instore-velocity-upload-box"]',t],['[dev-target="file-input"] inside instore-velocity-upload-box',r],['[dev-target="instore-velocity-helper"]',n],['[dev-target="business-plan-upload-box"]',o],['[dev-target="file-input"] inside business-plan-upload-box',s],['[dev-target="business-plan-helper"]',i],['[dev-target="submit-button"]',c]],u=!1;for(let[h,g]of d)g||(console.error(`Missing required element: ${h}`),u=!0);if(u||!t||!r||!n||!o||!s||!i||!c)return;let l=h=>{n.textContent=h?.team_ownership?.find(g=>g.document_type==="instore_velocity_reports")?.asset_name||he.instore_velocity_reports.placeholder,i.textContent=h?.team_ownership?.find(g=>g.document_type==="business_plan")?.asset_name||he.business_plan.placeholder},m,E=async()=>{m=(await ur())?.financialProgress,l(m)},L=h=>m?.team_ownership?.find(g=>g.document_type===h);await E();let p=(h,g,x)=>{let v=h.files?.[0];if(!v)return;let R=he[x];R.allowed.includes(v.type)?(g.textContent=v.name,g.classList.remove("is-error")):(g.textContent=R.message,g.classList.add("is-error"))},y=(h,g,x,v)=>{h.addEventListener("click",()=>g.click()),h.addEventListener("dragover",R=>{R.preventDefault(),h.classList.add("drag")}),h.addEventListener("dragleave",()=>h.classList.remove("drag")),h.addEventListener("drop",R=>{R.preventDefault(),h.classList.remove("drag"),R.dataTransfer?.files.length&&(g.files=R.dataTransfer.files,p(g,x,v),g.dispatchEvent(new Event("change",{bubbles:!0})))}),g.addEventListener("change",()=>p(g,x,v))};y(t,r,n,"instore_velocity_reports"),y(o,s,i,"business_plan");let f=async(h,g)=>{let x=L(h);if(!x){g.textContent="Supported formats: sheets, excel",g.classList.remove("is-error");return}g.classList.remove("is-error"),g.textContent="Deleting...";try{await sr(x.id),await E()}catch(v){console.error(v),g.classList.add("is-error"),g.textContent="Failed to delete file. Please try again."}},A=[[t,"instore_velocity_reports",n],[o,"business_plan",i]];for(let[h,g,x]of A){let v=_('[dev-target="trash-icon"]',h);v&&v.addEventListener("click",R=>{R.preventDefault(),R.stopPropagation(),f(g,x)})}let O=async(h,g)=>{let x=g==="instore_velocity_reports"?he.instore_velocity_reports:g==="business_plan"?he.business_plan:void 0;if(x&&!x.allowed.includes(h.type))throw new Error(x.message);let v={fileName:h.name,contentType:h.type,assetType:"document",fileSize:h.size,duration:0},R=await rr(v),{presignedUrl:G,asset:V}=R;if(!G)throw new Error("Presigned URL not received from server");await new Promise((J,H)=>{let C=new XMLHttpRequest;C.addEventListener("load",()=>{C.status>=200&&C.status<300?J():H(new Error("Failed to upload file to S3"))}),C.addEventListener("error",()=>H(new Error("Network error during upload"))),C.open("PUT",G),C.setRequestHeader("Content-Type",h.type),C.send(h)});let ge=await dr(h),ye={page:"team-ownership",document_type:g,asset_id:V.id,file_data:ge,file_name:h.name,file_mime_type:h.type};await nr(ye)};e.addEventListener("submit",async h=>{h.preventDefault(),h.stopPropagation(),c.classList.remove("is-error","is-success"),c.value="UPLOAD DOCUMENTS";let g=[];if(r.files?.[0]&&g.push({file:r.files[0],documentType:"instore_velocity_reports"}),s.files?.[0]&&g.push({file:s.files[0],documentType:"business_plan"}),g.length===0){c.classList.add("is-error"),c.value="Please select at least one file to upload";return}try{c.disabled=!0,c.value="Uploading...",await Promise.all(g.map(({file:x,documentType:v})=>O(x,v))),c.classList.add("is-success"),c.value="Documents uploaded successfully!",r.value="",s.value="",n.textContent="",i.textContent="",setTimeout(()=>{$("/onboarding-complete")},500)}catch(x){let{message:v}=x;console.error(v),c.classList.add("is-error"),c.value=v||"There was a problem uploading the documents",c.disabled=!1}})};window.Webflow||(window.Webflow=[]);window.Webflow.push(()=>{jn().catch(console.error)});
+var __defProp = Object.defineProperty;
+var __export = (target, all3) => {
+  for (var name in all3)
+    __defProp(target, name, { get: all3[name], enumerable: true });
+};
+
+// bin/live-reload.js
+new EventSource(`${"http://localhost:3000"}/esbuild`).addEventListener("change", () => location.reload());
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/bind.js
+function bind(fn, thisArg) {
+  return function wrap() {
+    return fn.apply(thisArg, arguments);
+  };
+}
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/utils.js
+var { toString } = Object.prototype;
+var { getPrototypeOf } = Object;
+var { iterator, toStringTag } = Symbol;
+var kindOf = /* @__PURE__ */ ((cache) => (thing) => {
+  const str = toString.call(thing);
+  return cache[str] || (cache[str] = str.slice(8, -1).toLowerCase());
+})(/* @__PURE__ */ Object.create(null));
+var kindOfTest = (type) => {
+  type = type.toLowerCase();
+  return (thing) => kindOf(thing) === type;
+};
+var typeOfTest = (type) => (thing) => typeof thing === type;
+var { isArray } = Array;
+var isUndefined = typeOfTest("undefined");
+function isBuffer(val) {
+  return val !== null && !isUndefined(val) && val.constructor !== null && !isUndefined(val.constructor) && isFunction(val.constructor.isBuffer) && val.constructor.isBuffer(val);
+}
+var isArrayBuffer = kindOfTest("ArrayBuffer");
+function isArrayBufferView(val) {
+  let result;
+  if (typeof ArrayBuffer !== "undefined" && ArrayBuffer.isView) {
+    result = ArrayBuffer.isView(val);
+  } else {
+    result = val && val.buffer && isArrayBuffer(val.buffer);
+  }
+  return result;
+}
+var isString = typeOfTest("string");
+var isFunction = typeOfTest("function");
+var isNumber = typeOfTest("number");
+var isObject = (thing) => thing !== null && typeof thing === "object";
+var isBoolean = (thing) => thing === true || thing === false;
+var isPlainObject = (val) => {
+  if (kindOf(val) !== "object") {
+    return false;
+  }
+  const prototype3 = getPrototypeOf(val);
+  return (prototype3 === null || prototype3 === Object.prototype || Object.getPrototypeOf(prototype3) === null) && !(toStringTag in val) && !(iterator in val);
+};
+var isEmptyObject = (val) => {
+  if (!isObject(val) || isBuffer(val)) {
+    return false;
+  }
+  try {
+    return Object.keys(val).length === 0 && Object.getPrototypeOf(val) === Object.prototype;
+  } catch (e) {
+    return false;
+  }
+};
+var isDate = kindOfTest("Date");
+var isFile = kindOfTest("File");
+var isBlob = kindOfTest("Blob");
+var isFileList = kindOfTest("FileList");
+var isStream = (val) => isObject(val) && isFunction(val.pipe);
+var isFormData = (thing) => {
+  let kind;
+  return thing && (typeof FormData === "function" && thing instanceof FormData || isFunction(thing.append) && ((kind = kindOf(thing)) === "formdata" || // detect form-data instance
+  kind === "object" && isFunction(thing.toString) && thing.toString() === "[object FormData]"));
+};
+var isURLSearchParams = kindOfTest("URLSearchParams");
+var [isReadableStream, isRequest, isResponse, isHeaders] = ["ReadableStream", "Request", "Response", "Headers"].map(kindOfTest);
+var trim = (str) => str.trim ? str.trim() : str.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, "");
+function forEach(obj, fn, { allOwnKeys = false } = {}) {
+  if (obj === null || typeof obj === "undefined") {
+    return;
+  }
+  let i;
+  let l;
+  if (typeof obj !== "object") {
+    obj = [obj];
+  }
+  if (isArray(obj)) {
+    for (i = 0, l = obj.length; i < l; i++) {
+      fn.call(null, obj[i], i, obj);
+    }
+  } else {
+    if (isBuffer(obj)) {
+      return;
+    }
+    const keys = allOwnKeys ? Object.getOwnPropertyNames(obj) : Object.keys(obj);
+    const len = keys.length;
+    let key;
+    for (i = 0; i < len; i++) {
+      key = keys[i];
+      fn.call(null, obj[key], key, obj);
+    }
+  }
+}
+function findKey(obj, key) {
+  if (isBuffer(obj)) {
+    return null;
+  }
+  key = key.toLowerCase();
+  const keys = Object.keys(obj);
+  let i = keys.length;
+  let _key;
+  while (i-- > 0) {
+    _key = keys[i];
+    if (key === _key.toLowerCase()) {
+      return _key;
+    }
+  }
+  return null;
+}
+var _global = (() => {
+  if (typeof globalThis !== "undefined") return globalThis;
+  return typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : global;
+})();
+var isContextDefined = (context) => !isUndefined(context) && context !== _global;
+function merge() {
+  const { caseless, skipUndefined } = isContextDefined(this) && this || {};
+  const result = {};
+  const assignValue = (val, key) => {
+    const targetKey = caseless && findKey(result, key) || key;
+    if (isPlainObject(result[targetKey]) && isPlainObject(val)) {
+      result[targetKey] = merge(result[targetKey], val);
+    } else if (isPlainObject(val)) {
+      result[targetKey] = merge({}, val);
+    } else if (isArray(val)) {
+      result[targetKey] = val.slice();
+    } else if (!skipUndefined || !isUndefined(val)) {
+      result[targetKey] = val;
+    }
+  };
+  for (let i = 0, l = arguments.length; i < l; i++) {
+    arguments[i] && forEach(arguments[i], assignValue);
+  }
+  return result;
+}
+var extend = (a, b, thisArg, { allOwnKeys } = {}) => {
+  forEach(b, (val, key) => {
+    if (thisArg && isFunction(val)) {
+      a[key] = bind(val, thisArg);
+    } else {
+      a[key] = val;
+    }
+  }, { allOwnKeys });
+  return a;
+};
+var stripBOM = (content) => {
+  if (content.charCodeAt(0) === 65279) {
+    content = content.slice(1);
+  }
+  return content;
+};
+var inherits = (constructor, superConstructor, props, descriptors2) => {
+  constructor.prototype = Object.create(superConstructor.prototype, descriptors2);
+  constructor.prototype.constructor = constructor;
+  Object.defineProperty(constructor, "super", {
+    value: superConstructor.prototype
+  });
+  props && Object.assign(constructor.prototype, props);
+};
+var toFlatObject = (sourceObj, destObj, filter2, propFilter) => {
+  let props;
+  let i;
+  let prop;
+  const merged = {};
+  destObj = destObj || {};
+  if (sourceObj == null) return destObj;
+  do {
+    props = Object.getOwnPropertyNames(sourceObj);
+    i = props.length;
+    while (i-- > 0) {
+      prop = props[i];
+      if ((!propFilter || propFilter(prop, sourceObj, destObj)) && !merged[prop]) {
+        destObj[prop] = sourceObj[prop];
+        merged[prop] = true;
+      }
+    }
+    sourceObj = filter2 !== false && getPrototypeOf(sourceObj);
+  } while (sourceObj && (!filter2 || filter2(sourceObj, destObj)) && sourceObj !== Object.prototype);
+  return destObj;
+};
+var endsWith = (str, searchString, position) => {
+  str = String(str);
+  if (position === void 0 || position > str.length) {
+    position = str.length;
+  }
+  position -= searchString.length;
+  const lastIndex = str.indexOf(searchString, position);
+  return lastIndex !== -1 && lastIndex === position;
+};
+var toArray = (thing) => {
+  if (!thing) return null;
+  if (isArray(thing)) return thing;
+  let i = thing.length;
+  if (!isNumber(i)) return null;
+  const arr = new Array(i);
+  while (i-- > 0) {
+    arr[i] = thing[i];
+  }
+  return arr;
+};
+var isTypedArray = /* @__PURE__ */ ((TypedArray) => {
+  return (thing) => {
+    return TypedArray && thing instanceof TypedArray;
+  };
+})(typeof Uint8Array !== "undefined" && getPrototypeOf(Uint8Array));
+var forEachEntry = (obj, fn) => {
+  const generator = obj && obj[iterator];
+  const _iterator = generator.call(obj);
+  let result;
+  while ((result = _iterator.next()) && !result.done) {
+    const pair = result.value;
+    fn.call(obj, pair[0], pair[1]);
+  }
+};
+var matchAll = (regExp, str) => {
+  let matches;
+  const arr = [];
+  while ((matches = regExp.exec(str)) !== null) {
+    arr.push(matches);
+  }
+  return arr;
+};
+var isHTMLForm = kindOfTest("HTMLFormElement");
+var toCamelCase = (str) => {
+  return str.toLowerCase().replace(
+    /[-_\s]([a-z\d])(\w*)/g,
+    function replacer(m, p1, p2) {
+      return p1.toUpperCase() + p2;
+    }
+  );
+};
+var hasOwnProperty = (({ hasOwnProperty: hasOwnProperty2 }) => (obj, prop) => hasOwnProperty2.call(obj, prop))(Object.prototype);
+var isRegExp = kindOfTest("RegExp");
+var reduceDescriptors = (obj, reducer) => {
+  const descriptors2 = Object.getOwnPropertyDescriptors(obj);
+  const reducedDescriptors = {};
+  forEach(descriptors2, (descriptor, name) => {
+    let ret;
+    if ((ret = reducer(descriptor, name, obj)) !== false) {
+      reducedDescriptors[name] = ret || descriptor;
+    }
+  });
+  Object.defineProperties(obj, reducedDescriptors);
+};
+var freezeMethods = (obj) => {
+  reduceDescriptors(obj, (descriptor, name) => {
+    if (isFunction(obj) && ["arguments", "caller", "callee"].indexOf(name) !== -1) {
+      return false;
+    }
+    const value = obj[name];
+    if (!isFunction(value)) return;
+    descriptor.enumerable = false;
+    if ("writable" in descriptor) {
+      descriptor.writable = false;
+      return;
+    }
+    if (!descriptor.set) {
+      descriptor.set = () => {
+        throw Error("Can not rewrite read-only method '" + name + "'");
+      };
+    }
+  });
+};
+var toObjectSet = (arrayOrString, delimiter) => {
+  const obj = {};
+  const define = (arr) => {
+    arr.forEach((value) => {
+      obj[value] = true;
+    });
+  };
+  isArray(arrayOrString) ? define(arrayOrString) : define(String(arrayOrString).split(delimiter));
+  return obj;
+};
+var noop = () => {
+};
+var toFiniteNumber = (value, defaultValue) => {
+  return value != null && Number.isFinite(value = +value) ? value : defaultValue;
+};
+function isSpecCompliantForm(thing) {
+  return !!(thing && isFunction(thing.append) && thing[toStringTag] === "FormData" && thing[iterator]);
+}
+var toJSONObject = (obj) => {
+  const stack = new Array(10);
+  const visit = (source, i) => {
+    if (isObject(source)) {
+      if (stack.indexOf(source) >= 0) {
+        return;
+      }
+      if (isBuffer(source)) {
+        return source;
+      }
+      if (!("toJSON" in source)) {
+        stack[i] = source;
+        const target = isArray(source) ? [] : {};
+        forEach(source, (value, key) => {
+          const reducedValue = visit(value, i + 1);
+          !isUndefined(reducedValue) && (target[key] = reducedValue);
+        });
+        stack[i] = void 0;
+        return target;
+      }
+    }
+    return source;
+  };
+  return visit(obj, 0);
+};
+var isAsyncFn = kindOfTest("AsyncFunction");
+var isThenable = (thing) => thing && (isObject(thing) || isFunction(thing)) && isFunction(thing.then) && isFunction(thing.catch);
+var _setImmediate = ((setImmediateSupported, postMessageSupported) => {
+  if (setImmediateSupported) {
+    return setImmediate;
+  }
+  return postMessageSupported ? ((token, callbacks) => {
+    _global.addEventListener("message", ({ source, data }) => {
+      if (source === _global && data === token) {
+        callbacks.length && callbacks.shift()();
+      }
+    }, false);
+    return (cb) => {
+      callbacks.push(cb);
+      _global.postMessage(token, "*");
+    };
+  })(`axios@${Math.random()}`, []) : (cb) => setTimeout(cb);
+})(
+  typeof setImmediate === "function",
+  isFunction(_global.postMessage)
+);
+var asap = typeof queueMicrotask !== "undefined" ? queueMicrotask.bind(_global) : typeof process !== "undefined" && process.nextTick || _setImmediate;
+var isIterable = (thing) => thing != null && isFunction(thing[iterator]);
+var utils_default = {
+  isArray,
+  isArrayBuffer,
+  isBuffer,
+  isFormData,
+  isArrayBufferView,
+  isString,
+  isNumber,
+  isBoolean,
+  isObject,
+  isPlainObject,
+  isEmptyObject,
+  isReadableStream,
+  isRequest,
+  isResponse,
+  isHeaders,
+  isUndefined,
+  isDate,
+  isFile,
+  isBlob,
+  isRegExp,
+  isFunction,
+  isStream,
+  isURLSearchParams,
+  isTypedArray,
+  isFileList,
+  forEach,
+  merge,
+  extend,
+  trim,
+  stripBOM,
+  inherits,
+  toFlatObject,
+  kindOf,
+  kindOfTest,
+  endsWith,
+  toArray,
+  forEachEntry,
+  matchAll,
+  isHTMLForm,
+  hasOwnProperty,
+  hasOwnProp: hasOwnProperty,
+  // an alias to avoid ESLint no-prototype-builtins detection
+  reduceDescriptors,
+  freezeMethods,
+  toObjectSet,
+  toCamelCase,
+  noop,
+  toFiniteNumber,
+  findKey,
+  global: _global,
+  isContextDefined,
+  isSpecCompliantForm,
+  toJSONObject,
+  isAsyncFn,
+  isThenable,
+  setImmediate: _setImmediate,
+  asap,
+  isIterable
+};
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/core/AxiosError.js
+function AxiosError(message, code, config, request, response) {
+  Error.call(this);
+  if (Error.captureStackTrace) {
+    Error.captureStackTrace(this, this.constructor);
+  } else {
+    this.stack = new Error().stack;
+  }
+  this.message = message;
+  this.name = "AxiosError";
+  code && (this.code = code);
+  config && (this.config = config);
+  request && (this.request = request);
+  if (response) {
+    this.response = response;
+    this.status = response.status ? response.status : null;
+  }
+}
+utils_default.inherits(AxiosError, Error, {
+  toJSON: function toJSON() {
+    return {
+      // Standard
+      message: this.message,
+      name: this.name,
+      // Microsoft
+      description: this.description,
+      number: this.number,
+      // Mozilla
+      fileName: this.fileName,
+      lineNumber: this.lineNumber,
+      columnNumber: this.columnNumber,
+      stack: this.stack,
+      // Axios
+      config: utils_default.toJSONObject(this.config),
+      code: this.code,
+      status: this.status
+    };
+  }
+});
+var prototype = AxiosError.prototype;
+var descriptors = {};
+[
+  "ERR_BAD_OPTION_VALUE",
+  "ERR_BAD_OPTION",
+  "ECONNABORTED",
+  "ETIMEDOUT",
+  "ERR_NETWORK",
+  "ERR_FR_TOO_MANY_REDIRECTS",
+  "ERR_DEPRECATED",
+  "ERR_BAD_RESPONSE",
+  "ERR_BAD_REQUEST",
+  "ERR_CANCELED",
+  "ERR_NOT_SUPPORT",
+  "ERR_INVALID_URL"
+  // eslint-disable-next-line func-names
+].forEach((code) => {
+  descriptors[code] = { value: code };
+});
+Object.defineProperties(AxiosError, descriptors);
+Object.defineProperty(prototype, "isAxiosError", { value: true });
+AxiosError.from = (error, code, config, request, response, customProps) => {
+  const axiosError = Object.create(prototype);
+  utils_default.toFlatObject(error, axiosError, function filter2(obj) {
+    return obj !== Error.prototype;
+  }, (prop) => {
+    return prop !== "isAxiosError";
+  });
+  const msg = error && error.message ? error.message : "Error";
+  const errCode = code == null && error ? error.code : code;
+  AxiosError.call(axiosError, msg, errCode, config, request, response);
+  if (error && axiosError.cause == null) {
+    Object.defineProperty(axiosError, "cause", { value: error, configurable: true });
+  }
+  axiosError.name = error && error.name || "Error";
+  customProps && Object.assign(axiosError, customProps);
+  return axiosError;
+};
+var AxiosError_default = AxiosError;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/null.js
+var null_default = null;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/toFormData.js
+function isVisitable(thing) {
+  return utils_default.isPlainObject(thing) || utils_default.isArray(thing);
+}
+function removeBrackets(key) {
+  return utils_default.endsWith(key, "[]") ? key.slice(0, -2) : key;
+}
+function renderKey(path, key, dots) {
+  if (!path) return key;
+  return path.concat(key).map(function each(token, i) {
+    token = removeBrackets(token);
+    return !dots && i ? "[" + token + "]" : token;
+  }).join(dots ? "." : "");
+}
+function isFlatArray(arr) {
+  return utils_default.isArray(arr) && !arr.some(isVisitable);
+}
+var predicates = utils_default.toFlatObject(utils_default, {}, null, function filter(prop) {
+  return /^is[A-Z]/.test(prop);
+});
+function toFormData(obj, formData, options) {
+  if (!utils_default.isObject(obj)) {
+    throw new TypeError("target must be an object");
+  }
+  formData = formData || new (null_default || FormData)();
+  options = utils_default.toFlatObject(options, {
+    metaTokens: true,
+    dots: false,
+    indexes: false
+  }, false, function defined(option, source) {
+    return !utils_default.isUndefined(source[option]);
+  });
+  const metaTokens = options.metaTokens;
+  const visitor = options.visitor || defaultVisitor;
+  const dots = options.dots;
+  const indexes = options.indexes;
+  const _Blob = options.Blob || typeof Blob !== "undefined" && Blob;
+  const useBlob = _Blob && utils_default.isSpecCompliantForm(formData);
+  if (!utils_default.isFunction(visitor)) {
+    throw new TypeError("visitor must be a function");
+  }
+  function convertValue(value) {
+    if (value === null) return "";
+    if (utils_default.isDate(value)) {
+      return value.toISOString();
+    }
+    if (utils_default.isBoolean(value)) {
+      return value.toString();
+    }
+    if (!useBlob && utils_default.isBlob(value)) {
+      throw new AxiosError_default("Blob is not supported. Use a Buffer instead.");
+    }
+    if (utils_default.isArrayBuffer(value) || utils_default.isTypedArray(value)) {
+      return useBlob && typeof Blob === "function" ? new Blob([value]) : Buffer.from(value);
+    }
+    return value;
+  }
+  function defaultVisitor(value, key, path) {
+    let arr = value;
+    if (value && !path && typeof value === "object") {
+      if (utils_default.endsWith(key, "{}")) {
+        key = metaTokens ? key : key.slice(0, -2);
+        value = JSON.stringify(value);
+      } else if (utils_default.isArray(value) && isFlatArray(value) || (utils_default.isFileList(value) || utils_default.endsWith(key, "[]")) && (arr = utils_default.toArray(value))) {
+        key = removeBrackets(key);
+        arr.forEach(function each(el, index) {
+          !(utils_default.isUndefined(el) || el === null) && formData.append(
+            // eslint-disable-next-line no-nested-ternary
+            indexes === true ? renderKey([key], index, dots) : indexes === null ? key : key + "[]",
+            convertValue(el)
+          );
+        });
+        return false;
+      }
+    }
+    if (isVisitable(value)) {
+      return true;
+    }
+    formData.append(renderKey(path, key, dots), convertValue(value));
+    return false;
+  }
+  const stack = [];
+  const exposedHelpers = Object.assign(predicates, {
+    defaultVisitor,
+    convertValue,
+    isVisitable
+  });
+  function build(value, path) {
+    if (utils_default.isUndefined(value)) return;
+    if (stack.indexOf(value) !== -1) {
+      throw Error("Circular reference detected in " + path.join("."));
+    }
+    stack.push(value);
+    utils_default.forEach(value, function each(el, key) {
+      const result = !(utils_default.isUndefined(el) || el === null) && visitor.call(
+        formData,
+        el,
+        utils_default.isString(key) ? key.trim() : key,
+        path,
+        exposedHelpers
+      );
+      if (result === true) {
+        build(el, path ? path.concat(key) : [key]);
+      }
+    });
+    stack.pop();
+  }
+  if (!utils_default.isObject(obj)) {
+    throw new TypeError("data must be an object");
+  }
+  build(obj);
+  return formData;
+}
+var toFormData_default = toFormData;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/AxiosURLSearchParams.js
+function encode(str) {
+  const charMap = {
+    "!": "%21",
+    "'": "%27",
+    "(": "%28",
+    ")": "%29",
+    "~": "%7E",
+    "%20": "+",
+    "%00": "\0"
+  };
+  return encodeURIComponent(str).replace(/[!'()~]|%20|%00/g, function replacer(match) {
+    return charMap[match];
+  });
+}
+function AxiosURLSearchParams(params, options) {
+  this._pairs = [];
+  params && toFormData_default(params, this, options);
+}
+var prototype2 = AxiosURLSearchParams.prototype;
+prototype2.append = function append(name, value) {
+  this._pairs.push([name, value]);
+};
+prototype2.toString = function toString2(encoder) {
+  const _encode = encoder ? function(value) {
+    return encoder.call(this, value, encode);
+  } : encode;
+  return this._pairs.map(function each(pair) {
+    return _encode(pair[0]) + "=" + _encode(pair[1]);
+  }, "").join("&");
+};
+var AxiosURLSearchParams_default = AxiosURLSearchParams;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/buildURL.js
+function encode2(val) {
+  return encodeURIComponent(val).replace(/%3A/gi, ":").replace(/%24/g, "$").replace(/%2C/gi, ",").replace(/%20/g, "+");
+}
+function buildURL(url, params, options) {
+  if (!params) {
+    return url;
+  }
+  const _encode = options && options.encode || encode2;
+  if (utils_default.isFunction(options)) {
+    options = {
+      serialize: options
+    };
+  }
+  const serializeFn = options && options.serialize;
+  let serializedParams;
+  if (serializeFn) {
+    serializedParams = serializeFn(params, options);
+  } else {
+    serializedParams = utils_default.isURLSearchParams(params) ? params.toString() : new AxiosURLSearchParams_default(params, options).toString(_encode);
+  }
+  if (serializedParams) {
+    const hashmarkIndex = url.indexOf("#");
+    if (hashmarkIndex !== -1) {
+      url = url.slice(0, hashmarkIndex);
+    }
+    url += (url.indexOf("?") === -1 ? "?" : "&") + serializedParams;
+  }
+  return url;
+}
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/core/InterceptorManager.js
+var InterceptorManager = class {
+  constructor() {
+    this.handlers = [];
+  }
+  /**
+   * Add a new interceptor to the stack
+   *
+   * @param {Function} fulfilled The function to handle `then` for a `Promise`
+   * @param {Function} rejected The function to handle `reject` for a `Promise`
+   *
+   * @return {Number} An ID used to remove interceptor later
+   */
+  use(fulfilled, rejected, options) {
+    this.handlers.push({
+      fulfilled,
+      rejected,
+      synchronous: options ? options.synchronous : false,
+      runWhen: options ? options.runWhen : null
+    });
+    return this.handlers.length - 1;
+  }
+  /**
+   * Remove an interceptor from the stack
+   *
+   * @param {Number} id The ID that was returned by `use`
+   *
+   * @returns {void}
+   */
+  eject(id) {
+    if (this.handlers[id]) {
+      this.handlers[id] = null;
+    }
+  }
+  /**
+   * Clear all interceptors from the stack
+   *
+   * @returns {void}
+   */
+  clear() {
+    if (this.handlers) {
+      this.handlers = [];
+    }
+  }
+  /**
+   * Iterate over all the registered interceptors
+   *
+   * This method is particularly useful for skipping over any
+   * interceptors that may have become `null` calling `eject`.
+   *
+   * @param {Function} fn The function to call for each interceptor
+   *
+   * @returns {void}
+   */
+  forEach(fn) {
+    utils_default.forEach(this.handlers, function forEachHandler(h) {
+      if (h !== null) {
+        fn(h);
+      }
+    });
+  }
+};
+var InterceptorManager_default = InterceptorManager;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/defaults/transitional.js
+var transitional_default = {
+  silentJSONParsing: true,
+  forcedJSONParsing: true,
+  clarifyTimeoutError: false
+};
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/platform/browser/classes/URLSearchParams.js
+var URLSearchParams_default = typeof URLSearchParams !== "undefined" ? URLSearchParams : AxiosURLSearchParams_default;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/platform/browser/classes/FormData.js
+var FormData_default = typeof FormData !== "undefined" ? FormData : null;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/platform/browser/classes/Blob.js
+var Blob_default = typeof Blob !== "undefined" ? Blob : null;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/platform/browser/index.js
+var browser_default = {
+  isBrowser: true,
+  classes: {
+    URLSearchParams: URLSearchParams_default,
+    FormData: FormData_default,
+    Blob: Blob_default
+  },
+  protocols: ["http", "https", "file", "blob", "url", "data"]
+};
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/platform/common/utils.js
+var utils_exports = {};
+__export(utils_exports, {
+  hasBrowserEnv: () => hasBrowserEnv,
+  hasStandardBrowserEnv: () => hasStandardBrowserEnv,
+  hasStandardBrowserWebWorkerEnv: () => hasStandardBrowserWebWorkerEnv,
+  navigator: () => _navigator,
+  origin: () => origin
+});
+var hasBrowserEnv = typeof window !== "undefined" && typeof document !== "undefined";
+var _navigator = typeof navigator === "object" && navigator || void 0;
+var hasStandardBrowserEnv = hasBrowserEnv && (!_navigator || ["ReactNative", "NativeScript", "NS"].indexOf(_navigator.product) < 0);
+var hasStandardBrowserWebWorkerEnv = (() => {
+  return typeof WorkerGlobalScope !== "undefined" && // eslint-disable-next-line no-undef
+  self instanceof WorkerGlobalScope && typeof self.importScripts === "function";
+})();
+var origin = hasBrowserEnv && window.location.href || "http://localhost";
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/platform/index.js
+var platform_default = {
+  ...utils_exports,
+  ...browser_default
+};
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/toURLEncodedForm.js
+function toURLEncodedForm(data, options) {
+  return toFormData_default(data, new platform_default.classes.URLSearchParams(), {
+    visitor: function(value, key, path, helpers) {
+      if (platform_default.isNode && utils_default.isBuffer(value)) {
+        this.append(key, value.toString("base64"));
+        return false;
+      }
+      return helpers.defaultVisitor.apply(this, arguments);
+    },
+    ...options
+  });
+}
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/formDataToJSON.js
+function parsePropPath(name) {
+  return utils_default.matchAll(/\w+|\[(\w*)]/g, name).map((match) => {
+    return match[0] === "[]" ? "" : match[1] || match[0];
+  });
+}
+function arrayToObject(arr) {
+  const obj = {};
+  const keys = Object.keys(arr);
+  let i;
+  const len = keys.length;
+  let key;
+  for (i = 0; i < len; i++) {
+    key = keys[i];
+    obj[key] = arr[key];
+  }
+  return obj;
+}
+function formDataToJSON(formData) {
+  function buildPath(path, value, target, index) {
+    let name = path[index++];
+    if (name === "__proto__") return true;
+    const isNumericKey = Number.isFinite(+name);
+    const isLast = index >= path.length;
+    name = !name && utils_default.isArray(target) ? target.length : name;
+    if (isLast) {
+      if (utils_default.hasOwnProp(target, name)) {
+        target[name] = [target[name], value];
+      } else {
+        target[name] = value;
+      }
+      return !isNumericKey;
+    }
+    if (!target[name] || !utils_default.isObject(target[name])) {
+      target[name] = [];
+    }
+    const result = buildPath(path, value, target[name], index);
+    if (result && utils_default.isArray(target[name])) {
+      target[name] = arrayToObject(target[name]);
+    }
+    return !isNumericKey;
+  }
+  if (utils_default.isFormData(formData) && utils_default.isFunction(formData.entries)) {
+    const obj = {};
+    utils_default.forEachEntry(formData, (name, value) => {
+      buildPath(parsePropPath(name), value, obj, 0);
+    });
+    return obj;
+  }
+  return null;
+}
+var formDataToJSON_default = formDataToJSON;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/defaults/index.js
+function stringifySafely(rawValue, parser, encoder) {
+  if (utils_default.isString(rawValue)) {
+    try {
+      (parser || JSON.parse)(rawValue);
+      return utils_default.trim(rawValue);
+    } catch (e) {
+      if (e.name !== "SyntaxError") {
+        throw e;
+      }
+    }
+  }
+  return (encoder || JSON.stringify)(rawValue);
+}
+var defaults = {
+  transitional: transitional_default,
+  adapter: ["xhr", "http", "fetch"],
+  transformRequest: [function transformRequest(data, headers) {
+    const contentType = headers.getContentType() || "";
+    const hasJSONContentType = contentType.indexOf("application/json") > -1;
+    const isObjectPayload = utils_default.isObject(data);
+    if (isObjectPayload && utils_default.isHTMLForm(data)) {
+      data = new FormData(data);
+    }
+    const isFormData2 = utils_default.isFormData(data);
+    if (isFormData2) {
+      return hasJSONContentType ? JSON.stringify(formDataToJSON_default(data)) : data;
+    }
+    if (utils_default.isArrayBuffer(data) || utils_default.isBuffer(data) || utils_default.isStream(data) || utils_default.isFile(data) || utils_default.isBlob(data) || utils_default.isReadableStream(data)) {
+      return data;
+    }
+    if (utils_default.isArrayBufferView(data)) {
+      return data.buffer;
+    }
+    if (utils_default.isURLSearchParams(data)) {
+      headers.setContentType("application/x-www-form-urlencoded;charset=utf-8", false);
+      return data.toString();
+    }
+    let isFileList2;
+    if (isObjectPayload) {
+      if (contentType.indexOf("application/x-www-form-urlencoded") > -1) {
+        return toURLEncodedForm(data, this.formSerializer).toString();
+      }
+      if ((isFileList2 = utils_default.isFileList(data)) || contentType.indexOf("multipart/form-data") > -1) {
+        const _FormData = this.env && this.env.FormData;
+        return toFormData_default(
+          isFileList2 ? { "files[]": data } : data,
+          _FormData && new _FormData(),
+          this.formSerializer
+        );
+      }
+    }
+    if (isObjectPayload || hasJSONContentType) {
+      headers.setContentType("application/json", false);
+      return stringifySafely(data);
+    }
+    return data;
+  }],
+  transformResponse: [function transformResponse(data) {
+    const transitional2 = this.transitional || defaults.transitional;
+    const forcedJSONParsing = transitional2 && transitional2.forcedJSONParsing;
+    const JSONRequested = this.responseType === "json";
+    if (utils_default.isResponse(data) || utils_default.isReadableStream(data)) {
+      return data;
+    }
+    if (data && utils_default.isString(data) && (forcedJSONParsing && !this.responseType || JSONRequested)) {
+      const silentJSONParsing = transitional2 && transitional2.silentJSONParsing;
+      const strictJSONParsing = !silentJSONParsing && JSONRequested;
+      try {
+        return JSON.parse(data, this.parseReviver);
+      } catch (e) {
+        if (strictJSONParsing) {
+          if (e.name === "SyntaxError") {
+            throw AxiosError_default.from(e, AxiosError_default.ERR_BAD_RESPONSE, this, null, this.response);
+          }
+          throw e;
+        }
+      }
+    }
+    return data;
+  }],
+  /**
+   * A timeout in milliseconds to abort a request. If set to 0 (default) a
+   * timeout is not created.
+   */
+  timeout: 0,
+  xsrfCookieName: "XSRF-TOKEN",
+  xsrfHeaderName: "X-XSRF-TOKEN",
+  maxContentLength: -1,
+  maxBodyLength: -1,
+  env: {
+    FormData: platform_default.classes.FormData,
+    Blob: platform_default.classes.Blob
+  },
+  validateStatus: function validateStatus(status) {
+    return status >= 200 && status < 300;
+  },
+  headers: {
+    common: {
+      "Accept": "application/json, text/plain, */*",
+      "Content-Type": void 0
+    }
+  }
+};
+utils_default.forEach(["delete", "get", "head", "post", "put", "patch"], (method) => {
+  defaults.headers[method] = {};
+});
+var defaults_default = defaults;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/parseHeaders.js
+var ignoreDuplicateOf = utils_default.toObjectSet([
+  "age",
+  "authorization",
+  "content-length",
+  "content-type",
+  "etag",
+  "expires",
+  "from",
+  "host",
+  "if-modified-since",
+  "if-unmodified-since",
+  "last-modified",
+  "location",
+  "max-forwards",
+  "proxy-authorization",
+  "referer",
+  "retry-after",
+  "user-agent"
+]);
+var parseHeaders_default = (rawHeaders) => {
+  const parsed = {};
+  let key;
+  let val;
+  let i;
+  rawHeaders && rawHeaders.split("\n").forEach(function parser(line) {
+    i = line.indexOf(":");
+    key = line.substring(0, i).trim().toLowerCase();
+    val = line.substring(i + 1).trim();
+    if (!key || parsed[key] && ignoreDuplicateOf[key]) {
+      return;
+    }
+    if (key === "set-cookie") {
+      if (parsed[key]) {
+        parsed[key].push(val);
+      } else {
+        parsed[key] = [val];
+      }
+    } else {
+      parsed[key] = parsed[key] ? parsed[key] + ", " + val : val;
+    }
+  });
+  return parsed;
+};
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/core/AxiosHeaders.js
+var $internals = Symbol("internals");
+function normalizeHeader(header) {
+  return header && String(header).trim().toLowerCase();
+}
+function normalizeValue(value) {
+  if (value === false || value == null) {
+    return value;
+  }
+  return utils_default.isArray(value) ? value.map(normalizeValue) : String(value);
+}
+function parseTokens(str) {
+  const tokens = /* @__PURE__ */ Object.create(null);
+  const tokensRE = /([^\s,;=]+)\s*(?:=\s*([^,;]+))?/g;
+  let match;
+  while (match = tokensRE.exec(str)) {
+    tokens[match[1]] = match[2];
+  }
+  return tokens;
+}
+var isValidHeaderName = (str) => /^[-_a-zA-Z0-9^`|~,!#$%&'*+.]+$/.test(str.trim());
+function matchHeaderValue(context, value, header, filter2, isHeaderNameFilter) {
+  if (utils_default.isFunction(filter2)) {
+    return filter2.call(this, value, header);
+  }
+  if (isHeaderNameFilter) {
+    value = header;
+  }
+  if (!utils_default.isString(value)) return;
+  if (utils_default.isString(filter2)) {
+    return value.indexOf(filter2) !== -1;
+  }
+  if (utils_default.isRegExp(filter2)) {
+    return filter2.test(value);
+  }
+}
+function formatHeader(header) {
+  return header.trim().toLowerCase().replace(/([a-z\d])(\w*)/g, (w, char, str) => {
+    return char.toUpperCase() + str;
+  });
+}
+function buildAccessors(obj, header) {
+  const accessorName = utils_default.toCamelCase(" " + header);
+  ["get", "set", "has"].forEach((methodName) => {
+    Object.defineProperty(obj, methodName + accessorName, {
+      value: function(arg1, arg2, arg3) {
+        return this[methodName].call(this, header, arg1, arg2, arg3);
+      },
+      configurable: true
+    });
+  });
+}
+var AxiosHeaders = class {
+  constructor(headers) {
+    headers && this.set(headers);
+  }
+  set(header, valueOrRewrite, rewrite) {
+    const self2 = this;
+    function setHeader(_value, _header, _rewrite) {
+      const lHeader = normalizeHeader(_header);
+      if (!lHeader) {
+        throw new Error("header name must be a non-empty string");
+      }
+      const key = utils_default.findKey(self2, lHeader);
+      if (!key || self2[key] === void 0 || _rewrite === true || _rewrite === void 0 && self2[key] !== false) {
+        self2[key || _header] = normalizeValue(_value);
+      }
+    }
+    const setHeaders = (headers, _rewrite) => utils_default.forEach(headers, (_value, _header) => setHeader(_value, _header, _rewrite));
+    if (utils_default.isPlainObject(header) || header instanceof this.constructor) {
+      setHeaders(header, valueOrRewrite);
+    } else if (utils_default.isString(header) && (header = header.trim()) && !isValidHeaderName(header)) {
+      setHeaders(parseHeaders_default(header), valueOrRewrite);
+    } else if (utils_default.isObject(header) && utils_default.isIterable(header)) {
+      let obj = {}, dest, key;
+      for (const entry of header) {
+        if (!utils_default.isArray(entry)) {
+          throw TypeError("Object iterator must return a key-value pair");
+        }
+        obj[key = entry[0]] = (dest = obj[key]) ? utils_default.isArray(dest) ? [...dest, entry[1]] : [dest, entry[1]] : entry[1];
+      }
+      setHeaders(obj, valueOrRewrite);
+    } else {
+      header != null && setHeader(valueOrRewrite, header, rewrite);
+    }
+    return this;
+  }
+  get(header, parser) {
+    header = normalizeHeader(header);
+    if (header) {
+      const key = utils_default.findKey(this, header);
+      if (key) {
+        const value = this[key];
+        if (!parser) {
+          return value;
+        }
+        if (parser === true) {
+          return parseTokens(value);
+        }
+        if (utils_default.isFunction(parser)) {
+          return parser.call(this, value, key);
+        }
+        if (utils_default.isRegExp(parser)) {
+          return parser.exec(value);
+        }
+        throw new TypeError("parser must be boolean|regexp|function");
+      }
+    }
+  }
+  has(header, matcher) {
+    header = normalizeHeader(header);
+    if (header) {
+      const key = utils_default.findKey(this, header);
+      return !!(key && this[key] !== void 0 && (!matcher || matchHeaderValue(this, this[key], key, matcher)));
+    }
+    return false;
+  }
+  delete(header, matcher) {
+    const self2 = this;
+    let deleted = false;
+    function deleteHeader(_header) {
+      _header = normalizeHeader(_header);
+      if (_header) {
+        const key = utils_default.findKey(self2, _header);
+        if (key && (!matcher || matchHeaderValue(self2, self2[key], key, matcher))) {
+          delete self2[key];
+          deleted = true;
+        }
+      }
+    }
+    if (utils_default.isArray(header)) {
+      header.forEach(deleteHeader);
+    } else {
+      deleteHeader(header);
+    }
+    return deleted;
+  }
+  clear(matcher) {
+    const keys = Object.keys(this);
+    let i = keys.length;
+    let deleted = false;
+    while (i--) {
+      const key = keys[i];
+      if (!matcher || matchHeaderValue(this, this[key], key, matcher, true)) {
+        delete this[key];
+        deleted = true;
+      }
+    }
+    return deleted;
+  }
+  normalize(format) {
+    const self2 = this;
+    const headers = {};
+    utils_default.forEach(this, (value, header) => {
+      const key = utils_default.findKey(headers, header);
+      if (key) {
+        self2[key] = normalizeValue(value);
+        delete self2[header];
+        return;
+      }
+      const normalized = format ? formatHeader(header) : String(header).trim();
+      if (normalized !== header) {
+        delete self2[header];
+      }
+      self2[normalized] = normalizeValue(value);
+      headers[normalized] = true;
+    });
+    return this;
+  }
+  concat(...targets) {
+    return this.constructor.concat(this, ...targets);
+  }
+  toJSON(asStrings) {
+    const obj = /* @__PURE__ */ Object.create(null);
+    utils_default.forEach(this, (value, header) => {
+      value != null && value !== false && (obj[header] = asStrings && utils_default.isArray(value) ? value.join(", ") : value);
+    });
+    return obj;
+  }
+  [Symbol.iterator]() {
+    return Object.entries(this.toJSON())[Symbol.iterator]();
+  }
+  toString() {
+    return Object.entries(this.toJSON()).map(([header, value]) => header + ": " + value).join("\n");
+  }
+  getSetCookie() {
+    return this.get("set-cookie") || [];
+  }
+  get [Symbol.toStringTag]() {
+    return "AxiosHeaders";
+  }
+  static from(thing) {
+    return thing instanceof this ? thing : new this(thing);
+  }
+  static concat(first, ...targets) {
+    const computed = new this(first);
+    targets.forEach((target) => computed.set(target));
+    return computed;
+  }
+  static accessor(header) {
+    const internals = this[$internals] = this[$internals] = {
+      accessors: {}
+    };
+    const accessors = internals.accessors;
+    const prototype3 = this.prototype;
+    function defineAccessor(_header) {
+      const lHeader = normalizeHeader(_header);
+      if (!accessors[lHeader]) {
+        buildAccessors(prototype3, _header);
+        accessors[lHeader] = true;
+      }
+    }
+    utils_default.isArray(header) ? header.forEach(defineAccessor) : defineAccessor(header);
+    return this;
+  }
+};
+AxiosHeaders.accessor(["Content-Type", "Content-Length", "Accept", "Accept-Encoding", "User-Agent", "Authorization"]);
+utils_default.reduceDescriptors(AxiosHeaders.prototype, ({ value }, key) => {
+  let mapped = key[0].toUpperCase() + key.slice(1);
+  return {
+    get: () => value,
+    set(headerValue) {
+      this[mapped] = headerValue;
+    }
+  };
+});
+utils_default.freezeMethods(AxiosHeaders);
+var AxiosHeaders_default = AxiosHeaders;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/core/transformData.js
+function transformData(fns, response) {
+  const config = this || defaults_default;
+  const context = response || config;
+  const headers = AxiosHeaders_default.from(context.headers);
+  let data = context.data;
+  utils_default.forEach(fns, function transform(fn) {
+    data = fn.call(config, data, headers.normalize(), response ? response.status : void 0);
+  });
+  headers.normalize();
+  return data;
+}
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/cancel/isCancel.js
+function isCancel(value) {
+  return !!(value && value.__CANCEL__);
+}
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/cancel/CanceledError.js
+function CanceledError(message, config, request) {
+  AxiosError_default.call(this, message == null ? "canceled" : message, AxiosError_default.ERR_CANCELED, config, request);
+  this.name = "CanceledError";
+}
+utils_default.inherits(CanceledError, AxiosError_default, {
+  __CANCEL__: true
+});
+var CanceledError_default = CanceledError;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/core/settle.js
+function settle(resolve, reject, response) {
+  const validateStatus2 = response.config.validateStatus;
+  if (!response.status || !validateStatus2 || validateStatus2(response.status)) {
+    resolve(response);
+  } else {
+    reject(new AxiosError_default(
+      "Request failed with status code " + response.status,
+      [AxiosError_default.ERR_BAD_REQUEST, AxiosError_default.ERR_BAD_RESPONSE][Math.floor(response.status / 100) - 4],
+      response.config,
+      response.request,
+      response
+    ));
+  }
+}
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/parseProtocol.js
+function parseProtocol(url) {
+  const match = /^([-+\w]{1,25})(:?\/\/|:)/.exec(url);
+  return match && match[1] || "";
+}
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/speedometer.js
+function speedometer(samplesCount, min) {
+  samplesCount = samplesCount || 10;
+  const bytes = new Array(samplesCount);
+  const timestamps = new Array(samplesCount);
+  let head = 0;
+  let tail = 0;
+  let firstSampleTS;
+  min = min !== void 0 ? min : 1e3;
+  return function push(chunkLength) {
+    const now = Date.now();
+    const startedAt = timestamps[tail];
+    if (!firstSampleTS) {
+      firstSampleTS = now;
+    }
+    bytes[head] = chunkLength;
+    timestamps[head] = now;
+    let i = tail;
+    let bytesCount = 0;
+    while (i !== head) {
+      bytesCount += bytes[i++];
+      i = i % samplesCount;
+    }
+    head = (head + 1) % samplesCount;
+    if (head === tail) {
+      tail = (tail + 1) % samplesCount;
+    }
+    if (now - firstSampleTS < min) {
+      return;
+    }
+    const passed = startedAt && now - startedAt;
+    return passed ? Math.round(bytesCount * 1e3 / passed) : void 0;
+  };
+}
+var speedometer_default = speedometer;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/throttle.js
+function throttle(fn, freq) {
+  let timestamp = 0;
+  let threshold = 1e3 / freq;
+  let lastArgs;
+  let timer;
+  const invoke = (args, now = Date.now()) => {
+    timestamp = now;
+    lastArgs = null;
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    fn(...args);
+  };
+  const throttled = (...args) => {
+    const now = Date.now();
+    const passed = now - timestamp;
+    if (passed >= threshold) {
+      invoke(args, now);
+    } else {
+      lastArgs = args;
+      if (!timer) {
+        timer = setTimeout(() => {
+          timer = null;
+          invoke(lastArgs);
+        }, threshold - passed);
+      }
+    }
+  };
+  const flush = () => lastArgs && invoke(lastArgs);
+  return [throttled, flush];
+}
+var throttle_default = throttle;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/progressEventReducer.js
+var progressEventReducer = (listener, isDownloadStream, freq = 3) => {
+  let bytesNotified = 0;
+  const _speedometer = speedometer_default(50, 250);
+  return throttle_default((e) => {
+    const loaded = e.loaded;
+    const total = e.lengthComputable ? e.total : void 0;
+    const progressBytes = loaded - bytesNotified;
+    const rate = _speedometer(progressBytes);
+    const inRange = loaded <= total;
+    bytesNotified = loaded;
+    const data = {
+      loaded,
+      total,
+      progress: total ? loaded / total : void 0,
+      bytes: progressBytes,
+      rate: rate ? rate : void 0,
+      estimated: rate && total && inRange ? (total - loaded) / rate : void 0,
+      event: e,
+      lengthComputable: total != null,
+      [isDownloadStream ? "download" : "upload"]: true
+    };
+    listener(data);
+  }, freq);
+};
+var progressEventDecorator = (total, throttled) => {
+  const lengthComputable = total != null;
+  return [(loaded) => throttled[0]({
+    lengthComputable,
+    total,
+    loaded
+  }), throttled[1]];
+};
+var asyncDecorator = (fn) => (...args) => utils_default.asap(() => fn(...args));
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/isURLSameOrigin.js
+var isURLSameOrigin_default = platform_default.hasStandardBrowserEnv ? /* @__PURE__ */ ((origin2, isMSIE) => (url) => {
+  url = new URL(url, platform_default.origin);
+  return origin2.protocol === url.protocol && origin2.host === url.host && (isMSIE || origin2.port === url.port);
+})(
+  new URL(platform_default.origin),
+  platform_default.navigator && /(msie|trident)/i.test(platform_default.navigator.userAgent)
+) : () => true;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/cookies.js
+var cookies_default = platform_default.hasStandardBrowserEnv ? (
+  // Standard browser envs support document.cookie
+  {
+    write(name, value, expires, path, domain, secure, sameSite) {
+      if (typeof document === "undefined") return;
+      const cookie = [`${name}=${encodeURIComponent(value)}`];
+      if (utils_default.isNumber(expires)) {
+        cookie.push(`expires=${new Date(expires).toUTCString()}`);
+      }
+      if (utils_default.isString(path)) {
+        cookie.push(`path=${path}`);
+      }
+      if (utils_default.isString(domain)) {
+        cookie.push(`domain=${domain}`);
+      }
+      if (secure === true) {
+        cookie.push("secure");
+      }
+      if (utils_default.isString(sameSite)) {
+        cookie.push(`SameSite=${sameSite}`);
+      }
+      document.cookie = cookie.join("; ");
+    },
+    read(name) {
+      if (typeof document === "undefined") return null;
+      const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+      return match ? decodeURIComponent(match[1]) : null;
+    },
+    remove(name) {
+      this.write(name, "", Date.now() - 864e5, "/");
+    }
+  }
+) : (
+  // Non-standard browser env (web workers, react-native) lack needed support.
+  {
+    write() {
+    },
+    read() {
+      return null;
+    },
+    remove() {
+    }
+  }
+);
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/isAbsoluteURL.js
+function isAbsoluteURL(url) {
+  return /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url);
+}
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/combineURLs.js
+function combineURLs(baseURL, relativeURL) {
+  return relativeURL ? baseURL.replace(/\/?\/$/, "") + "/" + relativeURL.replace(/^\/+/, "") : baseURL;
+}
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/core/buildFullPath.js
+function buildFullPath(baseURL, requestedURL, allowAbsoluteUrls) {
+  let isRelativeUrl = !isAbsoluteURL(requestedURL);
+  if (baseURL && (isRelativeUrl || allowAbsoluteUrls == false)) {
+    return combineURLs(baseURL, requestedURL);
+  }
+  return requestedURL;
+}
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/core/mergeConfig.js
+var headersToObject = (thing) => thing instanceof AxiosHeaders_default ? { ...thing } : thing;
+function mergeConfig(config1, config2) {
+  config2 = config2 || {};
+  const config = {};
+  function getMergedValue(target, source, prop, caseless) {
+    if (utils_default.isPlainObject(target) && utils_default.isPlainObject(source)) {
+      return utils_default.merge.call({ caseless }, target, source);
+    } else if (utils_default.isPlainObject(source)) {
+      return utils_default.merge({}, source);
+    } else if (utils_default.isArray(source)) {
+      return source.slice();
+    }
+    return source;
+  }
+  function mergeDeepProperties(a, b, prop, caseless) {
+    if (!utils_default.isUndefined(b)) {
+      return getMergedValue(a, b, prop, caseless);
+    } else if (!utils_default.isUndefined(a)) {
+      return getMergedValue(void 0, a, prop, caseless);
+    }
+  }
+  function valueFromConfig2(a, b) {
+    if (!utils_default.isUndefined(b)) {
+      return getMergedValue(void 0, b);
+    }
+  }
+  function defaultToConfig2(a, b) {
+    if (!utils_default.isUndefined(b)) {
+      return getMergedValue(void 0, b);
+    } else if (!utils_default.isUndefined(a)) {
+      return getMergedValue(void 0, a);
+    }
+  }
+  function mergeDirectKeys(a, b, prop) {
+    if (prop in config2) {
+      return getMergedValue(a, b);
+    } else if (prop in config1) {
+      return getMergedValue(void 0, a);
+    }
+  }
+  const mergeMap = {
+    url: valueFromConfig2,
+    method: valueFromConfig2,
+    data: valueFromConfig2,
+    baseURL: defaultToConfig2,
+    transformRequest: defaultToConfig2,
+    transformResponse: defaultToConfig2,
+    paramsSerializer: defaultToConfig2,
+    timeout: defaultToConfig2,
+    timeoutMessage: defaultToConfig2,
+    withCredentials: defaultToConfig2,
+    withXSRFToken: defaultToConfig2,
+    adapter: defaultToConfig2,
+    responseType: defaultToConfig2,
+    xsrfCookieName: defaultToConfig2,
+    xsrfHeaderName: defaultToConfig2,
+    onUploadProgress: defaultToConfig2,
+    onDownloadProgress: defaultToConfig2,
+    decompress: defaultToConfig2,
+    maxContentLength: defaultToConfig2,
+    maxBodyLength: defaultToConfig2,
+    beforeRedirect: defaultToConfig2,
+    transport: defaultToConfig2,
+    httpAgent: defaultToConfig2,
+    httpsAgent: defaultToConfig2,
+    cancelToken: defaultToConfig2,
+    socketPath: defaultToConfig2,
+    responseEncoding: defaultToConfig2,
+    validateStatus: mergeDirectKeys,
+    headers: (a, b, prop) => mergeDeepProperties(headersToObject(a), headersToObject(b), prop, true)
+  };
+  utils_default.forEach(Object.keys({ ...config1, ...config2 }), function computeConfigValue(prop) {
+    const merge2 = mergeMap[prop] || mergeDeepProperties;
+    const configValue = merge2(config1[prop], config2[prop], prop);
+    utils_default.isUndefined(configValue) && merge2 !== mergeDirectKeys || (config[prop] = configValue);
+  });
+  return config;
+}
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/resolveConfig.js
+var resolveConfig_default = (config) => {
+  const newConfig = mergeConfig({}, config);
+  let { data, withXSRFToken, xsrfHeaderName, xsrfCookieName, headers, auth } = newConfig;
+  newConfig.headers = headers = AxiosHeaders_default.from(headers);
+  newConfig.url = buildURL(buildFullPath(newConfig.baseURL, newConfig.url, newConfig.allowAbsoluteUrls), config.params, config.paramsSerializer);
+  if (auth) {
+    headers.set(
+      "Authorization",
+      "Basic " + btoa((auth.username || "") + ":" + (auth.password ? unescape(encodeURIComponent(auth.password)) : ""))
+    );
+  }
+  if (utils_default.isFormData(data)) {
+    if (platform_default.hasStandardBrowserEnv || platform_default.hasStandardBrowserWebWorkerEnv) {
+      headers.setContentType(void 0);
+    } else if (utils_default.isFunction(data.getHeaders)) {
+      const formHeaders = data.getHeaders();
+      const allowedHeaders = ["content-type", "content-length"];
+      Object.entries(formHeaders).forEach(([key, val]) => {
+        if (allowedHeaders.includes(key.toLowerCase())) {
+          headers.set(key, val);
+        }
+      });
+    }
+  }
+  if (platform_default.hasStandardBrowserEnv) {
+    withXSRFToken && utils_default.isFunction(withXSRFToken) && (withXSRFToken = withXSRFToken(newConfig));
+    if (withXSRFToken || withXSRFToken !== false && isURLSameOrigin_default(newConfig.url)) {
+      const xsrfValue = xsrfHeaderName && xsrfCookieName && cookies_default.read(xsrfCookieName);
+      if (xsrfValue) {
+        headers.set(xsrfHeaderName, xsrfValue);
+      }
+    }
+  }
+  return newConfig;
+};
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/adapters/xhr.js
+var isXHRAdapterSupported = typeof XMLHttpRequest !== "undefined";
+var xhr_default = isXHRAdapterSupported && function(config) {
+  return new Promise(function dispatchXhrRequest(resolve, reject) {
+    const _config = resolveConfig_default(config);
+    let requestData = _config.data;
+    const requestHeaders = AxiosHeaders_default.from(_config.headers).normalize();
+    let { responseType, onUploadProgress, onDownloadProgress } = _config;
+    let onCanceled;
+    let uploadThrottled, downloadThrottled;
+    let flushUpload, flushDownload;
+    function done() {
+      flushUpload && flushUpload();
+      flushDownload && flushDownload();
+      _config.cancelToken && _config.cancelToken.unsubscribe(onCanceled);
+      _config.signal && _config.signal.removeEventListener("abort", onCanceled);
+    }
+    let request = new XMLHttpRequest();
+    request.open(_config.method.toUpperCase(), _config.url, true);
+    request.timeout = _config.timeout;
+    function onloadend() {
+      if (!request) {
+        return;
+      }
+      const responseHeaders = AxiosHeaders_default.from(
+        "getAllResponseHeaders" in request && request.getAllResponseHeaders()
+      );
+      const responseData = !responseType || responseType === "text" || responseType === "json" ? request.responseText : request.response;
+      const response = {
+        data: responseData,
+        status: request.status,
+        statusText: request.statusText,
+        headers: responseHeaders,
+        config,
+        request
+      };
+      settle(function _resolve(value) {
+        resolve(value);
+        done();
+      }, function _reject(err) {
+        reject(err);
+        done();
+      }, response);
+      request = null;
+    }
+    if ("onloadend" in request) {
+      request.onloadend = onloadend;
+    } else {
+      request.onreadystatechange = function handleLoad() {
+        if (!request || request.readyState !== 4) {
+          return;
+        }
+        if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf("file:") === 0)) {
+          return;
+        }
+        setTimeout(onloadend);
+      };
+    }
+    request.onabort = function handleAbort() {
+      if (!request) {
+        return;
+      }
+      reject(new AxiosError_default("Request aborted", AxiosError_default.ECONNABORTED, config, request));
+      request = null;
+    };
+    request.onerror = function handleError(event) {
+      const msg = event && event.message ? event.message : "Network Error";
+      const err = new AxiosError_default(msg, AxiosError_default.ERR_NETWORK, config, request);
+      err.event = event || null;
+      reject(err);
+      request = null;
+    };
+    request.ontimeout = function handleTimeout() {
+      let timeoutErrorMessage = _config.timeout ? "timeout of " + _config.timeout + "ms exceeded" : "timeout exceeded";
+      const transitional2 = _config.transitional || transitional_default;
+      if (_config.timeoutErrorMessage) {
+        timeoutErrorMessage = _config.timeoutErrorMessage;
+      }
+      reject(new AxiosError_default(
+        timeoutErrorMessage,
+        transitional2.clarifyTimeoutError ? AxiosError_default.ETIMEDOUT : AxiosError_default.ECONNABORTED,
+        config,
+        request
+      ));
+      request = null;
+    };
+    requestData === void 0 && requestHeaders.setContentType(null);
+    if ("setRequestHeader" in request) {
+      utils_default.forEach(requestHeaders.toJSON(), function setRequestHeader(val, key) {
+        request.setRequestHeader(key, val);
+      });
+    }
+    if (!utils_default.isUndefined(_config.withCredentials)) {
+      request.withCredentials = !!_config.withCredentials;
+    }
+    if (responseType && responseType !== "json") {
+      request.responseType = _config.responseType;
+    }
+    if (onDownloadProgress) {
+      [downloadThrottled, flushDownload] = progressEventReducer(onDownloadProgress, true);
+      request.addEventListener("progress", downloadThrottled);
+    }
+    if (onUploadProgress && request.upload) {
+      [uploadThrottled, flushUpload] = progressEventReducer(onUploadProgress);
+      request.upload.addEventListener("progress", uploadThrottled);
+      request.upload.addEventListener("loadend", flushUpload);
+    }
+    if (_config.cancelToken || _config.signal) {
+      onCanceled = (cancel) => {
+        if (!request) {
+          return;
+        }
+        reject(!cancel || cancel.type ? new CanceledError_default(null, config, request) : cancel);
+        request.abort();
+        request = null;
+      };
+      _config.cancelToken && _config.cancelToken.subscribe(onCanceled);
+      if (_config.signal) {
+        _config.signal.aborted ? onCanceled() : _config.signal.addEventListener("abort", onCanceled);
+      }
+    }
+    const protocol = parseProtocol(_config.url);
+    if (protocol && platform_default.protocols.indexOf(protocol) === -1) {
+      reject(new AxiosError_default("Unsupported protocol " + protocol + ":", AxiosError_default.ERR_BAD_REQUEST, config));
+      return;
+    }
+    request.send(requestData || null);
+  });
+};
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/composeSignals.js
+var composeSignals = (signals, timeout) => {
+  const { length } = signals = signals ? signals.filter(Boolean) : [];
+  if (timeout || length) {
+    let controller = new AbortController();
+    let aborted;
+    const onabort = function(reason) {
+      if (!aborted) {
+        aborted = true;
+        unsubscribe();
+        const err = reason instanceof Error ? reason : this.reason;
+        controller.abort(err instanceof AxiosError_default ? err : new CanceledError_default(err instanceof Error ? err.message : err));
+      }
+    };
+    let timer = timeout && setTimeout(() => {
+      timer = null;
+      onabort(new AxiosError_default(`timeout ${timeout} of ms exceeded`, AxiosError_default.ETIMEDOUT));
+    }, timeout);
+    const unsubscribe = () => {
+      if (signals) {
+        timer && clearTimeout(timer);
+        timer = null;
+        signals.forEach((signal2) => {
+          signal2.unsubscribe ? signal2.unsubscribe(onabort) : signal2.removeEventListener("abort", onabort);
+        });
+        signals = null;
+      }
+    };
+    signals.forEach((signal2) => signal2.addEventListener("abort", onabort));
+    const { signal } = controller;
+    signal.unsubscribe = () => utils_default.asap(unsubscribe);
+    return signal;
+  }
+};
+var composeSignals_default = composeSignals;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/trackStream.js
+var streamChunk = function* (chunk, chunkSize) {
+  let len = chunk.byteLength;
+  if (!chunkSize || len < chunkSize) {
+    yield chunk;
+    return;
+  }
+  let pos = 0;
+  let end;
+  while (pos < len) {
+    end = pos + chunkSize;
+    yield chunk.slice(pos, end);
+    pos = end;
+  }
+};
+var readBytes = async function* (iterable, chunkSize) {
+  for await (const chunk of readStream(iterable)) {
+    yield* streamChunk(chunk, chunkSize);
+  }
+};
+var readStream = async function* (stream) {
+  if (stream[Symbol.asyncIterator]) {
+    yield* stream;
+    return;
+  }
+  const reader = stream.getReader();
+  try {
+    for (; ; ) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      yield value;
+    }
+  } finally {
+    await reader.cancel();
+  }
+};
+var trackStream = (stream, chunkSize, onProgress, onFinish) => {
+  const iterator2 = readBytes(stream, chunkSize);
+  let bytes = 0;
+  let done;
+  let _onFinish = (e) => {
+    if (!done) {
+      done = true;
+      onFinish && onFinish(e);
+    }
+  };
+  return new ReadableStream({
+    async pull(controller) {
+      try {
+        const { done: done2, value } = await iterator2.next();
+        if (done2) {
+          _onFinish();
+          controller.close();
+          return;
+        }
+        let len = value.byteLength;
+        if (onProgress) {
+          let loadedBytes = bytes += len;
+          onProgress(loadedBytes);
+        }
+        controller.enqueue(new Uint8Array(value));
+      } catch (err) {
+        _onFinish(err);
+        throw err;
+      }
+    },
+    cancel(reason) {
+      _onFinish(reason);
+      return iterator2.return();
+    }
+  }, {
+    highWaterMark: 2
+  });
+};
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/adapters/fetch.js
+var DEFAULT_CHUNK_SIZE = 64 * 1024;
+var { isFunction: isFunction2 } = utils_default;
+var globalFetchAPI = (({ Request, Response }) => ({
+  Request,
+  Response
+}))(utils_default.global);
+var {
+  ReadableStream: ReadableStream2,
+  TextEncoder
+} = utils_default.global;
+var test = (fn, ...args) => {
+  try {
+    return !!fn(...args);
+  } catch (e) {
+    return false;
+  }
+};
+var factory = (env) => {
+  env = utils_default.merge.call({
+    skipUndefined: true
+  }, globalFetchAPI, env);
+  const { fetch: envFetch, Request, Response } = env;
+  const isFetchSupported = envFetch ? isFunction2(envFetch) : typeof fetch === "function";
+  const isRequestSupported = isFunction2(Request);
+  const isResponseSupported = isFunction2(Response);
+  if (!isFetchSupported) {
+    return false;
+  }
+  const isReadableStreamSupported = isFetchSupported && isFunction2(ReadableStream2);
+  const encodeText = isFetchSupported && (typeof TextEncoder === "function" ? /* @__PURE__ */ ((encoder) => (str) => encoder.encode(str))(new TextEncoder()) : async (str) => new Uint8Array(await new Request(str).arrayBuffer()));
+  const supportsRequestStream = isRequestSupported && isReadableStreamSupported && test(() => {
+    let duplexAccessed = false;
+    const hasContentType = new Request(platform_default.origin, {
+      body: new ReadableStream2(),
+      method: "POST",
+      get duplex() {
+        duplexAccessed = true;
+        return "half";
+      }
+    }).headers.has("Content-Type");
+    return duplexAccessed && !hasContentType;
+  });
+  const supportsResponseStream = isResponseSupported && isReadableStreamSupported && test(() => utils_default.isReadableStream(new Response("").body));
+  const resolvers = {
+    stream: supportsResponseStream && ((res) => res.body)
+  };
+  isFetchSupported && (() => {
+    ["text", "arrayBuffer", "blob", "formData", "stream"].forEach((type) => {
+      !resolvers[type] && (resolvers[type] = (res, config) => {
+        let method = res && res[type];
+        if (method) {
+          return method.call(res);
+        }
+        throw new AxiosError_default(`Response type '${type}' is not supported`, AxiosError_default.ERR_NOT_SUPPORT, config);
+      });
+    });
+  })();
+  const getBodyLength = async (body) => {
+    if (body == null) {
+      return 0;
+    }
+    if (utils_default.isBlob(body)) {
+      return body.size;
+    }
+    if (utils_default.isSpecCompliantForm(body)) {
+      const _request = new Request(platform_default.origin, {
+        method: "POST",
+        body
+      });
+      return (await _request.arrayBuffer()).byteLength;
+    }
+    if (utils_default.isArrayBufferView(body) || utils_default.isArrayBuffer(body)) {
+      return body.byteLength;
+    }
+    if (utils_default.isURLSearchParams(body)) {
+      body = body + "";
+    }
+    if (utils_default.isString(body)) {
+      return (await encodeText(body)).byteLength;
+    }
+  };
+  const resolveBodyLength = async (headers, body) => {
+    const length = utils_default.toFiniteNumber(headers.getContentLength());
+    return length == null ? getBodyLength(body) : length;
+  };
+  return async (config) => {
+    let {
+      url,
+      method,
+      data,
+      signal,
+      cancelToken,
+      timeout,
+      onDownloadProgress,
+      onUploadProgress,
+      responseType,
+      headers,
+      withCredentials = "same-origin",
+      fetchOptions
+    } = resolveConfig_default(config);
+    let _fetch = envFetch || fetch;
+    responseType = responseType ? (responseType + "").toLowerCase() : "text";
+    let composedSignal = composeSignals_default([signal, cancelToken && cancelToken.toAbortSignal()], timeout);
+    let request = null;
+    const unsubscribe = composedSignal && composedSignal.unsubscribe && (() => {
+      composedSignal.unsubscribe();
+    });
+    let requestContentLength;
+    try {
+      if (onUploadProgress && supportsRequestStream && method !== "get" && method !== "head" && (requestContentLength = await resolveBodyLength(headers, data)) !== 0) {
+        let _request = new Request(url, {
+          method: "POST",
+          body: data,
+          duplex: "half"
+        });
+        let contentTypeHeader;
+        if (utils_default.isFormData(data) && (contentTypeHeader = _request.headers.get("content-type"))) {
+          headers.setContentType(contentTypeHeader);
+        }
+        if (_request.body) {
+          const [onProgress, flush] = progressEventDecorator(
+            requestContentLength,
+            progressEventReducer(asyncDecorator(onUploadProgress))
+          );
+          data = trackStream(_request.body, DEFAULT_CHUNK_SIZE, onProgress, flush);
+        }
+      }
+      if (!utils_default.isString(withCredentials)) {
+        withCredentials = withCredentials ? "include" : "omit";
+      }
+      const isCredentialsSupported = isRequestSupported && "credentials" in Request.prototype;
+      const resolvedOptions = {
+        ...fetchOptions,
+        signal: composedSignal,
+        method: method.toUpperCase(),
+        headers: headers.normalize().toJSON(),
+        body: data,
+        duplex: "half",
+        credentials: isCredentialsSupported ? withCredentials : void 0
+      };
+      request = isRequestSupported && new Request(url, resolvedOptions);
+      let response = await (isRequestSupported ? _fetch(request, fetchOptions) : _fetch(url, resolvedOptions));
+      const isStreamResponse = supportsResponseStream && (responseType === "stream" || responseType === "response");
+      if (supportsResponseStream && (onDownloadProgress || isStreamResponse && unsubscribe)) {
+        const options = {};
+        ["status", "statusText", "headers"].forEach((prop) => {
+          options[prop] = response[prop];
+        });
+        const responseContentLength = utils_default.toFiniteNumber(response.headers.get("content-length"));
+        const [onProgress, flush] = onDownloadProgress && progressEventDecorator(
+          responseContentLength,
+          progressEventReducer(asyncDecorator(onDownloadProgress), true)
+        ) || [];
+        response = new Response(
+          trackStream(response.body, DEFAULT_CHUNK_SIZE, onProgress, () => {
+            flush && flush();
+            unsubscribe && unsubscribe();
+          }),
+          options
+        );
+      }
+      responseType = responseType || "text";
+      let responseData = await resolvers[utils_default.findKey(resolvers, responseType) || "text"](response, config);
+      !isStreamResponse && unsubscribe && unsubscribe();
+      return await new Promise((resolve, reject) => {
+        settle(resolve, reject, {
+          data: responseData,
+          headers: AxiosHeaders_default.from(response.headers),
+          status: response.status,
+          statusText: response.statusText,
+          config,
+          request
+        });
+      });
+    } catch (err) {
+      unsubscribe && unsubscribe();
+      if (err && err.name === "TypeError" && /Load failed|fetch/i.test(err.message)) {
+        throw Object.assign(
+          new AxiosError_default("Network Error", AxiosError_default.ERR_NETWORK, config, request),
+          {
+            cause: err.cause || err
+          }
+        );
+      }
+      throw AxiosError_default.from(err, err && err.code, config, request);
+    }
+  };
+};
+var seedCache = /* @__PURE__ */ new Map();
+var getFetch = (config) => {
+  let env = config && config.env || {};
+  const { fetch: fetch2, Request, Response } = env;
+  const seeds = [
+    Request,
+    Response,
+    fetch2
+  ];
+  let len = seeds.length, i = len, seed, target, map = seedCache;
+  while (i--) {
+    seed = seeds[i];
+    target = map.get(seed);
+    target === void 0 && map.set(seed, target = i ? /* @__PURE__ */ new Map() : factory(env));
+    map = target;
+  }
+  return target;
+};
+var adapter = getFetch();
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/adapters/adapters.js
+var knownAdapters = {
+  http: null_default,
+  xhr: xhr_default,
+  fetch: {
+    get: getFetch
+  }
+};
+utils_default.forEach(knownAdapters, (fn, value) => {
+  if (fn) {
+    try {
+      Object.defineProperty(fn, "name", { value });
+    } catch (e) {
+    }
+    Object.defineProperty(fn, "adapterName", { value });
+  }
+});
+var renderReason = (reason) => `- ${reason}`;
+var isResolvedHandle = (adapter2) => utils_default.isFunction(adapter2) || adapter2 === null || adapter2 === false;
+function getAdapter(adapters, config) {
+  adapters = utils_default.isArray(adapters) ? adapters : [adapters];
+  const { length } = adapters;
+  let nameOrAdapter;
+  let adapter2;
+  const rejectedReasons = {};
+  for (let i = 0; i < length; i++) {
+    nameOrAdapter = adapters[i];
+    let id;
+    adapter2 = nameOrAdapter;
+    if (!isResolvedHandle(nameOrAdapter)) {
+      adapter2 = knownAdapters[(id = String(nameOrAdapter)).toLowerCase()];
+      if (adapter2 === void 0) {
+        throw new AxiosError_default(`Unknown adapter '${id}'`);
+      }
+    }
+    if (adapter2 && (utils_default.isFunction(adapter2) || (adapter2 = adapter2.get(config)))) {
+      break;
+    }
+    rejectedReasons[id || "#" + i] = adapter2;
+  }
+  if (!adapter2) {
+    const reasons = Object.entries(rejectedReasons).map(
+      ([id, state]) => `adapter ${id} ` + (state === false ? "is not supported by the environment" : "is not available in the build")
+    );
+    let s = length ? reasons.length > 1 ? "since :\n" + reasons.map(renderReason).join("\n") : " " + renderReason(reasons[0]) : "as no adapter specified";
+    throw new AxiosError_default(
+      `There is no suitable adapter to dispatch the request ` + s,
+      "ERR_NOT_SUPPORT"
+    );
+  }
+  return adapter2;
+}
+var adapters_default = {
+  /**
+   * Resolve an adapter from a list of adapter names or functions.
+   * @type {Function}
+   */
+  getAdapter,
+  /**
+   * Exposes all known adapters
+   * @type {Object<string, Function|Object>}
+   */
+  adapters: knownAdapters
+};
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/core/dispatchRequest.js
+function throwIfCancellationRequested(config) {
+  if (config.cancelToken) {
+    config.cancelToken.throwIfRequested();
+  }
+  if (config.signal && config.signal.aborted) {
+    throw new CanceledError_default(null, config);
+  }
+}
+function dispatchRequest(config) {
+  throwIfCancellationRequested(config);
+  config.headers = AxiosHeaders_default.from(config.headers);
+  config.data = transformData.call(
+    config,
+    config.transformRequest
+  );
+  if (["post", "put", "patch"].indexOf(config.method) !== -1) {
+    config.headers.setContentType("application/x-www-form-urlencoded", false);
+  }
+  const adapter2 = adapters_default.getAdapter(config.adapter || defaults_default.adapter, config);
+  return adapter2(config).then(function onAdapterResolution(response) {
+    throwIfCancellationRequested(config);
+    response.data = transformData.call(
+      config,
+      config.transformResponse,
+      response
+    );
+    response.headers = AxiosHeaders_default.from(response.headers);
+    return response;
+  }, function onAdapterRejection(reason) {
+    if (!isCancel(reason)) {
+      throwIfCancellationRequested(config);
+      if (reason && reason.response) {
+        reason.response.data = transformData.call(
+          config,
+          config.transformResponse,
+          reason.response
+        );
+        reason.response.headers = AxiosHeaders_default.from(reason.response.headers);
+      }
+    }
+    return Promise.reject(reason);
+  });
+}
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/env/data.js
+var VERSION = "1.13.2";
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/validator.js
+var validators = {};
+["object", "boolean", "number", "function", "string", "symbol"].forEach((type, i) => {
+  validators[type] = function validator(thing) {
+    return typeof thing === type || "a" + (i < 1 ? "n " : " ") + type;
+  };
+});
+var deprecatedWarnings = {};
+validators.transitional = function transitional(validator, version, message) {
+  function formatMessage(opt, desc) {
+    return "[Axios v" + VERSION + "] Transitional option '" + opt + "'" + desc + (message ? ". " + message : "");
+  }
+  return (value, opt, opts) => {
+    if (validator === false) {
+      throw new AxiosError_default(
+        formatMessage(opt, " has been removed" + (version ? " in " + version : "")),
+        AxiosError_default.ERR_DEPRECATED
+      );
+    }
+    if (version && !deprecatedWarnings[opt]) {
+      deprecatedWarnings[opt] = true;
+      console.warn(
+        formatMessage(
+          opt,
+          " has been deprecated since v" + version + " and will be removed in the near future"
+        )
+      );
+    }
+    return validator ? validator(value, opt, opts) : true;
+  };
+};
+validators.spelling = function spelling(correctSpelling) {
+  return (value, opt) => {
+    console.warn(`${opt} is likely a misspelling of ${correctSpelling}`);
+    return true;
+  };
+};
+function assertOptions(options, schema, allowUnknown) {
+  if (typeof options !== "object") {
+    throw new AxiosError_default("options must be an object", AxiosError_default.ERR_BAD_OPTION_VALUE);
+  }
+  const keys = Object.keys(options);
+  let i = keys.length;
+  while (i-- > 0) {
+    const opt = keys[i];
+    const validator = schema[opt];
+    if (validator) {
+      const value = options[opt];
+      const result = value === void 0 || validator(value, opt, options);
+      if (result !== true) {
+        throw new AxiosError_default("option " + opt + " must be " + result, AxiosError_default.ERR_BAD_OPTION_VALUE);
+      }
+      continue;
+    }
+    if (allowUnknown !== true) {
+      throw new AxiosError_default("Unknown option " + opt, AxiosError_default.ERR_BAD_OPTION);
+    }
+  }
+}
+var validator_default = {
+  assertOptions,
+  validators
+};
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/core/Axios.js
+var validators2 = validator_default.validators;
+var Axios = class {
+  constructor(instanceConfig) {
+    this.defaults = instanceConfig || {};
+    this.interceptors = {
+      request: new InterceptorManager_default(),
+      response: new InterceptorManager_default()
+    };
+  }
+  /**
+   * Dispatch a request
+   *
+   * @param {String|Object} configOrUrl The config specific for this request (merged with this.defaults)
+   * @param {?Object} config
+   *
+   * @returns {Promise} The Promise to be fulfilled
+   */
+  async request(configOrUrl, config) {
+    try {
+      return await this._request(configOrUrl, config);
+    } catch (err) {
+      if (err instanceof Error) {
+        let dummy = {};
+        Error.captureStackTrace ? Error.captureStackTrace(dummy) : dummy = new Error();
+        const stack = dummy.stack ? dummy.stack.replace(/^.+\n/, "") : "";
+        try {
+          if (!err.stack) {
+            err.stack = stack;
+          } else if (stack && !String(err.stack).endsWith(stack.replace(/^.+\n.+\n/, ""))) {
+            err.stack += "\n" + stack;
+          }
+        } catch (e) {
+        }
+      }
+      throw err;
+    }
+  }
+  _request(configOrUrl, config) {
+    if (typeof configOrUrl === "string") {
+      config = config || {};
+      config.url = configOrUrl;
+    } else {
+      config = configOrUrl || {};
+    }
+    config = mergeConfig(this.defaults, config);
+    const { transitional: transitional2, paramsSerializer, headers } = config;
+    if (transitional2 !== void 0) {
+      validator_default.assertOptions(transitional2, {
+        silentJSONParsing: validators2.transitional(validators2.boolean),
+        forcedJSONParsing: validators2.transitional(validators2.boolean),
+        clarifyTimeoutError: validators2.transitional(validators2.boolean)
+      }, false);
+    }
+    if (paramsSerializer != null) {
+      if (utils_default.isFunction(paramsSerializer)) {
+        config.paramsSerializer = {
+          serialize: paramsSerializer
+        };
+      } else {
+        validator_default.assertOptions(paramsSerializer, {
+          encode: validators2.function,
+          serialize: validators2.function
+        }, true);
+      }
+    }
+    if (config.allowAbsoluteUrls !== void 0) {
+    } else if (this.defaults.allowAbsoluteUrls !== void 0) {
+      config.allowAbsoluteUrls = this.defaults.allowAbsoluteUrls;
+    } else {
+      config.allowAbsoluteUrls = true;
+    }
+    validator_default.assertOptions(config, {
+      baseUrl: validators2.spelling("baseURL"),
+      withXsrfToken: validators2.spelling("withXSRFToken")
+    }, true);
+    config.method = (config.method || this.defaults.method || "get").toLowerCase();
+    let contextHeaders = headers && utils_default.merge(
+      headers.common,
+      headers[config.method]
+    );
+    headers && utils_default.forEach(
+      ["delete", "get", "head", "post", "put", "patch", "common"],
+      (method) => {
+        delete headers[method];
+      }
+    );
+    config.headers = AxiosHeaders_default.concat(contextHeaders, headers);
+    const requestInterceptorChain = [];
+    let synchronousRequestInterceptors = true;
+    this.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
+      if (typeof interceptor.runWhen === "function" && interceptor.runWhen(config) === false) {
+        return;
+      }
+      synchronousRequestInterceptors = synchronousRequestInterceptors && interceptor.synchronous;
+      requestInterceptorChain.unshift(interceptor.fulfilled, interceptor.rejected);
+    });
+    const responseInterceptorChain = [];
+    this.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
+      responseInterceptorChain.push(interceptor.fulfilled, interceptor.rejected);
+    });
+    let promise;
+    let i = 0;
+    let len;
+    if (!synchronousRequestInterceptors) {
+      const chain = [dispatchRequest.bind(this), void 0];
+      chain.unshift(...requestInterceptorChain);
+      chain.push(...responseInterceptorChain);
+      len = chain.length;
+      promise = Promise.resolve(config);
+      while (i < len) {
+        promise = promise.then(chain[i++], chain[i++]);
+      }
+      return promise;
+    }
+    len = requestInterceptorChain.length;
+    let newConfig = config;
+    while (i < len) {
+      const onFulfilled = requestInterceptorChain[i++];
+      const onRejected = requestInterceptorChain[i++];
+      try {
+        newConfig = onFulfilled(newConfig);
+      } catch (error) {
+        onRejected.call(this, error);
+        break;
+      }
+    }
+    try {
+      promise = dispatchRequest.call(this, newConfig);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+    i = 0;
+    len = responseInterceptorChain.length;
+    while (i < len) {
+      promise = promise.then(responseInterceptorChain[i++], responseInterceptorChain[i++]);
+    }
+    return promise;
+  }
+  getUri(config) {
+    config = mergeConfig(this.defaults, config);
+    const fullPath = buildFullPath(config.baseURL, config.url, config.allowAbsoluteUrls);
+    return buildURL(fullPath, config.params, config.paramsSerializer);
+  }
+};
+utils_default.forEach(["delete", "get", "head", "options"], function forEachMethodNoData(method) {
+  Axios.prototype[method] = function(url, config) {
+    return this.request(mergeConfig(config || {}, {
+      method,
+      url,
+      data: (config || {}).data
+    }));
+  };
+});
+utils_default.forEach(["post", "put", "patch"], function forEachMethodWithData(method) {
+  function generateHTTPMethod(isForm) {
+    return function httpMethod(url, data, config) {
+      return this.request(mergeConfig(config || {}, {
+        method,
+        headers: isForm ? {
+          "Content-Type": "multipart/form-data"
+        } : {},
+        url,
+        data
+      }));
+    };
+  }
+  Axios.prototype[method] = generateHTTPMethod();
+  Axios.prototype[method + "Form"] = generateHTTPMethod(true);
+});
+var Axios_default = Axios;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/cancel/CancelToken.js
+var CancelToken = class _CancelToken {
+  constructor(executor) {
+    if (typeof executor !== "function") {
+      throw new TypeError("executor must be a function.");
+    }
+    let resolvePromise;
+    this.promise = new Promise(function promiseExecutor(resolve) {
+      resolvePromise = resolve;
+    });
+    const token = this;
+    this.promise.then((cancel) => {
+      if (!token._listeners) return;
+      let i = token._listeners.length;
+      while (i-- > 0) {
+        token._listeners[i](cancel);
+      }
+      token._listeners = null;
+    });
+    this.promise.then = (onfulfilled) => {
+      let _resolve;
+      const promise = new Promise((resolve) => {
+        token.subscribe(resolve);
+        _resolve = resolve;
+      }).then(onfulfilled);
+      promise.cancel = function reject() {
+        token.unsubscribe(_resolve);
+      };
+      return promise;
+    };
+    executor(function cancel(message, config, request) {
+      if (token.reason) {
+        return;
+      }
+      token.reason = new CanceledError_default(message, config, request);
+      resolvePromise(token.reason);
+    });
+  }
+  /**
+   * Throws a `CanceledError` if cancellation has been requested.
+   */
+  throwIfRequested() {
+    if (this.reason) {
+      throw this.reason;
+    }
+  }
+  /**
+   * Subscribe to the cancel signal
+   */
+  subscribe(listener) {
+    if (this.reason) {
+      listener(this.reason);
+      return;
+    }
+    if (this._listeners) {
+      this._listeners.push(listener);
+    } else {
+      this._listeners = [listener];
+    }
+  }
+  /**
+   * Unsubscribe from the cancel signal
+   */
+  unsubscribe(listener) {
+    if (!this._listeners) {
+      return;
+    }
+    const index = this._listeners.indexOf(listener);
+    if (index !== -1) {
+      this._listeners.splice(index, 1);
+    }
+  }
+  toAbortSignal() {
+    const controller = new AbortController();
+    const abort = (err) => {
+      controller.abort(err);
+    };
+    this.subscribe(abort);
+    controller.signal.unsubscribe = () => this.unsubscribe(abort);
+    return controller.signal;
+  }
+  /**
+   * Returns an object that contains a new `CancelToken` and a function that, when called,
+   * cancels the `CancelToken`.
+   */
+  static source() {
+    let cancel;
+    const token = new _CancelToken(function executor(c) {
+      cancel = c;
+    });
+    return {
+      token,
+      cancel
+    };
+  }
+};
+var CancelToken_default = CancelToken;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/spread.js
+function spread(callback) {
+  return function wrap(arr) {
+    return callback.apply(null, arr);
+  };
+}
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/isAxiosError.js
+function isAxiosError(payload) {
+  return utils_default.isObject(payload) && payload.isAxiosError === true;
+}
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/helpers/HttpStatusCode.js
+var HttpStatusCode = {
+  Continue: 100,
+  SwitchingProtocols: 101,
+  Processing: 102,
+  EarlyHints: 103,
+  Ok: 200,
+  Created: 201,
+  Accepted: 202,
+  NonAuthoritativeInformation: 203,
+  NoContent: 204,
+  ResetContent: 205,
+  PartialContent: 206,
+  MultiStatus: 207,
+  AlreadyReported: 208,
+  ImUsed: 226,
+  MultipleChoices: 300,
+  MovedPermanently: 301,
+  Found: 302,
+  SeeOther: 303,
+  NotModified: 304,
+  UseProxy: 305,
+  Unused: 306,
+  TemporaryRedirect: 307,
+  PermanentRedirect: 308,
+  BadRequest: 400,
+  Unauthorized: 401,
+  PaymentRequired: 402,
+  Forbidden: 403,
+  NotFound: 404,
+  MethodNotAllowed: 405,
+  NotAcceptable: 406,
+  ProxyAuthenticationRequired: 407,
+  RequestTimeout: 408,
+  Conflict: 409,
+  Gone: 410,
+  LengthRequired: 411,
+  PreconditionFailed: 412,
+  PayloadTooLarge: 413,
+  UriTooLong: 414,
+  UnsupportedMediaType: 415,
+  RangeNotSatisfiable: 416,
+  ExpectationFailed: 417,
+  ImATeapot: 418,
+  MisdirectedRequest: 421,
+  UnprocessableEntity: 422,
+  Locked: 423,
+  FailedDependency: 424,
+  TooEarly: 425,
+  UpgradeRequired: 426,
+  PreconditionRequired: 428,
+  TooManyRequests: 429,
+  RequestHeaderFieldsTooLarge: 431,
+  UnavailableForLegalReasons: 451,
+  InternalServerError: 500,
+  NotImplemented: 501,
+  BadGateway: 502,
+  ServiceUnavailable: 503,
+  GatewayTimeout: 504,
+  HttpVersionNotSupported: 505,
+  VariantAlsoNegotiates: 506,
+  InsufficientStorage: 507,
+  LoopDetected: 508,
+  NotExtended: 510,
+  NetworkAuthenticationRequired: 511,
+  WebServerIsDown: 521,
+  ConnectionTimedOut: 522,
+  OriginIsUnreachable: 523,
+  TimeoutOccurred: 524,
+  SslHandshakeFailed: 525,
+  InvalidSslCertificate: 526
+};
+Object.entries(HttpStatusCode).forEach(([key, value]) => {
+  HttpStatusCode[value] = key;
+});
+var HttpStatusCode_default = HttpStatusCode;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/lib/axios.js
+function createInstance(defaultConfig) {
+  const context = new Axios_default(defaultConfig);
+  const instance = bind(Axios_default.prototype.request, context);
+  utils_default.extend(instance, Axios_default.prototype, context, { allOwnKeys: true });
+  utils_default.extend(instance, context, null, { allOwnKeys: true });
+  instance.create = function create(instanceConfig) {
+    return createInstance(mergeConfig(defaultConfig, instanceConfig));
+  };
+  return instance;
+}
+var axios = createInstance(defaults_default);
+axios.Axios = Axios_default;
+axios.CanceledError = CanceledError_default;
+axios.CancelToken = CancelToken_default;
+axios.isCancel = isCancel;
+axios.VERSION = VERSION;
+axios.toFormData = toFormData_default;
+axios.AxiosError = AxiosError_default;
+axios.Cancel = axios.CanceledError;
+axios.all = function all(promises) {
+  return Promise.all(promises);
+};
+axios.spread = spread;
+axios.isAxiosError = isAxiosError;
+axios.mergeConfig = mergeConfig;
+axios.AxiosHeaders = AxiosHeaders_default;
+axios.formToJSON = (thing) => formDataToJSON_default(utils_default.isHTMLForm(thing) ? new FormData(thing) : thing);
+axios.getAdapter = adapters_default.getAdapter;
+axios.HttpStatusCode = HttpStatusCode_default;
+axios.default = axios;
+var axios_default = axios;
+
+// ../../node_modules/.pnpm/axios@1.13.2/node_modules/axios/index.js
+var {
+  Axios: Axios2,
+  AxiosError: AxiosError2,
+  CanceledError: CanceledError2,
+  isCancel: isCancel2,
+  CancelToken: CancelToken2,
+  VERSION: VERSION2,
+  all: all2,
+  Cancel,
+  isAxiosError: isAxiosError2,
+  spread: spread2,
+  toFormData: toFormData2,
+  AxiosHeaders: AxiosHeaders2,
+  HttpStatusCode: HttpStatusCode2,
+  formToJSON,
+  getAdapter: getAdapter2,
+  mergeConfig: mergeConfig2
+} = axios_default;
+
+// shared/utils/config.ts
+var devMode = localStorage.getItem("api-mode");
+var API_LOCAL_DEV_URL = "http://127.0.0.1:8787";
+var API_REMOTE_DEV_URL = "https://assembled-brands-dev.crystal-e8a.workers.dev";
+var appConfig = {
+  apiBaseUrl: devMode === "local" ? API_LOCAL_DEV_URL : API_REMOTE_DEV_URL,
+  apiVersion: "/api/v1",
+  accessTokenPersistStrategy: "cookie",
+  TOKEN_NAME_IN_STORAGE: "accessToken",
+  TOKEN_TYPE: "Bearer",
+  REQUEST_HEADER_AUTH_KEY: "Authorization"
+};
+var navigateToPath = (path) => {
+  if (!path) {
+    console.error("navigateToPath: path is empty or undefined");
+    return;
+  }
+  const normalizedPath = path.replace(/^\/+/, "");
+  let finalPath = normalizedPath;
+  finalPath = `dev/${normalizedPath}`;
+  const newUrl = `${window.location.origin}/${finalPath}`;
+  window.location.assign(newUrl);
+};
+
+// shared/utils/auth.ts
+var setCookie = (name, value, days) => {
+  const date = /* @__PURE__ */ new Date();
+  date.setTime(date.getTime() + days * 24 * 60 * 60 * 1e3);
+  const expires = "expires=" + date.toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; ${expires}; path=/`;
+};
+var getCookie = (name) => {
+  const cookies = document.cookie.split("; ");
+  for (const c of cookies) {
+    const [key, val] = c.split("=");
+    if (key === name) return decodeURIComponent(val);
+  }
+  return null;
+};
+var deleteCookie = (name) => {
+  setCookie(name, "", -1);
+};
+var processMiddleware = () => {
+  const cookie = getCookie("accessToken");
+  if (!cookie) {
+    navigateToPath("/login?error=unauthorized");
+  }
+  return cookie;
+};
+var logoutUser = () => {
+  deleteCookie("accessToken");
+  localStorage.removeItem("x-team-id");
+  localStorage.removeItem("user");
+  navigateToPath("/login?error=logged-out");
+};
+
+// shared/services/axios/AxiosRequestIntrceptorConfigCallback.ts
+var AxiosRequestIntrceptorConfigCallback = (config) => {
+  const storage = appConfig.accessTokenPersistStrategy;
+  if (storage === "localStorage" || storage === "sessionStorage" || storage === "cookie") {
+    let accessToken = "";
+    if (storage === "localStorage") {
+      accessToken = localStorage.getItem(appConfig.TOKEN_NAME_IN_STORAGE) || "";
+    }
+    if (storage === "sessionStorage") {
+      accessToken = sessionStorage.getItem(appConfig.TOKEN_NAME_IN_STORAGE) || "";
+    }
+    if (storage === "cookie") {
+      accessToken = getCookie(appConfig.TOKEN_NAME_IN_STORAGE) || "";
+    }
+    if (accessToken) {
+      config.headers[appConfig.REQUEST_HEADER_AUTH_KEY] = `${appConfig.TOKEN_TYPE} ${accessToken}`;
+    }
+  }
+  const teamId = localStorage.getItem("x-team-id");
+  if (teamId) {
+    config.headers["X-Team-Id"] = teamId;
+  }
+  return config;
+};
+var AxiosRequestIntrceptorConfigCallback_default = AxiosRequestIntrceptorConfigCallback;
+
+// shared/services/axios/AxiosResponseIntrceptorErrorCallback.ts
+var UNAUTHORIZED_CODES = [401, 419, 440];
+var AxiosResponseIntrceptorErrorCallback = (error) => {
+  const { response } = error;
+  if (window.location.pathname.includes("/login")) {
+    return Promise.reject(error);
+  }
+  if (response && UNAUTHORIZED_CODES.includes(response.status)) {
+    deleteCookie("accessToken");
+    navigateToPath("/login?error=unauthorized");
+  }
+};
+var AxiosResponseIntrceptorErrorCallback_default = AxiosResponseIntrceptorErrorCallback;
+
+// shared/services/axios/AxiosBase.ts
+var AxiosBase = axios_default.create({
+  timeout: 6e4,
+  baseURL: appConfig.apiBaseUrl + appConfig.apiVersion
+});
+AxiosBase.interceptors.request.use(
+  (config) => {
+    return AxiosRequestIntrceptorConfigCallback_default(config);
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+AxiosBase.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    AxiosResponseIntrceptorErrorCallback_default(error);
+    return Promise.reject(error);
+  }
+);
+var AxiosBase_default = AxiosBase;
+
+// shared/services/ApiService.ts
+var ApiService = {
+  fetchDataWithAxios(param) {
+    return new Promise((resolve, reject) => {
+      AxiosBase_default(param).then((response) => {
+        resolve(response.data);
+      }).catch((error) => {
+        let message = "An unknown error occurred";
+        if (error.response && error.response.data) {
+          const data = error.response.data;
+          if (typeof data.message === "string") {
+            message = data.message;
+          } else if (typeof data.error === "string") {
+            message = data.error;
+          } else {
+            message = JSON.stringify(data);
+          }
+        } else if (error.message) {
+          message = error.message;
+        }
+        reject({ ...error, message });
+      });
+    });
+  }
+};
+var ApiService_default = ApiService;
+
+// shared/services/AssetService.ts
+var apiCreateAssetPresignedUrl = (data) => {
+  return ApiService_default.fetchDataWithAxios({
+    url: "/asset",
+    method: "post",
+    data
+  });
+};
+
+// shared/services/FinancialWizardService.ts
+var apiUploadFinancialDocument = (data) => {
+  return ApiService_default.fetchDataWithAxios({
+    url: "/financial-wizard/document",
+    method: "post",
+    data
+  });
+};
+var apiGetFinancialProgress = (userId) => {
+  return ApiService_default.fetchDataWithAxios({
+    url: "/financial-wizard/progress",
+    method: "get",
+    params: userId ? { user_id: userId } : void 0
+  });
+};
+var apiDeleteFinancialDocument = (id) => {
+  return ApiService_default.fetchDataWithAxios({
+    url: `/financial-wizard/document/${id}`,
+    method: "delete"
+  });
+};
+
+// shared/services/AuthService.ts
+async function apiGetUserMe() {
+  return ApiService_default.fetchDataWithAxios({
+    url: "/user/me",
+    method: "get"
+  });
+}
+
+// shared/services/OnboardingService.ts
+var apiGetOnboardingProgress = () => {
+  return ApiService_default.fetchDataWithAxios({
+    url: "/onboarding-wizard/progress",
+    method: "get"
+  });
+};
+
+// shared/services/TeamService.ts
+var apiGetMyTeams = () => {
+  return ApiService_default.fetchDataWithAxios({
+    url: "/team/my-teams",
+    method: "get"
+  });
+};
+
+// shared/utils/selectors.ts
+var queryElement = (selector, scope = document) => {
+  return scope.querySelector(selector);
+};
+var queryAllElements = (selector, scope = document) => {
+  const elements = scope.querySelectorAll(selector);
+  return [...Array.from(elements)];
+};
+
+// shared/utils/helpers.ts
+var routeMap = {
+  "/dev/finance-company-profile": {
+    nav_attr: "nav-company-profile-link",
+    nav_class: "is-active"
+  },
+  "/finance-company-profile": {
+    nav_attr: "nav-company-profile-link",
+    nav_class: "is-active"
+  },
+  "/dev/finance-financial-overview": {
+    nav_attr: "nav-financial-overview-link",
+    nav_class: "is-active"
+  },
+  "/finance-financial-overview": {
+    nav_attr: "nav-financial-overview-link",
+    nav_class: "is-active"
+  },
+  "/dev/finance-docs-financial-reports": {
+    nav_attr: "nav-financial-reports-link",
+    nav_class: "is-active-financial"
+  },
+  "/finance-docs-financial-reports": {
+    nav_attr: "nav-financial-reports-link",
+    nav_class: "is-active-financial"
+  },
+  "/dev/finance-docs-accounts-and-inventory": {
+    nav_attr: "nav-accounts-inventory-link",
+    nav_class: "is-active-financial"
+  },
+  "/finance-docs-accounts-and-inventory": {
+    nav_attr: "nav-accounts-inventory-link",
+    nav_class: "is-active-financial"
+  },
+  "/dev/finance-docs-ecommerce-performance": {
+    nav_attr: "nav-eccomerce-performance-link",
+    nav_class: "is-active-financial"
+  },
+  "/finance-docs-ecommerce-performance": {
+    nav_attr: "nav-eccomerce-performance-link",
+    nav_class: "is-active-financial"
+  },
+  "/dev/finance-docs-team-and-ownership": {
+    nav_attr: "nav-team-ownership-link",
+    nav_class: "is-active-financial"
+  },
+  "/finance-docs-team-and-ownership": {
+    nav_attr: "nav-team-ownership-link",
+    nav_class: "is-active-financial"
+  },
+  "/invite-team-members": {
+    nav_attr: "nav-team-member-link",
+    nav_class: "is-active-financial"
+  },
+  "/dev/invite-team-members": {
+    nav_attr: "nav-team-member-link",
+    nav_class: "is-active-financial"
+  }
+};
+var fetchProgressData = async (userId) => {
+  const [financialProgress, user, teams, onboardingProgress] = await Promise.all([
+    apiGetFinancialProgress(userId),
+    apiGetUserMe(),
+    apiGetMyTeams(),
+    apiGetOnboardingProgress()
+  ]);
+  return { financialProgress, user, teams, onboardingProgress };
+};
+var checkProgressUserAndTeams = async (userId) => {
+  try {
+    const { financialProgress, user, teams, onboardingProgress } = await fetchProgressData(userId);
+    const percentage = financialProgress?.percentage || 0;
+    const progressFill = queryElement('[dev-target="progress-percentage-fill"]');
+    const progressLabel = queryAllElements(
+      '[dev-target="progress-percentage-label"]'
+    );
+    const companyUsername = queryElement('[dev-target="user-name"]');
+    const companyEmail = queryElement('[dev-target="user-email"]');
+    const logout = queryElement('[dev-target="logout"]');
+    if (!progressFill || !progressLabel || !logout || !companyUsername || !companyEmail) {
+      console.error(
+        'Ensure [dev-target="progress-percentage-fill"], [dev-target="progress-percentage-label"], [dev-target="user-name"], [dev-target="user-email"], and [dev-target="logout"] are present.'
+      );
+      return;
+    }
+    progressFill.style.width = `${percentage}%`;
+    progressLabel[0].textContent = `Progress ${percentage}%`;
+    progressLabel[1].textContent = `${percentage}%`;
+    logout.addEventListener("click", () => {
+      logoutUser();
+    });
+    companyUsername.innerText = financialProgress.business?.legal_name || (user.first_name || "Full") + " " + (user.last_name || "Name");
+    companyEmail.innerText = financialProgress.business?.email || user.email || "hello@company.com";
+    return { financialProgress, user, teams, onboardingProgress };
+  } catch (error) {
+    console.error("Failed to load financial wizard progress:", error);
+  }
+};
+var constructNavBarClasses = () => {
+  const sidebarMenu = queryElement('[dev-target="sidebar-menu"]');
+  if (!sidebarMenu) {
+    console.error('Ensure [dev-target="sidebar-menu"] is present.');
+    return;
+  }
+  const currentPath = window.location.pathname;
+  const activeTarget = routeMap[currentPath];
+  const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
+  if (activeTarget) {
+    allNavLinks.forEach((link) => {
+      link.classList.remove("is-active");
+      link.classList.remove("is-active-financial");
+    });
+    const activeLink = queryElement(`[dev-target="${activeTarget.nav_attr}"]`);
+    if (activeLink) {
+      activeLink.classList.add(activeTarget.nav_class);
+    }
+  } else {
+    allNavLinks.forEach((link) => {
+      link.classList.remove("is-active");
+      link.classList.remove("is-active-financial");
+    });
+  }
+};
+var fileToBase64 = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const result = reader.result;
+    const parts = result.split(",");
+    resolve(parts.length > 1 ? parts[1] : parts[0]);
+  };
+  reader.onerror = () => reject(new Error("Failed to read file as base64"));
+  reader.readAsDataURL(file);
+});
+var initCollapsibleSidebar = () => {
+  const sidebar = queryElement('[dev-target="sidebar-menu"]');
+  const sidebarInner = sidebar?.querySelector(".sidebar");
+  const trigger = queryElement('[dev-target="collapsible-trigger"]');
+  if (!sidebar || !sidebarInner || !trigger) {
+    console.error(
+      'Ensure [dev-target="sidebar-menu"] and [dev-target="collapsible-trigger"] and  [dev-target="sidebar-inner"] are present.'
+    );
+    return;
+  }
+  let isCollapsed = false;
+  const toggleSidebar = () => {
+    isCollapsed = !isCollapsed;
+    const collapsibleContent = document.querySelectorAll(
+      '[sidebar="collapsible-content"], [dev-target="collapsible-content"]'
+    );
+    const sidebarlogoTextWrapper = queryElement(
+      '[dev-target="sidebar-logo-text-wrapper"]'
+    );
+    const sidebarBottomCollapsed = sidebar.querySelector(
+      '[dev-target="sidebar-bottom-collapsed"]'
+    );
+    const sideNavClose = sidebar.querySelector('[dev-target="sidenav-close"]');
+    const sidebarBottom = sidebar.querySelector('[dev-target="sidebar-bottom"]');
+    const userProfile = sidebar.querySelector(".user-profile_wrapper");
+    const userProfileInner = userProfile?.querySelector(
+      ".flex-horizontal_auth.gap-15"
+    );
+    if (isCollapsed) {
+      sidebar.classList.add("collapsed");
+      sidebarInner?.classList.add("mobile");
+      sidebarlogoTextWrapper?.classList.add("hide");
+      userProfile?.classList.add("image-overlay");
+      userProfileInner?.classList.add("overlay");
+      sidebarBottom?.classList.add("hide");
+      sidebarBottomCollapsed?.classList.remove("hide");
+      sideNavClose?.classList.add("is-collapsed");
+      collapsibleContent.forEach((el) => {
+        el.style.opacity = "0";
+        el.style.transition = "opacity 0.2s ease";
+        setTimeout(() => {
+          el.classList.add("hide");
+        }, 200);
+      });
+      sidebar.style.width = "80px";
+      sidebar.style.width = "auto";
+    } else {
+      sidebar.classList.remove("collapsed");
+      sidebarInner?.classList.remove("mobile");
+      sidebarlogoTextWrapper?.classList.remove("hide");
+      userProfile?.classList.remove("image-overlay");
+      userProfileInner?.classList.remove("overlay");
+      sidebarBottom?.classList.remove("hide");
+      sidebarBottomCollapsed?.classList.add("hide");
+      sideNavClose?.classList.remove("is-collapsed");
+      collapsibleContent.forEach((el) => {
+        el.classList.remove("hide");
+        setTimeout(() => {
+          el.style.opacity = "1";
+        }, 10);
+      });
+    }
+  };
+  trigger.addEventListener("click", toggleSidebar);
+  sidebar.style.transition = "width 0.3s ease";
+};
+
+// warm-lead/finance-docs-optional-docs/index.ts
+var FILE_TYPES = {
+  pdf: "application/pdf",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+};
+var DOC_RULES = {
+  instore_velocity_reports: {
+    allowed: [FILE_TYPES.doc, FILE_TYPES.docx, FILE_TYPES.pdf, FILE_TYPES.xls, FILE_TYPES.xlsx],
+    message: "Invalid file type. Allowed: WORD, PDF, or EXCEL",
+    placeholder: "Supported formats: WORD, PDF, EXCEL"
+  },
+  business_plan: {
+    allowed: [FILE_TYPES.pdf, FILE_TYPES.ppt, FILE_TYPES.pptx],
+    message: "Invalid file type. Allowed: PPT or PDF",
+    placeholder: "Supported formats: PPT, PDF"
+  }
+};
+var initOptionalDocsPage = async () => {
+  constructNavBarClasses();
+  processMiddleware();
+  initCollapsibleSidebar();
+  const form = document.querySelector('[dev-target="optional-docs-form"]');
+  if (!form) {
+    console.error('Optional docs form not found: [dev-target="optional-docs-form"]');
+    return;
+  }
+  const instoreVelocityBox = queryElement(
+    '[dev-target="instore-velocity-upload-box"]',
+    form
+  );
+  const instoreVelocityInput = queryElement(
+    '[dev-target="file-input"]',
+    instoreVelocityBox ?? form
+  );
+  const instoreVelocityHelpText = queryElement(
+    '[dev-target="instore-velocity-helper"]',
+    form
+  );
+  const businessPlanBox = queryElement(
+    '[dev-target="business-plan-upload-box"]',
+    form
+  );
+  const businessPlanInput = queryElement(
+    '[dev-target="file-input"]',
+    businessPlanBox ?? form
+  );
+  const businessPlanHelpText = queryElement(
+    '[dev-target="business-plan-helper"]',
+    form
+  );
+  const submitButton = queryElement('[dev-target="submit-button"]', form);
+  const requiredElements = [
+    ['[dev-target="instore-velocity-upload-box"]', instoreVelocityBox],
+    ['[dev-target="file-input"] inside instore-velocity-upload-box', instoreVelocityInput],
+    ['[dev-target="instore-velocity-helper"]', instoreVelocityHelpText],
+    ['[dev-target="business-plan-upload-box"]', businessPlanBox],
+    ['[dev-target="file-input"] inside business-plan-upload-box', businessPlanInput],
+    ['[dev-target="business-plan-helper"]', businessPlanHelpText],
+    ['[dev-target="submit-button"]', submitButton]
+  ];
+  let missingElements = false;
+  for (const [selector, el] of requiredElements) {
+    if (!el) {
+      console.error(`Missing required element: ${selector}`);
+      missingElements = true;
+    }
+  }
+  if (missingElements || !instoreVelocityBox || !instoreVelocityInput || !instoreVelocityHelpText || !businessPlanBox || !businessPlanInput || !businessPlanHelpText || !submitButton) {
+    return;
+  }
+  const updateHelperTexts = (progress) => {
+    instoreVelocityHelpText.textContent = progress?.team_ownership?.find((d) => d.document_type === "instore_velocity_reports")?.asset_name || DOC_RULES.instore_velocity_reports.placeholder;
+    businessPlanHelpText.textContent = progress?.team_ownership?.find((d) => d.document_type === "business_plan")?.asset_name || DOC_RULES.business_plan.placeholder;
+  };
+  let financialProgress;
+  const loadFinancialProgress = async () => {
+    const result = await checkProgressUserAndTeams();
+    financialProgress = result?.financialProgress;
+    updateHelperTexts(financialProgress);
+  };
+  const getDoc = (documentType) => financialProgress?.team_ownership?.find((doc) => doc.document_type === documentType);
+  await loadFinancialProgress();
+  const updateHelperText = (input, helperText, documentType) => {
+    const file = input.files?.[0];
+    if (!file) return;
+    const rule = DOC_RULES[documentType];
+    if (!rule.allowed.includes(file.type)) {
+      helperText.textContent = rule.message;
+      helperText.classList.add("is-error");
+    } else {
+      helperText.textContent = file.name;
+      helperText.classList.remove("is-error");
+    }
+  };
+  const setupDropZone = (box, input, helperText, documentType) => {
+    box.addEventListener("click", () => input.click());
+    box.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      box.classList.add("drag");
+    });
+    box.addEventListener("dragleave", () => box.classList.remove("drag"));
+    box.addEventListener("drop", (e) => {
+      e.preventDefault();
+      box.classList.remove("drag");
+      if (e.dataTransfer?.files.length) {
+        input.files = e.dataTransfer.files;
+        updateHelperText(input, helperText, documentType);
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    });
+    input.addEventListener("change", () => updateHelperText(input, helperText, documentType));
+  };
+  setupDropZone(
+    instoreVelocityBox,
+    instoreVelocityInput,
+    instoreVelocityHelpText,
+    "instore_velocity_reports"
+  );
+  setupDropZone(businessPlanBox, businessPlanInput, businessPlanHelpText, "business_plan");
+  const handleDeleteDocument = async (documentType, helperText) => {
+    const doc = getDoc(documentType);
+    if (!doc) {
+      helperText.textContent = "Supported formats: sheets, excel";
+      helperText.classList.remove("is-error");
+      return;
+    }
+    helperText.classList.remove("is-error");
+    helperText.textContent = "Deleting...";
+    try {
+      await apiDeleteFinancialDocument(doc.id);
+      await loadFinancialProgress();
+    } catch (error) {
+      console.error(error);
+      helperText.classList.add("is-error");
+      helperText.textContent = "Failed to delete file. Please try again.";
+    }
+  };
+  const trashHandlers = [
+    [instoreVelocityBox, "instore_velocity_reports", instoreVelocityHelpText],
+    [businessPlanBox, "business_plan", businessPlanHelpText]
+  ];
+  for (const [box, documentType, helperText] of trashHandlers) {
+    const trash = queryElement('[dev-target="trash-icon"]', box);
+    if (trash) {
+      trash.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        void handleDeleteDocument(documentType, helperText);
+      });
+    }
+  }
+  const uploadFile = async (file, documentType) => {
+    const rule = documentType === "instore_velocity_reports" ? DOC_RULES.instore_velocity_reports : documentType === "business_plan" ? DOC_RULES.business_plan : void 0;
+    if (rule && !rule.allowed.includes(file.type)) {
+      throw new Error(rule.message);
+    }
+    const assetPayload = {
+      fileName: file.name,
+      contentType: file.type,
+      assetType: "document",
+      fileSize: file.size,
+      duration: 0
+    };
+    const assetResponse = await apiCreateAssetPresignedUrl(assetPayload);
+    const { presignedUrl, asset } = assetResponse;
+    if (!presignedUrl) throw new Error("Presigned URL not received from server");
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.addEventListener("load", () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          reject(new Error("Failed to upload file to S3"));
+        }
+      });
+      xhr.addEventListener("error", () => reject(new Error("Network error during upload")));
+      xhr.open("PUT", presignedUrl);
+      xhr.setRequestHeader("Content-Type", file.type);
+      xhr.send(file);
+    });
+    const base64Data = await fileToBase64(file);
+    const documentPayload = {
+      page: "team-ownership",
+      document_type: documentType,
+      asset_id: asset.id,
+      file_data: base64Data,
+      file_name: file.name,
+      file_mime_type: file.type
+    };
+    await apiUploadFinancialDocument(documentPayload);
+  };
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    submitButton.classList.remove("is-error", "is-success");
+    submitButton.value = "UPLOAD DOCUMENTS";
+    const filesToUpload = [];
+    if (instoreVelocityInput.files?.[0]) {
+      filesToUpload.push({
+        file: instoreVelocityInput.files[0],
+        documentType: "instore_velocity_reports"
+      });
+    }
+    if (businessPlanInput.files?.[0]) {
+      filesToUpload.push({ file: businessPlanInput.files[0], documentType: "business_plan" });
+    }
+    if (filesToUpload.length === 0) {
+      submitButton.classList.add("is-error");
+      submitButton.value = "Please select at least one file to upload";
+      return;
+    }
+    try {
+      submitButton.disabled = true;
+      submitButton.value = "Uploading...";
+      await Promise.all(
+        filesToUpload.map(({ file, documentType }) => uploadFile(file, documentType))
+      );
+      submitButton.classList.add("is-success");
+      submitButton.value = "Documents uploaded successfully!";
+      instoreVelocityInput.value = "";
+      businessPlanInput.value = "";
+      instoreVelocityHelpText.textContent = "";
+      businessPlanHelpText.textContent = "";
+      setTimeout(() => {
+        navigateToPath("/onboarding-complete");
+      }, 500);
+    } catch (error) {
+      const { message } = error;
+      console.error(message);
+      submitButton.classList.add("is-error");
+      submitButton.value = message || "There was a problem uploading the documents";
+      submitButton.disabled = false;
+    }
+  });
+};
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initOptionalDocsPage().catch(console.error);
+});
+//# sourceMappingURL=index.js.map

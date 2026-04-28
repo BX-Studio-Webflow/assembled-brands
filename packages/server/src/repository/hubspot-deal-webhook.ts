@@ -54,6 +54,13 @@ export class HubspotDealWebhookRepository {
 		});
 	}
 
+	public async findProcessedByUserId(userId: number) {
+		return this.db.query.hubspotDealWebhookSchema.findFirst({
+			where: and(eq(hubspotDealWebhookSchema.user_id, userId), eq(hubspotDealWebhookSchema.status, 'processed')),
+			orderBy: [desc(hubspotDealWebhookSchema.created_at)],
+		});
+	}
+
 	public async delete(id: number) {
 		return this.db.delete(hubspotDealWebhookSchema).where(eq(hubspotDealWebhookSchema.id, id));
 	}

@@ -326,6 +326,10 @@ export class HubSpotService {
 		return this.dealWebhookRepo.findProcessedByDealObjectId(dealObjectId);
 	}
 
+	public async findProcessedDealByUserId(userId: number) {
+		return this.dealWebhookRepo.findProcessedByUserId(userId);
+	}
+
 	/**
 	 * Returns the HubSpot contact IDs associated with a deal.
 	 * Uses the CRM associations endpoint: GET /crm/v3/objects/deals/{id}/associations/contacts
