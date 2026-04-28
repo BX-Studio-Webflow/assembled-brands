@@ -137,4 +137,15 @@ export class HubSpotController {
 		await this.hubSpotService.processNewDealWebhook(event);
 		return c.json({ message: 'Deal webhook processed' });
 	};
+
+	/** Proxies GET /crm/v3/owners?limit=100 from HubSpot. */
+	public getOwners = async (c: Context) => {
+		try {
+			const owners = await this.hubSpotService.getOwners();
+			return c.json(owners);
+		} catch (err) {
+			logger.error(err);
+			return serveInternalServerError(c, err);
+		}
+	};
 }

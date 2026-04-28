@@ -219,7 +219,7 @@ export class HubSpotService {
 	 *  - legal_name            → dealname      ("Deal Name")
 	 *  - incorporation_state        → hq_state          ("HQ State")
 	 *  - net_revenue_last_12_months → annual_revenue     ("Annual Revenue")
-	 *  - ownerEmail                 → hubspot_owner_id   ("Deal Owner") — resolved via Owners API
+	 *  - ownerEmail                 → hubspot_owner_id   ("Deal Owner") — resolved via static map
 	 */
 	public async updateDeal(
 		dealObjectId: number,
@@ -240,7 +240,12 @@ export class HubSpotService {
 		if (fields.annual_revenue) properties.annual_revenue = fields.annual_revenue;
 
 		if (fields.ownerEmail) {
-			properties.deal_owner = fields.ownerEmail;
+			const ownerId = this.getOwnerIdByEmail(fields.ownerEmail);
+			if (ownerId) {
+				properties.hubspot_owner_id = ownerId;
+			} else {
+				logger.warn({ ownerEmail: fields.ownerEmail }, 'No HubSpot owner ID found for email, skipping owner assignment');
+			}
 		}
 
 		if (Object.keys(properties).length === 0) return;
@@ -264,15 +269,13 @@ export class HubSpotService {
 	}
 
 	/**
-	 * Looks up a HubSpot portal owner by email address.
-	 * @returns The owner's HubSpot ID string, or null if not found.
+	 * Returns up to 100 HubSpot portal owners.
 	 */
-	public async getOwnerIdByEmail(email: string): Promise<string | null> {
+	public async getOwners(): Promise<{ results: { id: string; email: string; firstName: string; lastName: string }[] }> {
 		if (!this.apiKey) {
 			throw new Error('HubSpot API key not configured');
 		}
-		const url = `https://api.hubapi.com/crm/v3/owners?email=${encodeURIComponent(email)}&limit=1`;
-		const response = await fetch(url, {
+		const response = await fetch('https://api.hubapi.com/crm/v3/owners?limit=100', {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
@@ -281,12 +284,38 @@ export class HubSpotService {
 		});
 		if (!response.ok) {
 			const error = await response.json();
-			logger.error({ error, email }, 'HubSpot owners API error');
+			logger.error({ error }, 'HubSpot owners API error');
 			throw new Error(`HubSpot owners API error: ${JSON.stringify(error)}`);
 		}
-		const data = (await response.json()) as { results: { id: string; email: string }[] };
-		const owner = data.results.find((o) => o.email.toLowerCase() === email.toLowerCase());
-		return owner?.id ?? null;
+		return response.json() as Promise<{ results: { id: string; email: string; firstName: string; lastName: string }[] }>;
+	}
+
+	/**
+	 * Resolves a HubSpot owner ID from email using a pre-fetched static map.
+	 * Update this map by calling GET /api/v1/hubspot/owners.
+	 * @returns The owner's HubSpot ID string, or null if not found.
+	 */
+	public getOwnerIdByEmail(email: string): string | null {
+		const OWNER_MAP: Record<string, string> = {
+			'michael@assembledbrands.com': '35891474',
+			'ethan@assembledbrands.com': '57770135',
+			'jackson@bx.studio': '68110406',
+			'abby@assembledbrands.com': '76601592',
+			'kunal@assembledbrands.com': '77266820',
+			'david@bx.studio': '80174606',
+			'seton@assembledbrands.com': '81459207',
+			'ben@assembledbrands.com': '82801322',
+			'brian@bx.studio': '86138627',
+			'christian@assembledbrands.com': '93163169',
+			'jeff@assembledbrands.com': '128994061',
+			'clifford@assembledbrands.com': '340017502',
+			'david@assembledbrands.com': '390237470',
+			'greg@bellaventure.co': '522917518',
+			'anthony@assembledbrands.com': '577268635',
+			'deardata@weeklyaccounting.com': '680064922',
+			'ann@assembledbrands.com': '1251924788',
+		};
+		return OWNER_MAP[email.toLowerCase()] ?? null;
 	}
 
 	/**

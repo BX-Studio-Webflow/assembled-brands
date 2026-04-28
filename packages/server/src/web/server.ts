@@ -183,6 +183,7 @@ export class Server {
 	private registerHubspotWebhookRoutes(api: Hono, hubSpotCtrl: HubSpotController) {
 		const hubspotWebhook = new Hono();
 		hubspotWebhook.post('/webhook', hubSpotCtrl.handleWebhook);
+		hubspotWebhook.get('/owners', hubSpotCtrl.getOwners);
 		api.route('/hubspot', hubspotWebhook);
 	}
 
