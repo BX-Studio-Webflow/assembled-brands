@@ -293,7 +293,7 @@ const initEcommercePerformancePage = async () => {
       firstVsReturningHelpText.textContent = '';
 
       setTimeout(() => {
-        navigateToPath('/dev/warm/finance-docs-team-and-ownership');
+        navigateToPath('/warm/finance-docs-team-and-ownership');
       }, 900);
     } catch (error) {
       const { message } = error as AxiosError;

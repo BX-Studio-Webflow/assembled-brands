@@ -49,6 +49,9 @@ const documentUploadSchema = z.object({
 		'management_bios',
 		'investor_deck',
 		'cap_table',
+		// Optional docs (stored under team folder)
+		'instore_velocity_reports',
+		'business_plan',
 		// Other
 		'other',
 	]),

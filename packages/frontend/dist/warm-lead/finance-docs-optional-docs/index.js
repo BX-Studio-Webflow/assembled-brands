@@ -3022,54 +3022,52 @@ var initCollapsibleSidebar = () => {
   sidebar.style.transition = "width 0.3s ease";
 };
 
-// warm-lead/finance-docs-ecommerce-performance/index.ts
+// warm-lead/finance-docs-optional-docs/index.ts
 var ALLOWED_FILE_TYPES = [
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 ];
-var initEcommercePerformancePage = async () => {
+var initOptionalDocsPage = async () => {
   constructNavBarClasses();
   processMiddleware();
   initCollapsibleSidebar();
-  const form = document.querySelector('[dev-target="ecommerce-performance-form"]');
+  const form = document.querySelector('[dev-target="optional-docs-form"]');
   if (!form) {
-    console.error(
-      'E-Commerce Performance form not found: [dev-target="ecommerce-performance-form"]'
-    );
+    console.error('Optional docs form not found: [dev-target="optional-docs-form"]');
     return;
   }
-  const salesOverTimeBox = queryElement(
-    '[dev-target="shopify-repeat-upload-box"]',
+  const instoreVelocityBox = queryElement(
+    '[dev-target="instore-velocity-upload-box"]',
     form
   );
-  const salesOverTimeInput = queryElement(
+  const instoreVelocityInput = queryElement(
     '[dev-target="file-input"]',
-    salesOverTimeBox ?? form
+    instoreVelocityBox ?? form
   );
-  const salesOverTimeHelpText = queryElement(
-    '[dev-target="shopify-repeat-helper"]',
+  const instoreVelocityHelpText = queryElement(
+    '[dev-target="instore-velocity-helper"]',
     form
   );
-  const firstVsReturningBox = queryElement(
-    '[dev-target="shopify-returning-upload-box"]',
+  const businessPlanBox = queryElement(
+    '[dev-target="business-plan-upload-box"]',
     form
   );
-  const firstVsReturningInput = queryElement(
+  const businessPlanInput = queryElement(
     '[dev-target="file-input"]',
-    firstVsReturningBox ?? form
+    businessPlanBox ?? form
   );
-  const firstVsReturningHelpText = queryElement(
-    '[dev-target="shopify-returning-helper"]',
+  const businessPlanHelpText = queryElement(
+    '[dev-target="business-plan-helper"]',
     form
   );
   const submitButton = queryElement('[dev-target="submit-button"]', form);
   const requiredElements = [
-    ['[dev-target="shopify-repeat-upload-box"]', salesOverTimeBox],
-    ['[dev-target="file-input"] inside shopify-repeat-upload-box', salesOverTimeInput],
-    ['[dev-target="shopify-repeat-helper"]', salesOverTimeHelpText],
-    ['[dev-target="shopify-monthly-upload-box"]', firstVsReturningBox],
-    ['[dev-target="file-input"] inside shopify-monthly-upload-box', firstVsReturningInput],
-    ['[dev-target="shopify-monthly-helper"]', firstVsReturningHelpText],
+    ['[dev-target="instore-velocity-upload-box"]', instoreVelocityBox],
+    ['[dev-target="file-input"] inside instore-velocity-upload-box', instoreVelocityInput],
+    ['[dev-target="instore-velocity-helper"]', instoreVelocityHelpText],
+    ['[dev-target="business-plan-upload-box"]', businessPlanBox],
+    ['[dev-target="file-input"] inside business-plan-upload-box', businessPlanInput],
+    ['[dev-target="business-plan-helper"]', businessPlanHelpText],
     ['[dev-target="submit-button"]', submitButton]
   ];
   let missingElements = false;
@@ -3079,15 +3077,13 @@ var initEcommercePerformancePage = async () => {
       missingElements = true;
     }
   }
-  if (missingElements || !salesOverTimeBox || !salesOverTimeInput || !salesOverTimeHelpText || !firstVsReturningBox || !firstVsReturningInput || !firstVsReturningHelpText || !submitButton) {
+  if (missingElements || !instoreVelocityBox || !instoreVelocityInput || !instoreVelocityHelpText || !businessPlanBox || !businessPlanInput || !businessPlanHelpText || !submitButton) {
     return;
   }
   const updateHelperTexts = (progress) => {
     const placeholder = "Supported formats: sheets, excel";
-    salesOverTimeHelpText.textContent = progress?.ecommerce_performance?.find((d) => d.document_type === "shopify_sales_over_time")?.asset_name || placeholder;
-    firstVsReturningHelpText.textContent = progress?.ecommerce_performance?.find(
-      (d) => d.document_type === "shopify_first_vs_returning_customers"
-    )?.asset_name || placeholder;
+    instoreVelocityHelpText.textContent = progress?.team_ownership?.find((d) => d.document_type === "instore_velocity_reports")?.asset_name || placeholder;
+    businessPlanHelpText.textContent = progress?.team_ownership?.find((d) => d.document_type === "business_plan")?.asset_name || placeholder;
   };
   let financialProgress;
   const loadFinancialProgress = async () => {
@@ -3095,7 +3091,7 @@ var initEcommercePerformancePage = async () => {
     financialProgress = result?.financialProgress;
     updateHelperTexts(financialProgress);
   };
-  const getDoc = (documentType) => financialProgress?.ecommerce_performance?.find((doc) => doc.document_type === documentType);
+  const getDoc = (documentType) => financialProgress?.team_ownership?.find((doc) => doc.document_type === documentType);
   await loadFinancialProgress();
   const updateHelperText = (input, helperText) => {
     const file = input.files?.[0];
@@ -3126,8 +3122,8 @@ var initEcommercePerformancePage = async () => {
     });
     input.addEventListener("change", () => updateHelperText(input, helperText));
   };
-  setupDropZone(salesOverTimeBox, salesOverTimeInput, salesOverTimeHelpText);
-  setupDropZone(firstVsReturningBox, firstVsReturningInput, firstVsReturningHelpText);
+  setupDropZone(instoreVelocityBox, instoreVelocityInput, instoreVelocityHelpText);
+  setupDropZone(businessPlanBox, businessPlanInput, businessPlanHelpText);
   const handleDeleteDocument = async (documentType, helperText) => {
     const doc = getDoc(documentType);
     if (!doc) {
@@ -3136,7 +3132,7 @@ var initEcommercePerformancePage = async () => {
       return;
     }
     helperText.classList.remove("is-error");
-    helperText.textContent = "Deleting\u2026";
+    helperText.textContent = "Deleting...";
     try {
       await apiDeleteFinancialDocument(doc.id);
       await loadFinancialProgress();
@@ -3147,8 +3143,8 @@ var initEcommercePerformancePage = async () => {
     }
   };
   const trashHandlers = [
-    [salesOverTimeBox, "shopify_sales_over_time", salesOverTimeHelpText],
-    [firstVsReturningBox, "shopify_first_vs_returning_customers", firstVsReturningHelpText]
+    [instoreVelocityBox, "instore_velocity_reports", instoreVelocityHelpText],
+    [businessPlanBox, "business_plan", businessPlanHelpText]
   ];
   for (const [box, documentType, helperText] of trashHandlers) {
     const trash = queryElement('[dev-target="trash-icon"]', box);
@@ -3187,12 +3183,12 @@ var initEcommercePerformancePage = async () => {
     });
     const base64Data = await fileToBase64(file);
     const documentPayload = {
-      page: "ecommerce-performance",
+      page: "team-ownership",
       document_type: documentType,
       asset_id: asset.id,
+      file_data: base64Data,
       file_name: file.name,
-      file_mime_type: file.type,
-      file_data: base64Data
+      file_mime_type: file.type
     };
     await apiUploadFinancialDocument(documentPayload);
   };
@@ -3202,17 +3198,14 @@ var initEcommercePerformancePage = async () => {
     submitButton.classList.remove("is-error", "is-success");
     submitButton.value = "UPLOAD DOCUMENTS";
     const filesToUpload = [];
-    if (salesOverTimeInput.files?.[0]) {
+    if (instoreVelocityInput.files?.[0]) {
       filesToUpload.push({
-        file: salesOverTimeInput.files[0],
-        documentType: "shopify_sales_over_time"
+        file: instoreVelocityInput.files[0],
+        documentType: "instore_velocity_reports"
       });
     }
-    if (firstVsReturningInput.files?.[0]) {
-      filesToUpload.push({
-        file: firstVsReturningInput.files[0],
-        documentType: "shopify_first_vs_returning_customers"
-      });
+    if (businessPlanInput.files?.[0]) {
+      filesToUpload.push({ file: businessPlanInput.files[0], documentType: "business_plan" });
     }
     if (filesToUpload.length === 0) {
       submitButton.classList.add("is-error");
@@ -3221,22 +3214,22 @@ var initEcommercePerformancePage = async () => {
     }
     try {
       submitButton.disabled = true;
-      submitButton.value = "Uploading\u2026";
+      submitButton.value = "Uploading...";
       await Promise.all(
         filesToUpload.map(({ file, documentType }) => uploadFile(file, documentType))
       );
       submitButton.classList.add("is-success");
       submitButton.value = "Documents uploaded successfully!";
-      salesOverTimeInput.value = "";
-      firstVsReturningInput.value = "";
-      salesOverTimeHelpText.textContent = "";
-      firstVsReturningHelpText.textContent = "";
+      instoreVelocityInput.value = "";
+      businessPlanInput.value = "";
+      instoreVelocityHelpText.textContent = "";
+      businessPlanHelpText.textContent = "";
       setTimeout(() => {
-        navigateToPath("/warm/finance-docs-team-and-ownership");
-      }, 900);
+        navigateToPath("/onboarding-complete");
+      }, 500);
     } catch (error) {
       const { message } = error;
-      console.error(error);
+      console.error(message);
       submitButton.classList.add("is-error");
       submitButton.value = message || "There was a problem uploading the documents";
       submitButton.disabled = false;
@@ -3245,6 +3238,6 @@ var initEcommercePerformancePage = async () => {
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initEcommercePerformancePage().catch(console.error);
+  initOptionalDocsPage().catch(console.error);
 });
 //# sourceMappingURL=index.js.map

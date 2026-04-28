@@ -36,6 +36,8 @@ export type FinancialDocumentBody = {
     | 'management_bios'
     | 'investor_deck'
     | 'cap_table'
+    | 'instore_velocity_reports'
+    | 'business_plan'
     | 'other';
   asset_id: number;
   notes?: string;

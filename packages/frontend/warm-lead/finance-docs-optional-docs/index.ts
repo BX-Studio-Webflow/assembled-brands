@@ -25,52 +25,52 @@ const ALLOWED_FILE_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ];
 
-const initTeamOwnershipPage = async () => {
+const initOptionalDocsPage = async () => {
   constructNavBarClasses();
   processMiddleware();
   initCollapsibleSidebar();
 
-  const form = document.querySelector('[dev-target="ecommerce-performance-form"]');
+  const form = document.querySelector('[dev-target="optional-docs-form"]');
   if (!form) {
-    console.error('Team & Ownership form not found: [dev-target="ecommerce-performance-form"]');
+    console.error('Optional docs form not found: [dev-target="optional-docs-form"]');
     return;
   }
 
-  const managementBiosBox = queryElement<HTMLElement>(
-    '[dev-target="management-bios-upload-box"]',
+  const instoreVelocityBox = queryElement<HTMLElement>(
+    '[dev-target="instore-velocity-upload-box"]',
     form
   );
-  const managementBiosInput = queryElement<HTMLInputElement>(
+  const instoreVelocityInput = queryElement<HTMLInputElement>(
     '[dev-target="file-input"]',
-    managementBiosBox ?? form
+    instoreVelocityBox ?? form
   );
-  const managementBiosHelpText = queryElement<HTMLElement>(
-    '[dev-target="management-bios-helper"]',
+  const instoreVelocityHelpText = queryElement<HTMLElement>(
+    '[dev-target="instore-velocity-helper"]',
     form
   );
 
-  const capitalisationTableBox = queryElement<HTMLElement>(
-    '[dev-target="capitalisation-table-upload-box"]',
+  const businessPlanBox = queryElement<HTMLElement>(
+    '[dev-target="business-plan-upload-box"]',
     form
   );
-  const capitalisationTableInput = queryElement<HTMLInputElement>(
+  const businessPlanInput = queryElement<HTMLInputElement>(
     '[dev-target="file-input"]',
-    capitalisationTableBox ?? form
+    businessPlanBox ?? form
   );
-  const capitalisationTableHelpText = queryElement<HTMLElement>(
-    '[dev-target="capitalisation-table-helper"]',
+  const businessPlanHelpText = queryElement<HTMLElement>(
+    '[dev-target="business-plan-helper"]',
     form
   );
 
   const submitButton = queryElement<HTMLInputElement>('[dev-target="submit-button"]', form);
 
   const requiredElements: [string, unknown][] = [
-    ['[dev-target="management-bios-upload-box"]', managementBiosBox],
-    ['[dev-target="file-input"] inside management-bios-upload-box', managementBiosInput],
-    ['[dev-target="management-bios-helper"]', managementBiosHelpText],
-    ['[dev-target="capitalisation-table-upload-box"]', capitalisationTableBox],
-    ['[dev-target="file-input"] inside capitalisation-table-upload-box', capitalisationTableInput],
-    ['[dev-target="capitalisation-table-helper"]', capitalisationTableHelpText],
+    ['[dev-target="instore-velocity-upload-box"]', instoreVelocityBox],
+    ['[dev-target="file-input"] inside instore-velocity-upload-box', instoreVelocityInput],
+    ['[dev-target="instore-velocity-helper"]', instoreVelocityHelpText],
+    ['[dev-target="business-plan-upload-box"]', businessPlanBox],
+    ['[dev-target="file-input"] inside business-plan-upload-box', businessPlanInput],
+    ['[dev-target="business-plan-helper"]', businessPlanHelpText],
     ['[dev-target="submit-button"]', submitButton],
   ];
   let missingElements = false;
@@ -82,12 +82,12 @@ const initTeamOwnershipPage = async () => {
   }
   if (
     missingElements ||
-    !managementBiosBox ||
-    !managementBiosInput ||
-    !managementBiosHelpText ||
-    !capitalisationTableBox ||
-    !capitalisationTableInput ||
-    !capitalisationTableHelpText ||
+    !instoreVelocityBox ||
+    !instoreVelocityInput ||
+    !instoreVelocityHelpText ||
+    !businessPlanBox ||
+    !businessPlanInput ||
+    !businessPlanHelpText ||
     !submitButton
   ) {
     return;
@@ -95,11 +95,11 @@ const initTeamOwnershipPage = async () => {
 
   const updateHelperTexts = (progress: FinancialWizardProgressResponse | undefined) => {
     const placeholder = 'Supported formats: sheets, excel';
-    managementBiosHelpText.textContent =
-      progress?.team_ownership?.find((d) => d.document_type === 'management_bios')?.asset_name ||
-      placeholder;
-    capitalisationTableHelpText.textContent =
-      progress?.team_ownership?.find((d) => d.document_type === 'cap_table')?.asset_name ||
+    instoreVelocityHelpText.textContent =
+      progress?.team_ownership?.find((d) => d.document_type === 'instore_velocity_reports')
+        ?.asset_name || placeholder;
+    businessPlanHelpText.textContent =
+      progress?.team_ownership?.find((d) => d.document_type === 'business_plan')?.asset_name ||
       placeholder;
   };
 
@@ -146,8 +146,8 @@ const initTeamOwnershipPage = async () => {
     input.addEventListener('change', () => updateHelperText(input, helperText));
   };
 
-  setupDropZone(managementBiosBox, managementBiosInput, managementBiosHelpText);
-  setupDropZone(capitalisationTableBox, capitalisationTableInput, capitalisationTableHelpText);
+  setupDropZone(instoreVelocityBox, instoreVelocityInput, instoreVelocityHelpText);
+  setupDropZone(businessPlanBox, businessPlanInput, businessPlanHelpText);
 
   const handleDeleteDocument = async (
     documentType: FinancialDocumentBody['document_type'],
@@ -172,8 +172,8 @@ const initTeamOwnershipPage = async () => {
   };
 
   const trashHandlers: [HTMLElement, FinancialDocumentBody['document_type'], HTMLElement][] = [
-    [managementBiosBox, 'management_bios', managementBiosHelpText],
-    [capitalisationTableBox, 'cap_table', capitalisationTableHelpText],
+    [instoreVelocityBox, 'instore_velocity_reports', instoreVelocityHelpText],
+    [businessPlanBox, 'business_plan', businessPlanHelpText],
   ];
   for (const [box, documentType, helperText] of trashHandlers) {
     const trash = queryElement<HTMLElement>('[dev-target="trash-icon"]', box);
@@ -243,12 +243,14 @@ const initTeamOwnershipPage = async () => {
       documentType: FinancialDocumentBody['document_type'];
     }> = [];
 
-    if (managementBiosInput.files?.[0]) {
-      filesToUpload.push({ file: managementBiosInput.files[0], documentType: 'management_bios' });
+    if (instoreVelocityInput.files?.[0]) {
+      filesToUpload.push({
+        file: instoreVelocityInput.files[0],
+        documentType: 'instore_velocity_reports',
+      });
     }
-
-    if (capitalisationTableInput.files?.[0]) {
-      filesToUpload.push({ file: capitalisationTableInput.files[0], documentType: 'cap_table' });
+    if (businessPlanInput.files?.[0]) {
+      filesToUpload.push({ file: businessPlanInput.files[0], documentType: 'business_plan' });
     }
 
     if (filesToUpload.length === 0) {
@@ -268,14 +270,14 @@ const initTeamOwnershipPage = async () => {
       submitButton.classList.add('is-success');
       submitButton.value = 'Documents uploaded successfully!';
 
-      managementBiosInput.value = '';
-      capitalisationTableInput.value = '';
-      managementBiosHelpText.textContent = '';
-      capitalisationTableHelpText.textContent = '';
+      instoreVelocityInput.value = '';
+      businessPlanInput.value = '';
+      instoreVelocityHelpText.textContent = '';
+      businessPlanHelpText.textContent = '';
 
       setTimeout(() => {
-        navigateToPath('/warm/finance-docs-optional-docs');
-      }, 900);
+        navigateToPath('/onboarding-complete');
+      }, 500);
     } catch (error) {
       const { message } = error as AxiosError;
       console.error(message);
@@ -288,5 +290,5 @@ const initTeamOwnershipPage = async () => {
 
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  initTeamOwnershipPage().catch(console.error);
+  initOptionalDocsPage().catch(console.error);
 });
