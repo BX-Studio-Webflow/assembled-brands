@@ -213,6 +213,91 @@ export class HubSpotService {
 	}
 
 	/**
+	 * Updates deal properties on HubSpot using PATCH /crm/v3/objects/deals/{id}.
+	 *
+	 * Property mapping (warm-lead form → HubSpot):
+	 *  - legal_name            → dealname      ("Deal Name")
+	 *  - incorporation_state        → hq_state          ("HQ State")
+	 *  - net_revenue_last_12_months → annual_revenue     ("Annual Revenue")
+	 *  - ownerEmail                 → hubspot_owner_id   ("Deal Owner") — resolved via Owners API
+	 */
+	public async updateDeal(
+		dealObjectId: number,
+		fields: {
+			dealname?: string;
+			hq_state?: string;
+			annual_revenue?: string;
+			ownerEmail?: string;
+		},
+	): Promise<void> {
+		if (!this.apiKey) {
+			throw new Error('HubSpot API key not configured');
+		}
+
+		const properties: Record<string, string> = {};
+		if (fields.dealname) properties.dealname = fields.dealname;
+		if (fields.hq_state) properties.hq_state = fields.hq_state;
+		if (fields.annual_revenue) properties.annual_revenue = fields.annual_revenue;
+
+		if (fields.ownerEmail) {
+			properties.deal_owner = fields.ownerEmail;
+		}
+
+		if (Object.keys(properties).length === 0) return;
+
+		const response = await fetch(`${HUBSPOT_DEALS_URL}/${dealObjectId}`, {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${this.apiKey}`,
+			},
+			body: JSON.stringify({ properties }),
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			logger.error({ error, dealObjectId }, 'HubSpot deal update failed');
+			throw new Error(`HubSpot deal update error: ${JSON.stringify(error)}`);
+		}
+
+		logger.info({ dealObjectId, fields: Object.keys(properties) }, 'HubSpot deal updated');
+	}
+
+	/**
+	 * Looks up a HubSpot portal owner by email address.
+	 * @returns The owner's HubSpot ID string, or null if not found.
+	 */
+	public async getOwnerIdByEmail(email: string): Promise<string | null> {
+		if (!this.apiKey) {
+			throw new Error('HubSpot API key not configured');
+		}
+		const url = `https://api.hubapi.com/crm/v3/owners?email=${encodeURIComponent(email)}&limit=1`;
+		const response = await fetch(url, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${this.apiKey}`,
+			},
+		});
+		if (!response.ok) {
+			const error = await response.json();
+			logger.error({ error, email }, 'HubSpot owners API error');
+			throw new Error(`HubSpot owners API error: ${JSON.stringify(error)}`);
+		}
+		const data = (await response.json()) as { results: { id: string; email: string }[] };
+		const owner = data.results.find((o) => o.email.toLowerCase() === email.toLowerCase());
+		return owner?.id ?? null;
+	}
+
+	/**
+	 * Finds the most recent processed deal webhook row for a given HubSpot deal object ID.
+	 * Returns the row (including user_id) or null if not found / not yet processed.
+	 */
+	public async findProcessedDealByObjectId(dealObjectId: number) {
+		return this.dealWebhookRepo.findProcessedByDealObjectId(dealObjectId);
+	}
+
+	/**
 	 * Returns the HubSpot contact IDs associated with a deal.
 	 * Uses the CRM associations endpoint: GET /crm/v3/objects/deals/{id}/associations/contacts
 	 */
@@ -248,9 +333,9 @@ export class HubSpotService {
 			name: firstName,
 			body: `Hi ${firstName}, we have received a referral for you${dealName ? ` (${dealName})` : ''}. Please click the button below to fill in your company profile and start your application with Assembled Brands.`,
 			buttonText: 'Start my application',
-			buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/warm-lead/onboarding-warm-lead?deal-id=${dealId}`,
+			buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/warm/onboarding-warm-lead?deal_id=${dealId}`,
 		});
-		logger.info({ email }, 'Warm-lead invite sent');
+		logger.info({ email, dealId }, 'Warm-lead invite sent');
 	}
 
 	/**

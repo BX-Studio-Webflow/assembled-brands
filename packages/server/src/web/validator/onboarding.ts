@@ -45,6 +45,32 @@ const onboardingStep3Schema = z
 export const onboardingStep3Validator = zValidator('json', onboardingStep3Schema);
 export type OnboardingStep3Body = z.infer<typeof onboardingStep3Schema>;
 
+// Warm Lead: unauthenticated single-step submission
+const warmLeadDetailsSchema = z
+	.object({
+		deal_id: z.number({ message: 'deal_id is required' }).int().positive(),
+		legal_name: z.string().min(1, 'Legal name is required'),
+		incorporation_state: z.string().length(2, 'State must be a 2-letter US state code'),
+		net_revenue_last_12_months: z.string().min(1, 'Revenue is required'),
+		working_with_team_member: z.boolean(),
+		team_member_email: z.email('team_member_email must be a valid email').optional(),
+	})
+	.refine(
+		(data) => {
+			if (data.working_with_team_member) {
+				return !!data.team_member_email && data.team_member_email.length > 0;
+			}
+			return true;
+		},
+		{
+			message: 'team_member_email is required when working_with_team_member is true',
+			path: ['team_member_email'],
+		},
+	);
+
+export const warmLeadDetailsValidator = zValidator('json', warmLeadDetailsSchema);
+export type WarmLeadDetailsBody = z.infer<typeof warmLeadDetailsSchema>;
+
 // Progress Response Type
 export type OnboardingProgressResponse = {
 	current_step: number;

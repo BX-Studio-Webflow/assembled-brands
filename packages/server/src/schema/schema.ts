@@ -245,6 +245,12 @@ export const onboardingApplicationSchema = sqliteTable('onboarding_applications'
 	}),
 	desired_loan_amount: text('desired_loan_amount'),
 
+	// Warm-lead extra fields
+	incorporation_state: text('incorporation_state'),
+	net_revenue_last_12_months: text('net_revenue_last_12_months'),
+	working_with_team_member: integer('working_with_team_member', { mode: 'boolean' }).default(false),
+	team_member_email: text('team_member_email'),
+
 	// Step 3: Qualification
 	company_type: text('company_type', {
 		enum: ['cpg', 'saas', 'consulting', 'distributor_wholesaler', 'service_provider', 'other'],

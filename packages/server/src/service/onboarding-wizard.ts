@@ -1,7 +1,7 @@
 import { logger } from '../lib/logger.ts';
 import type { OnboardingWizardRepository } from '../repository/onboarding-wizard.ts';
 import type { NewOnboardingApplication, OnboardingApplication } from '../schema/schema.ts';
-import type { OnboardingStep1Body, OnboardingStep2Body, OnboardingStep3Body } from '../web/validator/onboarding.js';
+import type { OnboardingStep1Body, OnboardingStep2Body, OnboardingStep3Body, WarmLeadDetailsBody } from '../web/validator/onboarding.js';
 import type { HubSpotService } from './hubspot.ts';
 import type { UserService } from './user.ts';
 
@@ -292,6 +292,68 @@ export class OnboardingWizardService {
 	public async update(id: number, data: Partial<NewOnboardingApplication>): Promise<void> {
 		try {
 			await this.repo.update(id, data);
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Unauthenticated warm-lead submission.
+	 * Resolves the platform user from the HubSpot deal ID, then upserts their
+	 * onboarding application with the submitted company details.
+	 *
+	 * @param body - Validated warm-lead form body (includes deal_id)
+	 * @returns The upserted onboarding application
+	 * @throws {Error} When deal not found, user not linked, or DB write fails
+	 */
+	public async saveWarmLeadDetails(body: WarmLeadDetailsBody): Promise<OnboardingApplication> {
+		try {
+			const dealRow = await this.hubSpotService.findProcessedDealByObjectId(body.deal_id);
+			if (!dealRow) {
+				throw new Error(`No processed deal found for deal_id ${body.deal_id}`);
+			}
+			if (!dealRow.user_id) {
+				throw new Error(`Deal ${body.deal_id} has no associated user yet`);
+			}
+			const userId = dealRow.user_id;
+
+			const update: Partial<NewOnboardingApplication> = {
+				legal_name: body.legal_name,
+				incorporation_state: body.incorporation_state,
+				net_revenue_last_12_months: body.net_revenue_last_12_months,
+				working_with_team_member: body.working_with_team_member,
+				team_member_email: body.working_with_team_member ? (body.team_member_email ?? null) : null,
+				updated_at: new Date(),
+			};
+
+			let savedApplication: OnboardingApplication;
+			const existing = await this.repo.findByUserId(userId);
+			if (existing) {
+				await this.repo.update(existing.id, update);
+				const refreshed = await this.repo.findById(existing.id);
+				if (!refreshed) throw new Error('Failed to retrieve updated application');
+				savedApplication = refreshed;
+			} else {
+				const [created] = await this.repo.create({ user_id: userId, ...update });
+				if (!created) throw new Error('Failed to create warm-lead application');
+				savedApplication = created;
+			}
+
+			// Push fields back to HubSpot. Non-fatal: a failure here does not roll back
+			// the DB write — the team can reconcile manually if needed.
+			try {
+				await this.hubSpotService.updateDeal(body.deal_id, {
+					dealname: body.legal_name,
+					hq_state: body.incorporation_state,
+					annual_revenue: body.net_revenue_last_12_months,
+					ownerEmail: body.working_with_team_member ? body.team_member_email : undefined,
+				});
+			} catch (hsErr) {
+				logger.error({ hsErr, deal_id: body.deal_id }, 'Failed to sync warm-lead fields to HubSpot (non-fatal)');
+			}
+
+			return savedApplication;
 		} catch (error) {
 			logger.error(error);
 			throw error;

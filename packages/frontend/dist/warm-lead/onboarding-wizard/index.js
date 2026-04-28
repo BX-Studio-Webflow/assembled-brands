@@ -2655,13 +2655,6 @@ var getCookie = (name) => {
 var deleteCookie = (name) => {
   setCookie(name, "", -1);
 };
-var processMiddleware = () => {
-  const cookie = getCookie("accessToken");
-  if (!cookie) {
-    navigateToPath("/login?error=unauthorized");
-  }
-  return cookie;
-};
 
 // shared/services/axios/AxiosRequestIntrceptorConfigCallback.ts
 var AxiosRequestIntrceptorConfigCallback = (config) => {
@@ -2752,63 +2745,20 @@ var ApiService = {
 };
 var ApiService_default = ApiService;
 
-// shared/services/AuthService.ts
-async function apiGetUserMe() {
-  return ApiService_default.fetchDataWithAxios({
-    url: "/user/me",
-    method: "get"
-  });
-}
-
-// shared/services/FinancialWizardService.ts
-var apiGetFinancialProgress = (userId) => {
-  return ApiService_default.fetchDataWithAxios({
-    url: "/financial-wizard/progress",
-    method: "get",
-    params: userId ? { user_id: userId } : void 0
-  });
-};
-
-// shared/services/OnboardingService.ts
-var apiGetOnboardingProgress = () => {
-  return ApiService_default.fetchDataWithAxios({
-    url: "/onboarding-wizard/progress",
-    method: "get"
-  });
-};
-
-// shared/services/TeamService.ts
-var apiGetMyTeams = () => {
-  return ApiService_default.fetchDataWithAxios({
-    url: "/team/my-teams",
-    method: "get"
-  });
-};
-
 // shared/utils/selectors.ts
 var queryElement = (selector, scope = document) => {
   return scope.querySelector(selector);
 };
 
-// shared/utils/helpers.ts
-var fetchProgressData = async (userId) => {
-  const [financialProgress, user, teams, onboardingProgress] = await Promise.all([
-    apiGetFinancialProgress(userId),
-    apiGetUserMe(),
-    apiGetMyTeams(),
-    apiGetOnboardingProgress()
-  ]);
-  return { financialProgress, user, teams, onboardingProgress };
-};
-
 // warm-lead/onboarding-wizard/index.ts
 var initWarmLeadOnboardingPage = async () => {
-  processMiddleware();
   const form = document.querySelector('[dev-target="onboarding-form"]');
   if (!form || !(form instanceof HTMLFormElement)) {
     console.error('Warm-lead onboarding form not found: [dev-target="onboarding-form"]');
     return;
   }
+  const dealIdParam = new URLSearchParams(window.location.search).get("deal_id");
+  const dealId = dealIdParam ? parseInt(dealIdParam, 10) : null;
   const submitButton = queryElement('[dev-target="submit-button"]', form);
   const backButton = queryElement('[dev-target="back-button"]', form);
   const legalName = queryElement('[dev-target="legal-name-input"]', form);
@@ -2823,6 +2773,12 @@ var initWarmLeadOnboardingPage = async () => {
     console.error("Required onboarding controls not found");
     return;
   }
+  if (!dealId || Number.isNaN(dealId)) {
+    submitButton.classList.add("is-error");
+    submitButton.value = "Invalid invite link \u2014 deal ID missing";
+    submitButton.disabled = true;
+    return;
+  }
   form.querySelector('[dev-target="step-2"]')?.classList.add("hide");
   form.querySelector('[dev-target="step-3"]')?.classList.add("hide");
   const toggleMemberField = () => {
@@ -2830,22 +2786,10 @@ var initWarmLeadOnboardingPage = async () => {
       'input[name="working-with-member"]:checked'
     );
     if (!memberFieldWrapper) return;
-    if (checked?.value === "yes") {
-      memberFieldWrapper.classList.remove("hide");
-    } else {
-      memberFieldWrapper.classList.add("hide");
-    }
+    memberFieldWrapper.classList.toggle("hide", checked?.value !== "yes");
   };
   memberRadios.forEach((radio) => radio.addEventListener("change", toggleMemberField));
   toggleMemberField();
-  try {
-    const result = await fetchProgressData();
-    const progress = result?.onboardingProgress?.progress;
-    if (progress?.step1?.legal_name) {
-      legalName.value = progress.step1.legal_name;
-    }
-  } catch {
-  }
   backButton.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -2903,29 +2847,30 @@ var initWarmLeadOnboardingPage = async () => {
       submitButton.value = "Please answer this question";
       return;
     }
-    if (workingWith.value === "yes" && !memberSelect.value) {
+    const isWorkingWithMember = workingWith.value === "yes";
+    if (isWorkingWithMember && !memberSelect.value) {
       memberSelect.classList.add("is-error");
       submitButton.classList.add("is-error");
       submitButton.value = "Choose a team member";
       return;
     }
     const payload = {
+      deal_id: dealId,
       legal_name: legalName.value.trim(),
       incorporation_state: companyHq.value,
       net_revenue_last_12_months: netRevenue.value,
-      working_with_team_member: workingWith.value,
-      team_member_slug: workingWith.value === "yes" ? memberSelect.value : null
+      working_with_team_member: isWorkingWithMember,
+      ...isWorkingWithMember ? { team_member_email: memberSelect.value } : {}
     };
     try {
       await ApiService_default.fetchDataWithAxios({
-        url: "/onboarding-wizard/step1",
+        url: "/onboarding-wizard/warm-lead",
         method: "post",
         data: payload
       });
       submitButton.classList.add("is-success");
       submitButton.value = "Saved!";
       setTimeout(() => {
-        navigateToPath("/finance-company-profile");
       }, 400);
     } catch (error) {
       const { message } = error;

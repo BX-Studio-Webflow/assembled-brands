@@ -43,7 +43,12 @@ import {
 	updatePageValidator,
 	updateStepValidator,
 } from './validator/financial-wizard.ts';
-import { onboardingStep1Validator, onboardingStep2Validator, onboardingStep3Validator } from './validator/onboarding.ts';
+import {
+	onboardingStep1Validator,
+	onboardingStep2Validator,
+	onboardingStep3Validator,
+	warmLeadDetailsValidator,
+} from './validator/onboarding.ts';
 import { createTeamValidator, inviteMemberValidator, revokeAccessValidator, teamQueryValidator } from './validator/team.ts';
 import {
 	claimYourAccountValidator,
@@ -263,7 +268,10 @@ export class Server {
 		const onboardingWizard = new Hono();
 		const authCheck = jwt({ secret: env.SECRET_KEY });
 
-		// All routes require authentication
+		// Unauthenticated warm-lead submission (identified by deal_id)
+		onboardingWizard.post('/warm-lead', warmLeadDetailsValidator, onboardingWizardCtrl.submitWarmLeadDetails);
+
+		// All routes below require authentication
 		onboardingWizard.use(authCheck);
 		onboardingWizard.use(teamAccess(teamService));
 

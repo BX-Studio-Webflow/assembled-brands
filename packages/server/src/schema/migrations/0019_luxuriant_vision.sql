@@ -1,0 +1,1 @@
+ALTER TABLE `onboarding_applications` RENAME COLUMN "team_member_slug" TO "team_member_email";

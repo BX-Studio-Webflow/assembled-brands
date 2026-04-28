@@ -5,7 +5,7 @@ import type { User } from '../../schema/schema.js';
 import type { OnboardingWizardService } from '../../service/onboarding-wizard.js';
 import type { UserService } from '../../service/user.js';
 import type { UpdateStepBody } from '../validator/financial-wizard.js';
-import type { OnboardingStep1Body, OnboardingStep2Body, OnboardingStep3Body } from '../validator/onboarding.ts';
+import type { OnboardingStep1Body, OnboardingStep2Body, OnboardingStep3Body, WarmLeadDetailsBody } from '../validator/onboarding.ts';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { serveData } from './resp/resp.js';
 
@@ -251,6 +251,31 @@ export class OnboardingWizardController {
 			});
 		} catch (error) {
 			logger.error(error);
+			return serveInternalServerError(c, error);
+		}
+	};
+
+	/**
+	 * Unauthenticated warm-lead submission.
+	 * Looks up the platform user via the HubSpot deal_id and upserts their
+	 * onboarding application with the submitted company details.
+	 */
+	public submitWarmLeadDetails = async (c: Context) => {
+		try {
+			const body: WarmLeadDetailsBody = await c.req.json();
+			const application = await this.service.saveWarmLeadDetails(body);
+			return serveData(c, {
+				message: 'Details saved successfully',
+				application,
+			});
+		} catch (error) {
+			logger.error(error);
+			if (error instanceof Error && error.message.includes('No processed deal')) {
+				return serveBadRequest(c, 'Deal not found or not yet processed. Please try again shortly.');
+			}
+			if (error instanceof Error && error.message.includes('no associated user')) {
+				return serveBadRequest(c, 'No account linked to this deal yet. Please wait for your invite email.');
+			}
 			return serveInternalServerError(c, error);
 		}
 	};

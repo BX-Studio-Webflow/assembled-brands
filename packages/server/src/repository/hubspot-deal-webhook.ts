@@ -42,6 +42,18 @@ export class HubspotDealWebhookRepository {
 		return this.db.update(hubspotDealWebhookSchema).set(data).where(eq(hubspotDealWebhookSchema.id, id));
 	}
 
+	/**
+	 * Find the most recent processed deal row for a given HubSpot deal object ID.
+	 * Used to resolve the platform user associated with an incoming warm-lead form.
+	 * @param {number} objectId - HubSpot deal object ID
+	 */
+	public async findProcessedByDealObjectId(objectId: number) {
+		return this.db.query.hubspotDealWebhookSchema.findFirst({
+			where: and(eq(hubspotDealWebhookSchema.object_id, objectId), eq(hubspotDealWebhookSchema.status, 'processed')),
+			orderBy: [desc(hubspotDealWebhookSchema.created_at)],
+		});
+	}
+
 	public async delete(id: number) {
 		return this.db.delete(hubspotDealWebhookSchema).where(eq(hubspotDealWebhookSchema.id, id));
 	}

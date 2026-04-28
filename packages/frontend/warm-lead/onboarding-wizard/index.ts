@@ -1,22 +1,28 @@
 import type { AxiosError } from 'axios';
 import ApiService from 'shared/services/ApiService';
 
-import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
-import { fetchProgressData } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
-/** Warm-lead onboarding fields — align with API when backend is ready */
-type WarmLeadOnboardingPayload = Record<string, unknown>;
+type WarmLeadPayload = {
+  deal_id: number;
+  legal_name: string;
+  incorporation_state: string;
+  net_revenue_last_12_months: string;
+  working_with_team_member: boolean;
+  team_member_email?: string;
+};
 
 const initWarmLeadOnboardingPage = async () => {
-  processMiddleware();
-
   const form = document.querySelector('[dev-target="onboarding-form"]');
   if (!form || !(form instanceof HTMLFormElement)) {
     console.error('Warm-lead onboarding form not found: [dev-target="onboarding-form"]');
     return;
   }
+
+  // deal_id comes from the invite link: ?deal_id=123
+  const dealIdParam = new URLSearchParams(window.location.search).get('deal_id');
+  const dealId = dealIdParam ? parseInt(dealIdParam, 10) : null;
 
   const submitButton = queryElement<HTMLInputElement>('[dev-target="submit-button"]', form);
   const backButton = queryElement<HTMLInputElement>('[dev-target="back-button"]', form);
@@ -42,6 +48,13 @@ const initWarmLeadOnboardingPage = async () => {
     return;
   }
 
+  if (!dealId || Number.isNaN(dealId)) {
+    submitButton.classList.add('is-error');
+    submitButton.value = 'Invalid invite link — deal ID missing';
+    submitButton.disabled = true;
+    return;
+  }
+
   form.querySelector('[dev-target="step-2"]')?.classList.add('hide');
   form.querySelector('[dev-target="step-3"]')?.classList.add('hide');
 
@@ -50,25 +63,11 @@ const initWarmLeadOnboardingPage = async () => {
       'input[name="working-with-member"]:checked'
     );
     if (!memberFieldWrapper) return;
-    if (checked?.value === 'yes') {
-      memberFieldWrapper.classList.remove('hide');
-    } else {
-      memberFieldWrapper.classList.add('hide');
-    }
+    memberFieldWrapper.classList.toggle('hide', checked?.value !== 'yes');
   };
 
   memberRadios.forEach((radio) => radio.addEventListener('change', toggleMemberField));
   toggleMemberField();
-
-  try {
-    const result = await fetchProgressData();
-    const progress = result?.onboardingProgress?.progress;
-    if (progress?.step1?.legal_name) {
-      legalName.value = progress.step1.legal_name;
-    }
-  } catch {
-    // non-blocking
-  }
 
   backButton.addEventListener('click', (event) => {
     event.preventDefault();
@@ -138,31 +137,34 @@ const initWarmLeadOnboardingPage = async () => {
       return;
     }
 
-    if (workingWith.value === 'yes' && !memberSelect.value) {
+    const isWorkingWithMember = workingWith.value === 'yes';
+
+    if (isWorkingWithMember && !memberSelect.value) {
       memberSelect.classList.add('is-error');
       submitButton.classList.add('is-error');
       submitButton.value = 'Choose a team member';
       return;
     }
 
-    const payload: WarmLeadOnboardingPayload = {
+    const payload: WarmLeadPayload = {
+      deal_id: dealId,
       legal_name: legalName.value.trim(),
       incorporation_state: companyHq.value,
       net_revenue_last_12_months: netRevenue.value,
-      working_with_team_member: workingWith.value,
-      team_member_slug: workingWith.value === 'yes' ? memberSelect.value : null,
+      working_with_team_member: isWorkingWithMember,
+      ...(isWorkingWithMember ? { team_member_email: memberSelect.value } : {}),
     };
 
     try {
       await ApiService.fetchDataWithAxios({
-        url: '/onboarding-wizard/step1',
+        url: '/onboarding-wizard/warm-lead',
         method: 'post',
         data: payload,
       });
       submitButton.classList.add('is-success');
       submitButton.value = 'Saved!';
       setTimeout(() => {
-        navigateToPath('/finance-company-profile');
+        //navigateToPath('/login');
       }, 400);
     } catch (error) {
       const { message } = error as AxiosError;
