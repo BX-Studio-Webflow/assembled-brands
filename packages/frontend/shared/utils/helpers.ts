@@ -146,13 +146,64 @@ export const constructNavBarClasses = () => {
     return;
   }
 
-  // Get current route
   const currentPath = window.location.pathname;
+  const isWarmPath = currentPath.startsWith('/dev/warm/') || currentPath.startsWith('/warm/');
 
-  // Find the matching dev-target for current route
-  const activeTarget = routeMap[currentPath];
+  const normalizeRoutePath = (path: string) =>
+    path.replace(/^\/dev\/warm\//, '/dev/').replace(/^\/warm\//, '/');
 
-  const allNavLinks = document.querySelectorAll('[dev-attr="nav"]');
+  const activeTarget = routeMap[normalizeRoutePath(currentPath)];
+
+  const allNavLinks = document.querySelectorAll<HTMLElement>('[dev-attr="nav"]');
+
+  const warmNavConfig: Record<string, { href: string; isVisible: boolean }> = {
+    'nav-company-profile-link': { href: '/dev/warm/onboarding-warm-lead', isVisible: true },
+    'nav-financial-overview-link': {
+      href: '/dev/warm/finance-financial-overview',
+      isVisible: false,
+    },
+    'nav-financial-reports-link': {
+      href: '/dev/warm/finance-docs-financial-report',
+      isVisible: true,
+    },
+    'nav-accounts-inventory-link': {
+      href: '/dev/warm/finance-docs-accounts-and-inventory',
+      isVisible: true,
+    },
+    'nav-eccomerce-performance-link': {
+      href: '/dev/warm/finance-docs-ecommerce-performance',
+      isVisible: true,
+    },
+    'nav-team-ownership-link': {
+      href: '/dev/warm/finance-docs-team-and-ownership',
+      isVisible: true,
+    },
+    'nav-team-member-link': { href: '/dev/warm/invite-team-members', isVisible: true },
+  };
+
+  allNavLinks.forEach((link) => {
+    const target = link.getAttribute('dev-target');
+    if (!target) return;
+
+    if (isWarmPath) {
+      const warmEntry = warmNavConfig[target];
+      if (warmEntry) {
+        link.setAttribute('href', warmEntry.href);
+        link.classList.toggle('hide', !warmEntry.isVisible);
+      } else {
+        const existingHref = link.getAttribute('href');
+        if (existingHref?.startsWith('/dev/')) {
+          link.setAttribute('href', existingHref.replace('/dev/', '/dev/warm/'));
+        } else if (existingHref?.startsWith('/')) {
+          link.setAttribute('href', `/dev/warm${existingHref}`);
+        }
+      }
+      return;
+    }
+
+    // Restore visibility when not in warm-lead flow.
+    link.classList.remove('hide');
+  });
 
   if (activeTarget) {
     allNavLinks.forEach((link) => {

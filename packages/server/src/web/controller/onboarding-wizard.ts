@@ -185,6 +185,7 @@ export class OnboardingWizardController {
 				is_rejected: application.is_rejected || false,
 				rejection_reason: application.rejection_reason || null,
 				percentage,
+				progress_data: application,
 				step1: {
 					legal_name: application.legal_name || null,
 					employee_count: application.employee_count || null,
