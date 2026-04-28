@@ -30,9 +30,9 @@ const initTeamOwnershipPage = async () => {
   processMiddleware();
   initCollapsibleSidebar();
 
-  const form = document.querySelector('[dev-target="ecommerce-performance-form"]');
+  const form = document.querySelector('[dev-target="team-ownership-form"]');
   if (!form) {
-    console.error('Team & Ownership form not found: [dev-target="ecommerce-performance-form"]');
+    console.error('Team & Ownership form not found: [dev-target="team-ownership-form"]');
     return;
   }
 
