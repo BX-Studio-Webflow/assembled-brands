@@ -37,7 +37,15 @@ const routeMap: RouteMap = {
     nav_attr: 'nav-financial-reports-link',
     nav_class: 'is-active-financial',
   },
+  '/dev/finance-docs-financial-report': {
+    nav_attr: 'nav-financial-reports-link',
+    nav_class: 'is-active-financial',
+  },
   '/finance-docs-financial-reports': {
+    nav_attr: 'nav-financial-reports-link',
+    nav_class: 'is-active-financial',
+  },
+  '/finance-docs-financial-report': {
     nav_attr: 'nav-financial-reports-link',
     nav_class: 'is-active-financial',
   },
@@ -71,6 +79,22 @@ const routeMap: RouteMap = {
   },
   '/dev/invite-team-members': {
     nav_attr: 'nav-team-member-link',
+    nav_class: 'is-active-financial',
+  },
+  '/dev/finance-docs-forecasts': {
+    nav_attr: 'nav-financial-forecasts-link',
+    nav_class: 'is-active-financial',
+  },
+  '/finance-docs-forecasts': {
+    nav_attr: 'nav-financial-forecasts-link',
+    nav_class: 'is-active-financial',
+  },
+  '/dev/finance-docs-optional-docs': {
+    nav_attr: 'nav-optional-documents-link',
+    nav_class: 'is-active-financial',
+  },
+  '/finance-docs-optional-docs': {
+    nav_attr: 'nav-optional-documents-link',
     nav_class: 'is-active-financial',
   },
 };
@@ -154,8 +178,6 @@ export const constructNavBarClasses = () => {
 
   const activeTarget = routeMap[normalizeRoutePath(currentPath)];
 
-  const allNavLinks = document.querySelectorAll<HTMLElement>('[dev-attr="nav"]');
-
   const warmNavConfig: Record<string, { href: string; isVisible: boolean }> = {
     'nav-company-profile-link': { href: '/dev/warm/onboarding-warm-lead', isVisible: true },
     'nav-financial-overview-link': {
@@ -164,6 +186,10 @@ export const constructNavBarClasses = () => {
     },
     'nav-financial-reports-link': {
       href: '/dev/warm/finance-docs-financial-report',
+      isVisible: true,
+    },
+    'nav-financial-forecasts-link': {
+      href: '/dev/warm/finance-docs-forecasts',
       isVisible: true,
     },
     'nav-accounts-inventory-link': {
@@ -178,8 +204,70 @@ export const constructNavBarClasses = () => {
       href: '/dev/warm/finance-docs-team-and-ownership',
       isVisible: true,
     },
+    'nav-optional-documents-link': {
+      href: '/dev/warm/finance-docs-optional-docs',
+      isVisible: true,
+    },
     'nav-team-member-link': { href: '/dev/warm/invite-team-members', isVisible: true },
   };
+
+  const buildWarmDocumentUploadNav = () => {
+    const templateLink = sidebarMenu.querySelector<HTMLAnchorElement>(
+      '[dev-target="nav-financial-reports-link"]'
+    );
+    const submenu = templateLink?.closest<HTMLElement>('.is-submenu');
+    if (!templateLink || !submenu) return;
+
+    const navItems = [
+      {
+        target: 'nav-financial-reports-link',
+        label: 'Financial reports',
+        href: '/dev/warm/finance-docs-financial-report',
+      },
+      {
+        target: 'nav-financial-forecasts-link',
+        label: 'Financial Forecasts',
+        href: '/dev/warm/finance-docs-forecasts',
+      },
+      {
+        target: 'nav-accounts-inventory-link',
+        label: 'Accounts & Inventory',
+        href: '/dev/warm/finance-docs-accounts-and-inventory',
+      },
+      {
+        target: 'nav-eccomerce-performance-link',
+        label: 'E-Commerce performance',
+        href: '/dev/warm/finance-docs-ecommerce-performance',
+      },
+      {
+        target: 'nav-team-ownership-link',
+        label: 'Team and Ownership',
+        href: '/dev/warm/finance-docs-team-and-ownership',
+      },
+      {
+        target: 'nav-optional-documents-link',
+        label: 'Optional Documents',
+        href: '/dev/warm/finance-docs-optional-docs',
+      },
+    ];
+
+    submenu.innerHTML = '';
+    navItems.forEach((item) => {
+      const link = templateLink.cloneNode(true) as HTMLAnchorElement;
+      link.setAttribute('dev-attr', 'nav');
+      link.setAttribute('dev-target', item.target);
+      link.setAttribute('href', item.href);
+      link.textContent = item.label;
+      link.classList.remove('is-document-active', 'is-active', 'is-active-financial', 'w--current');
+      submenu.appendChild(link);
+    });
+  };
+
+  if (isWarmPath) {
+    buildWarmDocumentUploadNav();
+  }
+
+  const allNavLinks = document.querySelectorAll<HTMLElement>('[dev-attr="nav"]');
 
   allNavLinks.forEach((link) => {
     const target = link.getAttribute('dev-target');
