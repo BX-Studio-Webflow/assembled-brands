@@ -148,4 +148,38 @@ export class HubSpotController {
 			return serveInternalServerError(c, err);
 		}
 	};
+
+	/** Proxies GET /crm/v3/pipelines/deals from HubSpot. */
+	public getDealPipelines = async (c: Context) => {
+		try {
+			const pipelines = await this.hubSpotService.getDealPipelines();
+			return c.json(pipelines);
+		} catch (err) {
+			logger.error(err);
+			return serveInternalServerError(c, err);
+		}
+	};
+
+	/** Proxies GET /crm/v3/objects/deals/:id from HubSpot. */
+	public getDealById = async (c: Context) => {
+		try {
+			const dealIdParam = c.req.param('id');
+			const dealId = Number(dealIdParam);
+			if (!Number.isInteger(dealId) || dealId <= 0) {
+				return serveBadRequest(c, 'Invalid deal id');
+			}
+
+			const propertiesParam = c.req.query('properties');
+			const properties = propertiesParam
+				?.split(',')
+				.map((prop) => prop.trim())
+				.filter(Boolean);
+
+			const deal = await this.hubSpotService.getDealById(dealId, properties);
+			return c.json(deal);
+		} catch (err) {
+			logger.error(err);
+			return serveInternalServerError(c, err);
+		}
+	};
 }

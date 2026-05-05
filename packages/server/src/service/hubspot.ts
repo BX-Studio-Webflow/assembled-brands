@@ -269,6 +269,36 @@ export class HubSpotService {
 	}
 
 	/**
+	 * Updates only the HubSpot deal stage via PATCH /crm/v3/objects/deals/{id}.
+	 */
+	public async updateDealStage(dealObjectId: number, dealStage: string): Promise<void> {
+		if (!this.apiKey) {
+			throw new Error('HubSpot API key not configured');
+		}
+
+		const response = await fetch(`${HUBSPOT_DEALS_URL}/${dealObjectId}`, {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${this.apiKey}`,
+			},
+			body: JSON.stringify({
+				properties: {
+					dealstage: dealStage,
+				},
+			}),
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			logger.error({ error, dealObjectId, dealStage }, 'HubSpot deal stage update failed');
+			throw new Error(`HubSpot deal stage update error: ${JSON.stringify(error)}`);
+		}
+
+		logger.info({ dealObjectId, dealStage }, 'HubSpot deal stage updated');
+	}
+
+	/**
 	 * Returns up to 100 HubSpot portal owners.
 	 */
 	public async getOwners(): Promise<{ results: { id: string; email: string; firstName: string; lastName: string }[] }> {
@@ -288,6 +318,28 @@ export class HubSpotService {
 			throw new Error(`HubSpot owners API error: ${JSON.stringify(error)}`);
 		}
 		return response.json() as Promise<{ results: { id: string; email: string; firstName: string; lastName: string }[] }>;
+	}
+
+	/**
+	 * Returns HubSpot deal pipelines from GET /crm/v3/pipelines/deals.
+	 */
+	public async getDealPipelines(): Promise<unknown> {
+		if (!this.apiKey) {
+			throw new Error('HubSpot API key not configured');
+		}
+		const response = await fetch('https://api.hubapi.com/crm/v3/pipelines/deals', {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${this.apiKey}`,
+			},
+		});
+		if (!response.ok) {
+			const error = await response.json();
+			logger.error({ error }, 'HubSpot deal pipelines API error');
+			throw new Error(`HubSpot deal pipelines API error: ${JSON.stringify(error)}`);
+		}
+		return response.json() as Promise<unknown>;
 	}
 
 	/**
@@ -374,12 +426,14 @@ export class HubSpotService {
 	/**
 	 * Fetches a deal by its HubSpot object ID.
 	 * @param {number} id - HubSpot deal object ID
+	 * @param {string[]} [properties] - Optional HubSpot deal properties to request
 	 */
-	public async getDealById(id: number): Promise<HubSpotDeal> {
+	public async getDealById(id: number, properties?: string[]): Promise<HubSpotDeal> {
 		if (!this.apiKey) {
 			throw new Error('HubSpot API key not configured');
 		}
-		const url = `${HUBSPOT_DEALS_URL}/${id}?properties=${DEAL_PROPERTIES}`;
+		const requestedProperties = properties?.length ? properties.join(',') : DEAL_PROPERTIES;
+		const url = `${HUBSPOT_DEALS_URL}/${id}?properties=${requestedProperties}`;
 		const response = await fetch(url, {
 			method: 'GET',
 			headers: {

@@ -119,8 +119,8 @@ export class Server {
 		const assetService = new AssetService(assetRepo, s3Service);
 		const userService = new UserService(userRepo);
 		const teamService = new TeamService(teamRepo, userService);
-		const financialWizardService = new FinancialWizardService(financialWizardRepo, assetService);
 		const hubSpotService = new HubSpotService(hubspotContactWebhookRepo, hubspotDealWebhookRepo, userService);
+		const financialWizardService = new FinancialWizardService(financialWizardRepo, assetService, hubSpotService);
 		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService, financialWizardService);
 		const onboardingWizardService = new OnboardingWizardService(onboardingWizardRepo, hubSpotService, userService, businessService);
 		const emailService = new EmailService(emailRepo);
@@ -190,6 +190,8 @@ export class Server {
 		const hubspotWebhook = new Hono();
 		hubspotWebhook.post('/webhook', hubSpotCtrl.handleWebhook);
 		hubspotWebhook.get('/owners', hubSpotCtrl.getOwners);
+		hubspotWebhook.get('/pipelines/deals', hubSpotCtrl.getDealPipelines);
+		hubspotWebhook.get('/deals/:id', hubSpotCtrl.getDealById);
 		api.route('/hubspot', hubspotWebhook);
 	}
 

@@ -3,6 +3,7 @@ import type { FinancialWizardRepository } from '../repository/financial-wizard.t
 import { type NewFinancialDocument, NewFinancialStepFolder } from '../schema/index.ts';
 import type { FinancialOverviewBody, FinancialWizardProgressResponse } from '../web/validator/financial-wizard.ts';
 import type { AssetService } from './asset.js';
+import type { HubSpotService } from './hubspot.ts';
 
 /**
  * Page order for progress calculation
@@ -24,9 +25,15 @@ export type FinancialWizardPage = (typeof PAGE_ORDER)[number];
 export class FinancialWizardService {
 	private repo: FinancialWizardRepository;
 	private assetService: AssetService;
-	constructor(repo: FinancialWizardRepository, assetService: AssetService) {
+	private hubSpotService: HubSpotService;
+	private static readonly HUBSPOT_STAGE_MEETING_BOOKED = '1022121848';
+	private static readonly HUBSPOT_STAGE_PACKAGE_RECEIVED = 'cca1d0b8-397f-4309-b87e-7a663f2a78bc';
+	private static readonly OPTIONAL_DOC_TYPES: NewFinancialDocument['document_type'][] = ['instore_velocity_reports', 'business_plan'];
+
+	constructor(repo: FinancialWizardRepository, assetService: AssetService, hubSpotService: HubSpotService) {
 		this.repo = repo;
 		this.assetService = assetService;
+		this.hubSpotService = hubSpotService;
 	}
 
 	/**
@@ -133,6 +140,7 @@ export class FinancialWizardService {
 	) {
 		try {
 			const application = await this.getOrCreateApplication(userId);
+			const hadExistingDocuments = (await this.repo.findDocumentsByApplicationId(application.id, true)).length > 0;
 
 			const asset = await this.assetService.getAsset(assetId);
 			if (!asset || asset.user_id !== userId) {
@@ -155,10 +163,36 @@ export class FinancialWizardService {
 				});
 			}
 
+			try {
+				await this.syncHubSpotDealStageAfterUpload(userId, documentType, hadExistingDocuments);
+			} catch (error) {
+				logger.error({ error, userId, documentType }, 'Failed to sync HubSpot deal stage after document upload');
+			}
+
 			return document;
 		} catch (error) {
 			logger.error(error);
 			throw error;
+		}
+	}
+
+	private async syncHubSpotDealStageAfterUpload(
+		userId: number,
+		documentType: NewFinancialDocument['document_type'],
+		hadExistingDocuments: boolean,
+	): Promise<void> {
+		const dealRow = await this.hubSpotService.findProcessedDealByUserId(userId);
+		if (!dealRow) {
+			return;
+		}
+
+		if (FinancialWizardService.OPTIONAL_DOC_TYPES.includes(documentType)) {
+			await this.hubSpotService.updateDealStage(dealRow.object_id, FinancialWizardService.HUBSPOT_STAGE_PACKAGE_RECEIVED);
+			return;
+		}
+
+		if (!hadExistingDocuments) {
+			await this.hubSpotService.updateDealStage(dealRow.object_id, FinancialWizardService.HUBSPOT_STAGE_MEETING_BOOKED);
 		}
 	}
 
