@@ -3282,9 +3282,20 @@ var initFinanceDocsAccountsInventoryPage = async () => {
         documentType: "accounts_payable_aging"
       });
     }
-    if (filesToUpload.length === 0) {
+    const hasMonthlyInventoryDoc = Boolean(monthlyInventoryInput.files?.[0]) || Boolean(getDoc("monthly_inventory_report"));
+    const hasAccountsReceivableDoc = Boolean(accountsReceivableInput.files?.[0]) || Boolean(getDoc("accounts_receivable_aging"));
+    const hasAccountsPayableDoc = Boolean(accountsPayableInput.files?.[0]) || Boolean(getDoc("accounts_payable_aging"));
+    if (!hasMonthlyInventoryDoc || !hasAccountsReceivableDoc || !hasAccountsPayableDoc) {
       submitButton.classList.add("is-error");
-      submitButton.value = "Please select at least one file to upload";
+      submitButton.value = "Please upload all required documents";
+      return;
+    }
+    if (filesToUpload.length === 0) {
+      submitButton.classList.add("is-success");
+      submitButton.value = "Saved Changes";
+      setTimeout(() => {
+        navigateToPath("/warm/finance-docs-ecommerce-performance");
+      }, 300);
       return;
     }
     try {

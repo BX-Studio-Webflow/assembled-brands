@@ -3283,9 +3283,19 @@ var initFinanceForecastsPage = async () => {
         documentType: "balance_sheet_full_year_forecast"
       });
     }
-    if (filesToUpload.length === 0) {
+    const hasIncomeForecastDoc = Boolean(incomeForecastInput.files?.[0]) || Boolean(getFinancialReportDoc("income_statement_forecast"));
+    const hasBalanceForecastDoc = Boolean(balanceForecastInput.files?.[0]) || Boolean(getFinancialReportDoc("balance_sheet_full_year_forecast"));
+    if (!hasIncomeForecastDoc || !hasBalanceForecastDoc) {
       submitButton.classList.add("is-error");
-      submitButton.value = "Please select at least one file to upload";
+      submitButton.value = "Please upload all required documents";
+      return;
+    }
+    if (filesToUpload.length === 0) {
+      submitButton.classList.add("is-success");
+      submitButton.value = "Saved Changes";
+      setTimeout(() => {
+        navigateToPath("/warm/finance-docs-accounts-and-inventory");
+      }, 300);
       return;
     }
     try {

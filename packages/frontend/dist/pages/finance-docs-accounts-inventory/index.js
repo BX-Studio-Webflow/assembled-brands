@@ -3612,9 +3612,22 @@ var initFinanceDocsAccountsInventoryPage = async () => {
       submitButton.value = "Please upload only Excel (.xls or .xlsx) files";
       return;
     }
-    if (filesToUpload.length === 0) {
+    const hasMonthlyInventoryDoc = Boolean(monthlyInventoryInput?.files?.[0]) || Boolean(getAccountsInventoryDoc("monthly_inventory_report"));
+    const hasAccountsReceivableDoc = Boolean(accountsReceivableInput?.files?.[0]) || Boolean(getAccountsInventoryDoc("accounts_receivable_aging"));
+    const hasAccountsPayableDoc = Boolean(accountsPayableInput?.files?.[0]) || Boolean(getAccountsInventoryDoc("accounts_payable_aging"));
+    if (!hasMonthlyInventoryDoc || !hasAccountsReceivableDoc || !hasAccountsPayableDoc) {
       submitButton.classList.add("is-error");
-      submitButton.value = "Please select at least one file to upload";
+      submitButton.value = "Please upload all required documents";
+      return;
+    }
+    if (filesToUpload.length === 0) {
+      submitButton.classList.add("is-success");
+      submitButton.value = "Saved Changes";
+      setTimeout(() => {
+        submitButton.classList.remove("is-success");
+        submitButton.value = "UPLOAD DOCUMENTS";
+        navigateToPath("/finance-docs-ecommerce-performance");
+      }, 300);
       return;
     }
     try {

@@ -494,9 +494,27 @@ const initTeamOwnershipPage = async () => {
       return;
     }
 
-    if (filesToUpload.length === 0) {
+    const hasManagementBiosDoc =
+      Boolean(managementBiosInput?.files?.[0]) || Boolean(getTeamOwnershipDoc('management_bios'));
+    const hasInvestorDeckDoc =
+      Boolean(investorDeckInput?.files?.[0]) || Boolean(getTeamOwnershipDoc('investor_deck'));
+    const hasCapTableDoc =
+      Boolean(capitalisationTableInput?.files?.[0]) || Boolean(getTeamOwnershipDoc('cap_table'));
+
+    if (!hasManagementBiosDoc || !hasInvestorDeckDoc || !hasCapTableDoc) {
       submitButton.classList.add('is-error');
-      submitButton.value = 'Please select at least one file to upload';
+      submitButton.value = 'Please upload all required documents';
+      return;
+    }
+
+    if (filesToUpload.length === 0) {
+      submitButton.classList.add('is-success');
+      submitButton.value = 'Saved Changes';
+      setTimeout(() => {
+        submitButton.classList.remove('is-success');
+        submitButton.value = 'UPLOAD DOCUMENTS';
+        navigateToPath('/invite-team-members');
+      }, 300);
       return;
     }
 

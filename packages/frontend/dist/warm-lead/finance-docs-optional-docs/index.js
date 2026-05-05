@@ -3280,8 +3280,11 @@ var initOptionalDocsPage = async () => {
       filesToUpload.push({ file: businessPlanInput.files[0], documentType: "business_plan" });
     }
     if (filesToUpload.length === 0) {
-      submitButton.classList.add("is-error");
-      submitButton.value = "Please select at least one file to upload";
+      submitButton.classList.add("is-success");
+      submitButton.value = "Skipped Optional Documents";
+      setTimeout(() => {
+        navigateToPath("/onboarding-complete");
+      }, 300);
       return;
     }
     try {

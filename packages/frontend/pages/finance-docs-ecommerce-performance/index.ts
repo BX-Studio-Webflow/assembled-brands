@@ -399,9 +399,26 @@ const initEcommercePerformancePage = async () => {
       return;
     }
 
-    if (filesToUpload.length === 0) {
+    const hasRepeatCustomersDoc =
+      Boolean(shopifyRepeatInput?.files?.[0]) ||
+      Boolean(getEcommerceDoc('shopify_repeat_customers'));
+    const hasMonthlySalesDoc =
+      Boolean(shopifyMonthlyInput?.files?.[0]) || Boolean(getEcommerceDoc('shopify_monthly_sales'));
+
+    if (!hasRepeatCustomersDoc || !hasMonthlySalesDoc) {
       submitButton.classList.add('is-error');
-      submitButton.value = 'Please select at least one file to upload';
+      submitButton.value = 'Please upload all required documents';
+      return;
+    }
+
+    if (filesToUpload.length === 0) {
+      submitButton.classList.add('is-success');
+      submitButton.value = 'Saved Changes';
+      setTimeout(() => {
+        submitButton.classList.remove('is-success');
+        submitButton.value = 'UPLOAD DOCUMENTS';
+        navigateToPath('/finance-docs-team-and-ownership');
+      }, 300);
       return;
     }
 

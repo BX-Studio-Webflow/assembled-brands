@@ -290,9 +290,25 @@ const initFinanceReportsPage = async () => {
       });
     }
 
-    if (filesToUpload.length === 0) {
+    const hasBalanceSheetDoc =
+      Boolean(balanceSheetInput.files?.[0]) ||
+      Boolean(getFinancialReportDoc('monthly_balance_sheet'));
+    const hasIncomeStatementDoc =
+      Boolean(incomeStatementInput.files?.[0]) ||
+      Boolean(getFinancialReportDoc('monthly_income_statement'));
+
+    if (!hasBalanceSheetDoc || !hasIncomeStatementDoc) {
       submitButton.classList.add('is-error');
-      submitButton.value = 'Please select at least one file to upload';
+      submitButton.value = 'Please upload all required documents';
+      return;
+    }
+
+    if (filesToUpload.length === 0) {
+      submitButton.classList.add('is-success');
+      submitButton.value = 'Saved...';
+      setTimeout(() => {
+        navigateToPath('/warm/finance-docs-forecasts');
+      }, 300);
       return;
     }
 

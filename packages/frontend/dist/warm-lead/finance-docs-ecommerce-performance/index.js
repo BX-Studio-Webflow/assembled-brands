@@ -3260,9 +3260,19 @@ var initEcommercePerformancePage = async () => {
         documentType: "shopify_first_vs_returning_customers"
       });
     }
-    if (filesToUpload.length === 0) {
+    const hasSalesOverTimeDoc = Boolean(salesOverTimeInput.files?.[0]) || Boolean(getDoc("shopify_sales_over_time"));
+    const hasFirstVsReturningDoc = Boolean(firstVsReturningInput.files?.[0]) || Boolean(getDoc("shopify_first_vs_returning_customers"));
+    if (!hasSalesOverTimeDoc || !hasFirstVsReturningDoc) {
       submitButton.classList.add("is-error");
-      submitButton.value = "Please select at least one file to upload";
+      submitButton.value = "Please upload all required documents";
+      return;
+    }
+    if (filesToUpload.length === 0) {
+      submitButton.classList.add("is-success");
+      submitButton.value = "Saved Changes";
+      setTimeout(() => {
+        navigateToPath("/warm/finance-docs-team-and-ownership");
+      }, 300);
       return;
     }
     try {

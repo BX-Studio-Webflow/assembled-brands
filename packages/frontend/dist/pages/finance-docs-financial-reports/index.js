@@ -3577,9 +3577,22 @@ var initFinanceReportsPage = async () => {
         documentType: "monthly_income_forecast"
       });
     }
-    if (filesToUpload.length === 0) {
+    const hasBalanceSheetDoc = Boolean(balanceSheetInput?.files?.[0]) || Boolean(getFinancialReportDoc("monthly_balance_sheet"));
+    const hasIncomeStatementDoc = Boolean(incomeStatementInput?.files?.[0]) || Boolean(getFinancialReportDoc("monthly_income_statement"));
+    const hasIncomeForecastDoc = Boolean(incomeForecastInput?.files?.[0]) || Boolean(getFinancialReportDoc("monthly_income_forecast"));
+    if (!hasBalanceSheetDoc || !hasIncomeStatementDoc || !hasIncomeForecastDoc) {
       submitButton.classList.add("is-error");
-      submitButton.value = "Please select at least one file to upload";
+      submitButton.value = "Please upload all required documents";
+      return;
+    }
+    if (filesToUpload.length === 0) {
+      submitButton.classList.add("is-success");
+      submitButton.value = "Saved Changes";
+      setTimeout(() => {
+        submitButton.classList.remove("is-success");
+        submitButton.value = "UPLOAD DOCUMENTS";
+        navigateToPath("/finance-docs-accounts-and-inventory");
+      }, 300);
       return;
     }
     try {

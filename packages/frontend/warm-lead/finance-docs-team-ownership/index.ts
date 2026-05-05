@@ -294,9 +294,23 @@ const initTeamOwnershipPage = async () => {
       filesToUpload.push({ file: capitalisationTableInput.files[0], documentType: 'cap_table' });
     }
 
-    if (filesToUpload.length === 0) {
+    const hasManagementBiosDoc =
+      Boolean(managementBiosInput.files?.[0]) || Boolean(getDoc('management_bios'));
+    const hasCapitalisationTableDoc =
+      Boolean(capitalisationTableInput.files?.[0]) || Boolean(getDoc('cap_table'));
+
+    if (!hasManagementBiosDoc || !hasCapitalisationTableDoc) {
       submitButton.classList.add('is-error');
-      submitButton.value = 'Please select at least one file to upload';
+      submitButton.value = 'Please upload all required documents';
+      return;
+    }
+
+    if (filesToUpload.length === 0) {
+      submitButton.classList.add('is-success');
+      submitButton.value = 'Saved Changes';
+      setTimeout(() => {
+        navigateToPath('/warm/finance-docs-optional-docs');
+      }, 300);
       return;
     }
 
