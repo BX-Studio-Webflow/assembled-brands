@@ -49,6 +49,7 @@ import {
 	onboardingStep3Validator,
 	warmLeadDetailsForUserValidator,
 	warmLeadDetailsValidator,
+	warmLeadSessionValidator,
 } from './validator/onboarding.ts';
 import { createTeamValidator, inviteMemberValidator, revokeAccessValidator, teamQueryValidator } from './validator/team.ts';
 import {
@@ -278,6 +279,7 @@ export class Server {
 		const authCheck = jwt({ secret: env.SECRET_KEY });
 
 		// Unauthenticated warm-lead submission (identified by deal_id)
+		onboardingWizard.post('/warm-lead/session', warmLeadSessionValidator, onboardingWizardCtrl.createWarmLeadSession);
 		onboardingWizard.post('/warm-lead', warmLeadDetailsValidator, onboardingWizardCtrl.submitWarmLeadDetails);
 
 		// All routes below require authentication

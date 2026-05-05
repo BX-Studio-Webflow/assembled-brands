@@ -14,6 +14,7 @@ import type {
 	OnboardingStep3Body,
 	WarmLeadDetailsBody,
 	WarmLeadDetailsForUserBody,
+	WarmLeadSessionBody,
 } from '../validator/onboarding.ts';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { serveData } from './resp/resp.js';
@@ -329,6 +330,42 @@ export class OnboardingWizardController {
 			logger.error(error);
 			if (error instanceof Error && error.message.includes('No processed deal')) {
 				return serveBadRequest(c, 'No HubSpot deal linked to this account yet. Please use your invite link first.');
+			}
+			return serveInternalServerError(c, error);
+		}
+	};
+
+	/**
+	 * Unauthenticated warm-lead session exchange.
+	 * Validates deal_id and returns a fresh auth token + user context for that deal.
+	 */
+	public createWarmLeadSession = async (c: Context) => {
+		try {
+			const body: WarmLeadSessionBody = await c.req.json();
+			const user = await this.service.getWarmLeadUserByDealId(body.deal_id);
+
+			const [token, serializedUser, financialWizardProgress, onboardingProgress, teams] = await Promise.all([
+				encode(user.id, user.email),
+				serializeUser(user),
+				this.financialWizardService.getProgress(user.id),
+				this.service.getProgress(user.id),
+				this.teamService.getUserTeams(user.id),
+			]);
+
+			return c.json({
+				token,
+				user: serializedUser,
+				financialWizardProgress,
+				onboardingProgress,
+				teams,
+			});
+		} catch (error) {
+			logger.error(error);
+			if (error instanceof Error && error.message.includes('No processed deal')) {
+				return serveBadRequest(c, 'Deal not found or not yet processed. Please try again shortly.');
+			}
+			if (error instanceof Error && error.message.includes('no associated user')) {
+				return serveBadRequest(c, 'No account linked to this deal yet. Please wait for your invite email.');
 			}
 			return serveInternalServerError(c, error);
 		}

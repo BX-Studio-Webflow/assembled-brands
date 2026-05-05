@@ -401,6 +401,21 @@ export class OnboardingWizardService {
 		});
 	}
 
+	public async getWarmLeadUserByDealId(dealId: number): Promise<User> {
+		const dealRow = await this.hubSpotService.findProcessedDealByObjectId(dealId);
+		if (!dealRow) {
+			throw new Error(`No processed deal found for deal_id ${dealId}`);
+		}
+		if (!dealRow.user_id) {
+			throw new Error(`Deal ${dealId} has no associated user yet`);
+		}
+		const user = await this.userService.find(dealRow.user_id);
+		if (!user) {
+			throw new Error(`No user found for deal ${dealId}`);
+		}
+		return user;
+	}
+
 	/**
 	 * Deletes an application
 	 * @param {number} id - ID of the application to delete
