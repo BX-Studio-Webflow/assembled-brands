@@ -28,7 +28,7 @@ export class FinancialWizardService {
 	private hubSpotService: HubSpotService;
 	private static readonly HUBSPOT_STAGE_MEETING_BOOKED = '1022121848';
 	private static readonly HUBSPOT_STAGE_PACKAGE_RECEIVED = 'cca1d0b8-397f-4309-b87e-7a663f2a78bc';
-	private static readonly OPTIONAL_DOC_TYPES: NewFinancialDocument['document_type'][] = ['instore_velocity_reports', 'business_plan'];
+	private static readonly TEAM_OWNERSHIP_REQUIRED_DOC_TYPES: NewFinancialDocument['document_type'][] = ['management_bios', 'cap_table'];
 
 	constructor(repo: FinancialWizardRepository, assetService: AssetService, hubSpotService: HubSpotService) {
 		this.repo = repo;
@@ -164,7 +164,7 @@ export class FinancialWizardService {
 			}
 
 			try {
-				await this.syncHubSpotDealStageAfterUpload(userId, documentType, hadExistingDocuments);
+				await this.syncHubSpotDealStageAfterUpload(userId, application.id, documentType, hadExistingDocuments);
 			} catch (error) {
 				logger.error({ error, userId, documentType }, 'Failed to sync HubSpot deal stage after document upload');
 			}
@@ -178,6 +178,7 @@ export class FinancialWizardService {
 
 	private async syncHubSpotDealStageAfterUpload(
 		userId: number,
+		applicationId: number,
 		documentType: NewFinancialDocument['document_type'],
 		hadExistingDocuments: boolean,
 	): Promise<void> {
@@ -186,9 +187,16 @@ export class FinancialWizardService {
 			return;
 		}
 
-		if (FinancialWizardService.OPTIONAL_DOC_TYPES.includes(documentType)) {
-			await this.hubSpotService.updateDealStage(dealRow.object_id, FinancialWizardService.HUBSPOT_STAGE_PACKAGE_RECEIVED);
-			return;
+		const isTeamOwnershipRequiredDoc = FinancialWizardService.TEAM_OWNERSHIP_REQUIRED_DOC_TYPES.includes(documentType);
+		if (isTeamOwnershipRequiredDoc) {
+			const [managementBios, capTable] = await Promise.all([
+				this.repo.findCurrentDocumentByType(applicationId, 'management_bios'),
+				this.repo.findCurrentDocumentByType(applicationId, 'cap_table'),
+			]);
+			if (managementBios && capTable) {
+				await this.hubSpotService.updateDealStage(dealRow.object_id, FinancialWizardService.HUBSPOT_STAGE_PACKAGE_RECEIVED);
+				return;
+			}
 		}
 
 		if (!hadExistingDocuments) {
@@ -471,9 +479,11 @@ export class FinancialWizardService {
 			| 'company-profile'
 			| 'financial-overview'
 			| 'financial-reports'
+			| 'forecasts'
 			| 'accounts-inventory'
 			| 'ecommerce-performance'
 			| 'team-ownership'
+			| 'optional-docs'
 			| 'legal'
 			| 'due-diligence'
 			| 'financial-screener',

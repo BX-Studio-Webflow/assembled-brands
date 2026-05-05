@@ -48,6 +48,34 @@ export class FinancialWizardController {
 	}
 
 	/**
+	 * Resolves which Google Drive folder page should receive a document.
+	 * Keeps DB page semantics unchanged while allowing warm-lead specific folders.
+	 */
+	private getDriveFolderPage(
+		page: FinancialDocumentBody['page'],
+		documentType: FinancialDocumentBody['document_type'],
+	):
+		| 'company-profile'
+		| 'financial-overview'
+		| 'financial-reports'
+		| 'forecasts'
+		| 'accounts-inventory'
+		| 'ecommerce-performance'
+		| 'team-ownership'
+		| 'optional-docs'
+		| 'legal'
+		| 'due-diligence'
+		| 'financial-screener' {
+		if (documentType === 'income_statement_forecast' || documentType === 'balance_sheet_full_year_forecast') {
+			return 'forecasts';
+		}
+		if (documentType === 'instore_velocity_reports' || documentType === 'business_plan') {
+			return 'optional-docs';
+		}
+		return page;
+	}
+
+	/**
 	 * Saves Financial Overview
 	 * @param {Context} c - The Hono context containing financial overview data
 	 * @returns {Promise<Response>} Response containing saved overview data
@@ -101,7 +129,8 @@ export class FinancialWizardController {
 				return serveBadRequest(c, 'Business not found for user');
 			}
 
-			const folder = await this.service.findFolderIDByPageAndBusiness(page, business.id);
+			const folderPage = this.getDriveFolderPage(page, document_type);
+			const folder = await this.service.findFolderIDByPageAndBusiness(folderPage, business.id);
 
 			const structuredName = `${document_type}-${page}-${Date.now()}-${file_name}`;
 

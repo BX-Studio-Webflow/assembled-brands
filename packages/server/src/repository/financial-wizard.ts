@@ -248,9 +248,11 @@ export class FinancialWizardRepository {
 			| 'company-profile'
 			| 'financial-overview'
 			| 'financial-reports'
+			| 'forecasts'
 			| 'accounts-inventory'
 			| 'ecommerce-performance'
 			| 'team-ownership'
+			| 'optional-docs'
 			| 'legal'
 			| 'due-diligence'
 			| 'financial-screener',

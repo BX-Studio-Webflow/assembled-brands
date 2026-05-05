@@ -2765,9 +2765,28 @@ var initWarmLeadOnboardingPage = async () => {
     console.error('Warm-lead onboarding form not found: [dev-target="onboarding-form"]');
     return;
   }
-  const isLoggedIn = getCookie("accessToken");
+  let isLoggedIn = Boolean(getCookie("accessToken"));
   const dealIdParam = new URLSearchParams(window.location.search).get("deal_id");
-  const dealId = dealIdParam ? parseInt(dealIdParam, 10) : null;
+  const urlDealId = dealIdParam ? parseInt(dealIdParam, 10) : null;
+  const hasValidUrlDealId = Number.isInteger(urlDealId) && urlDealId > 0;
+  const dealId = hasValidUrlDealId ? urlDealId : null;
+  const exchangeWarmLeadSession = async () => {
+    if (!dealId) return;
+    try {
+      const response = await ApiService_default.fetchDataWithAxios({
+        url: "/onboarding-wizard/warm-lead/session",
+        method: "post",
+        data: { deal_id: dealId }
+      });
+      setCookie("accessToken", response.token, 10);
+      localStorage.setItem("user", JSON.stringify(response.user));
+      localStorage.removeItem("x-team-id");
+      isLoggedIn = true;
+    } catch (error) {
+      console.error("Failed to initialize warm-lead session:", error);
+    }
+  };
+  await exchangeWarmLeadSession();
   const submitButton = queryElement('[dev-target="submit-button"]', form);
   const backButton = queryElement('[dev-target="back-button"]', form);
   const legalName = queryElement('[dev-target="legal-name-input"]', form);

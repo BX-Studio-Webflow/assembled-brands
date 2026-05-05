@@ -168,9 +168,11 @@ export class BusinessService {
 				//create all needed drive folders and store in advance
 				const pages = [
 					'financial-reports',
+					'forecasts',
 					'accounts-inventory',
 					'ecommerce-performance',
 					'team-ownership',
+					'optional-docs',
 					'legal',
 					'due-diligence',
 					'financial-screener',
