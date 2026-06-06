@@ -12,25 +12,38 @@ function validateBase64Size(base64String: string): boolean {
 	return sizeInBytes <= MAX_LOGO_SIZE;
 }
 
-const businessSchema = z.object({
-	legal_name: z.string().min(1),
-	headquarters: z.string().optional(),
-	year_formed: z.string().optional(),
-	accounting_software: z.enum(['quickbooks', 'quickbooks-online', 'netsuite', 'other', 'acumatica']),
-	other_accounting_software: z.string().optional(),
-	description: z.string().optional(),
-	logo: z
-		.string()
-		.regex(base64ImageRegex, { message: 'Invalid image format' })
-		.refine(validateBase64Size, { message: 'Logo size must be less than 10MB' })
-		.or(z.string().url())
-		.optional(),
-	logoFileName: z.string().optional(),
-	banner: z.string().optional(),
-	user_id: z.number().optional(),
-	imageBase64: z.string().nullable().optional(),
-	fileName: z.string().nullable().optional(),
-});
+const businessSchema = z
+	.object({
+		legal_name: z.string().min(1),
+		headquarters: z.string().optional(),
+		inventory_location: z.enum(['US-CA', 'International']).optional(),
+		international_location: z.string().optional(),
+		raised_external_equity: z.enum(['yes', 'no']).optional(),
+		year_formed: z.string().optional(),
+		accounting_software: z.enum(['quickbooks', 'quickbooks-online', 'netsuite', 'other', 'acumatica']),
+		other_accounting_software: z.string().optional(),
+		description: z.string().optional(),
+		logo: z
+			.string()
+			.regex(base64ImageRegex, { message: 'Invalid image format' })
+			.refine(validateBase64Size, { message: 'Logo size must be less than 10MB' })
+			.or(z.string().url())
+			.optional(),
+		logoFileName: z.string().optional(),
+		banner: z.string().optional(),
+		user_id: z.number().optional(),
+		imageBase64: z.string().nullable().optional(),
+		fileName: z.string().nullable().optional(),
+	})
+	.superRefine((data, ctx) => {
+		if (data.inventory_location === 'International' && !data.international_location?.trim()) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: 'City and country are required for international inventory locations',
+				path: ['international_location'],
+			});
+		}
+	});
 
 export const businessValidator = zValidator('json', businessSchema);
 const businessQuerySchema = z.object({

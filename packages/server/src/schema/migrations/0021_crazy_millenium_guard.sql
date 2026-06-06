@@ -1,0 +1,1 @@
+ALTER TABLE `businesses` ADD `raised_external_equity` text;

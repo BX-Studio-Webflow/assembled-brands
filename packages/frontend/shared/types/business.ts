@@ -10,6 +10,9 @@ export interface Business {
   accounting_software: string;
   other_accounting_software: string;
   headquarters: string;
+  inventory_location: 'US-CA' | 'International' | null;
+  international_location: string | null;
+  raised_external_equity: 'yes' | 'no' | null;
   logo: string;
   logo_asset_id: number;
   created_at: string;
@@ -29,6 +32,9 @@ export interface UpdateBusinessRequest extends Record<string, unknown> {
   year_formed: string;
   accounting_software: string;
   other_accounting_software: string;
+  inventory_location?: 'US-CA' | 'International';
+  international_location?: string;
+  raised_external_equity?: 'yes' | 'no';
 }
 
 export interface UploadBusinessLogoRequest {

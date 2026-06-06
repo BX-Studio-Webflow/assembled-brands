@@ -1,10 +1,12 @@
 import type { AxiosError } from 'axios';
 import { apiCreateAssetPresignedUrl } from 'shared/services/AssetService';
+import { apiUpdateBusiness } from 'shared/services/BusinessService';
 import {
   apiDeleteFinancialDocument,
   apiUploadFinancialDocument,
 } from 'shared/services/FinancialWizardService';
 import type { CreateAssetBody } from 'shared/types/asset';
+import type { UpdateBusinessRequest } from 'shared/types/business';
 import type {
   FinancialDocumentBody,
   FinancialWizardProgressResponse,
@@ -44,6 +46,26 @@ const DOC_RULES: Record<
   },
 };
 
+type RaisedExternalEquity = NonNullable<UpdateBusinessRequest['raised_external_equity']>;
+
+const getBusinessProfile = (progress: FinancialWizardProgressResponse | undefined) =>
+  progress?.company_profile ?? progress?.business ?? null;
+
+const buildBusinessUpdatePayload = (
+  profile: NonNullable<ReturnType<typeof getBusinessProfile>>,
+  raisedExternalEquity: RaisedExternalEquity
+): UpdateBusinessRequest => ({
+  legal_name: profile.legal_name,
+  headquarters: profile.headquarters ?? '',
+  description: profile.description ?? '',
+  year_formed: profile.year_formed ?? '',
+  accounting_software: profile.accounting_software || 'other',
+  other_accounting_software: profile.other_accounting_software ?? '',
+  inventory_location: profile.inventory_location ?? undefined,
+  international_location: profile.international_location ?? '',
+  raised_external_equity: raisedExternalEquity,
+});
+
 const initTeamOwnershipPage = async () => {
   constructNavBarClasses();
   processMiddleware();
@@ -82,11 +104,18 @@ const initTeamOwnershipPage = async () => {
   );
 
   const submitButton = queryElement<HTMLInputElement>('[dev-target="submit-button"]', form);
+  const raisedExternalEquitySelect = queryElement<HTMLSelectElement>(
+    'select[dev-target="company-raised-equity"]',
+    form
+  );
+  const capTableWrapper = queryElement<HTMLElement>('[dev-target="cap-wrapper"]', form);
 
   const requiredElements: [string, unknown][] = [
     ['[dev-target="management-bios-upload-box"]', managementBiosBox],
     ['[dev-target="file-input"] inside management-bios-upload-box', managementBiosInput],
     ['[dev-target="management-bios-helper"]', managementBiosHelpText],
+    ['select[dev-target="company-raised-equity"]', raisedExternalEquitySelect],
+    ['[dev-target="cap-wrapper"]', capTableWrapper],
     ['[dev-target="capitalisation-table-upload-box"]', capitalisationTableBox],
     ['[dev-target="file-input"] inside capitalisation-table-upload-box', capitalisationTableInput],
     ['[dev-target="capitalisation-table-helper"]', capitalisationTableHelpText],
@@ -104,6 +133,8 @@ const initTeamOwnershipPage = async () => {
     !managementBiosBox ||
     !managementBiosInput ||
     !managementBiosHelpText ||
+    !raisedExternalEquitySelect ||
+    !capTableWrapper ||
     !capitalisationTableBox ||
     !capitalisationTableInput ||
     !capitalisationTableHelpText ||
@@ -111,6 +142,47 @@ const initTeamOwnershipPage = async () => {
   ) {
     return;
   }
+
+  const requiresCapTable = () => raisedExternalEquitySelect.value === 'yes';
+
+  const toggleCapTableSection = () => {
+    capTableWrapper.classList.toggle('hide', !requiresCapTable());
+  };
+
+  const updateFundingHistoryFields = (progress: FinancialWizardProgressResponse | undefined) => {
+    const profile = getBusinessProfile(progress);
+    if (profile?.raised_external_equity) {
+      raisedExternalEquitySelect.value = profile.raised_external_equity;
+    }
+    raisedExternalEquitySelect.dispatchEvent(new Event('change', { bubbles: true }));
+    toggleCapTableSection();
+  };
+
+  raisedExternalEquitySelect.addEventListener('change', toggleCapTableSection);
+  toggleCapTableSection();
+
+  const getRaisedExternalEquityValue = (): RaisedExternalEquity | null => {
+    raisedExternalEquitySelect.classList.remove('is-error');
+    if (!raisedExternalEquitySelect.value) {
+      raisedExternalEquitySelect.classList.add('is-error');
+      return null;
+    }
+    return raisedExternalEquitySelect.value as RaisedExternalEquity;
+  };
+
+  const saveFundingHistory = async () => {
+    const raisedExternalEquity = getRaisedExternalEquityValue();
+    if (!raisedExternalEquity) {
+      throw new Error('Please select whether your company has raised external equity capital');
+    }
+
+    const profile = getBusinessProfile(financialProgress);
+    if (!profile?.legal_name) {
+      throw new Error('Business profile not found');
+    }
+
+    await apiUpdateBusiness(buildBusinessUpdatePayload(profile, raisedExternalEquity));
+  };
 
   const updateHelperTexts = (progress: FinancialWizardProgressResponse | undefined) => {
     managementBiosHelpText.textContent =
@@ -126,6 +198,7 @@ const initTeamOwnershipPage = async () => {
     const result = await checkProgressUserAndTeams();
     financialProgress = result?.financialProgress;
     updateHelperTexts(financialProgress);
+    updateFundingHistoryFields(financialProgress);
   };
 
   const getDoc = (documentType: FinancialDocumentBody['document_type']) =>
@@ -290,33 +363,56 @@ const initTeamOwnershipPage = async () => {
       filesToUpload.push({ file: managementBiosInput.files[0], documentType: 'management_bios' });
     }
 
-    if (capitalisationTableInput.files?.[0]) {
+    if (requiresCapTable() && capitalisationTableInput.files?.[0]) {
       filesToUpload.push({ file: capitalisationTableInput.files[0], documentType: 'cap_table' });
+    }
+
+    const raisedExternalEquity = getRaisedExternalEquityValue();
+    if (!raisedExternalEquity) {
+      submitButton.classList.add('is-error');
+      submitButton.value = 'Please select whether your company has raised external equity capital';
+      return;
     }
 
     const hasManagementBiosDoc =
       Boolean(managementBiosInput.files?.[0]) || Boolean(getDoc('management_bios'));
     const hasCapitalisationTableDoc =
       Boolean(capitalisationTableInput.files?.[0]) || Boolean(getDoc('cap_table'));
+    const capTableRequired = raisedExternalEquity === 'yes';
 
-    if (!hasManagementBiosDoc || !hasCapitalisationTableDoc) {
+    if (!hasManagementBiosDoc || (capTableRequired && !hasCapitalisationTableDoc)) {
       submitButton.classList.add('is-error');
-      submitButton.value = 'Please upload all required documents';
+      submitButton.value = capTableRequired
+        ? 'Please upload all required documents'
+        : 'Please upload your management bios';
       return;
     }
 
     if (filesToUpload.length === 0) {
-      submitButton.classList.add('is-success');
-      submitButton.value = 'Saved Changes';
-      setTimeout(() => {
-        navigateToPath('/warm/finance-docs-optional-docs');
-      }, 300);
+      try {
+        submitButton.disabled = true;
+        submitButton.value = 'Saving...';
+        await saveFundingHistory();
+        submitButton.classList.add('is-success');
+        submitButton.value = 'Saved Changes';
+        setTimeout(() => {
+          navigateToPath('/warm/finance-docs-optional-docs');
+        }, 300);
+      } catch (error) {
+        const { message } = error as AxiosError;
+        console.error(error);
+        submitButton.classList.add('is-error');
+        submitButton.value = message || 'There was a problem saving your funding history';
+        submitButton.disabled = false;
+      }
       return;
     }
 
     try {
       submitButton.disabled = true;
       submitButton.value = 'Uploading...';
+
+      await saveFundingHistory();
 
       await Promise.all(
         filesToUpload.map(({ file, documentType }) => uploadFile(file, documentType))

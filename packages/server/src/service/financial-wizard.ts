@@ -189,11 +189,13 @@ export class FinancialWizardService {
 
 		const isTeamOwnershipRequiredDoc = FinancialWizardService.TEAM_OWNERSHIP_REQUIRED_DOC_TYPES.includes(documentType);
 		if (isTeamOwnershipRequiredDoc) {
-			const [managementBios, capTable] = await Promise.all([
+			const [managementBios, capTable, business] = await Promise.all([
 				this.repo.findCurrentDocumentByType(applicationId, 'management_bios'),
 				this.repo.findCurrentDocumentByType(applicationId, 'cap_table'),
+				this.repo.findBusinessByUserId(userId),
 			]);
-			if (managementBios && capTable) {
+			const requiresCapTable = business?.raised_external_equity !== 'no';
+			if (managementBios && (!requiresCapTable || capTable)) {
 				await this.hubSpotService.updateDealStage(dealRow.object_id, FinancialWizardService.HUBSPOT_STAGE_PACKAGE_RECEIVED);
 				return;
 			}

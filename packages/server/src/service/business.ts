@@ -154,6 +154,9 @@ export class BusinessService {
 
 			const businessData = {
 				...business,
+				...(business.inventory_location !== undefined && {
+					international_location: business.inventory_location === 'International' ? business.international_location?.trim() || null : null,
+				}),
 				logo_asset_id: logoAssetId,
 				user_id: userId,
 			};

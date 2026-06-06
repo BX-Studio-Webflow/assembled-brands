@@ -49,6 +49,13 @@ export const businessSchema = sqliteTable('businesses', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	legal_name: text('legal_name').notNull(),
 	headquarters: text('headquarters'),
+	inventory_location: text('inventory_location', {
+		enum: ['US-CA', 'International'],
+	}),
+	international_location: text('international_location'),
+	raised_external_equity: text('raised_external_equity', {
+		enum: ['yes', 'no'],
+	}),
 	year_formed: text('year_formed'),
 	accounting_software: text('accounting_software'),
 	other_accounting_software: text('other_accounting_software'),

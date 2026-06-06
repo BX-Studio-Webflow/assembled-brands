@@ -1,10 +1,12 @@
 import type { AxiosError } from 'axios';
 import { apiCreateAssetPresignedUrl } from 'shared/services/AssetService';
+import { apiUpdateBusiness } from 'shared/services/BusinessService';
 import {
   apiDeleteFinancialDocument,
   apiUploadFinancialDocument,
 } from 'shared/services/FinancialWizardService';
 import type { CreateAssetBody } from 'shared/types/asset';
+import type { UpdateBusinessRequest } from 'shared/types/business';
 import type {
   FinancialDocumentBody,
   FinancialWizardProgressResponse,
@@ -24,6 +26,31 @@ const ALLOWED_FILE_TYPES = [
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ];
+
+type InventoryLocation = NonNullable<UpdateBusinessRequest['inventory_location']>;
+
+const getBusinessProfile = (progress: FinancialWizardProgressResponse | undefined) =>
+  progress?.company_profile ?? progress?.business ?? null;
+
+const buildBusinessUpdatePayload = (
+  profile: NonNullable<ReturnType<typeof getBusinessProfile>>,
+  inventory: {
+    inventory_location: InventoryLocation;
+    international_location?: string;
+  }
+): UpdateBusinessRequest => ({
+  legal_name: profile.legal_name,
+  headquarters: profile.headquarters ?? '',
+  description: profile.description ?? '',
+  year_formed: profile.year_formed ?? '',
+  accounting_software: profile.accounting_software || 'other',
+  other_accounting_software: profile.other_accounting_software ?? '',
+  inventory_location: inventory.inventory_location,
+  international_location:
+    inventory.inventory_location === 'International'
+      ? (inventory.international_location ?? '')
+      : '',
+});
 
 const initFinanceDocsAccountsInventoryPage = async () => {
   constructNavBarClasses();
@@ -78,6 +105,17 @@ const initFinanceDocsAccountsInventoryPage = async () => {
   );
 
   const submitButton = queryElement<HTMLInputElement>('[dev-target="submit-button"]', form);
+  const inventoryLocationSelect = queryElement<HTMLSelectElement>(
+    'select[dev-target="company-hq"]',
+    form
+  );
+  const internationalLocationInput = queryElement<HTMLInputElement>(
+    '[dev-target="international-location-input"]',
+    form
+  );
+  const internationalLocationWrapper = internationalLocationInput?.closest(
+    '.input-onboarding_wrapper'
+  );
 
   const requiredElements: [string, unknown][] = [
     ['[dev-target="monthly-inventory-upload-box"]', monthlyInventoryBox],
@@ -89,6 +127,8 @@ const initFinanceDocsAccountsInventoryPage = async () => {
     ['[dev-target="accounts-payable-upload-box"]', accountsPayableBox],
     ['[dev-target="file-input"] inside accounts-payable-upload-box', accountsPayableInput],
     ['[dev-target="accounts-payable-helper"]', accountsPayableHelpText],
+    ['select[dev-target="company-hq"]', inventoryLocationSelect],
+    ['[dev-target="international-location-input"]', internationalLocationInput],
     ['[dev-target="submit-button"]', submitButton],
   ];
   let missingElements = false;
@@ -109,10 +149,84 @@ const initFinanceDocsAccountsInventoryPage = async () => {
     !accountsPayableBox ||
     !accountsPayableInput ||
     !accountsPayableHelpText ||
+    !inventoryLocationSelect ||
+    !internationalLocationInput ||
     !submitButton
   ) {
     return;
   }
+
+  const isInternationalInventoryLocation = () => inventoryLocationSelect.value === 'International';
+
+  const toggleInternationalLocationField = () => {
+    const showInternationalField = isInternationalInventoryLocation();
+    internationalLocationWrapper?.classList.toggle('hide', !showInternationalField);
+    internationalLocationInput.required = showInternationalField;
+    if (!showInternationalField) {
+      internationalLocationInput.classList.remove('is-error');
+    }
+  };
+
+  const updateInventoryLocationFields = (progress: FinancialWizardProgressResponse | undefined) => {
+    const profile = getBusinessProfile(progress);
+    if (profile?.inventory_location) {
+      inventoryLocationSelect.value = profile.inventory_location;
+    }
+    if (profile?.international_location) {
+      internationalLocationInput.value = profile.international_location;
+    }
+    inventoryLocationSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    toggleInternationalLocationField();
+  };
+
+  inventoryLocationSelect.addEventListener('change', toggleInternationalLocationField);
+  internationalLocationInput.addEventListener('input', () => {
+    internationalLocationInput.classList.remove('is-error');
+  });
+  toggleInternationalLocationField();
+
+  const getInventoryLocationPayload = (): {
+    inventory_location: InventoryLocation;
+    international_location?: string;
+  } | null => {
+    inventoryLocationSelect.classList.remove('is-error');
+    internationalLocationInput.classList.remove('is-error');
+
+    if (!inventoryLocationSelect.value) {
+      inventoryLocationSelect.classList.add('is-error');
+      return null;
+    }
+
+    if (isInternationalInventoryLocation() && !internationalLocationInput.value.trim()) {
+      internationalLocationInput.classList.add('is-error');
+      return null;
+    }
+
+    return {
+      inventory_location: inventoryLocationSelect.value as InventoryLocation,
+      international_location: isInternationalInventoryLocation()
+        ? internationalLocationInput.value.trim()
+        : undefined,
+    };
+  };
+
+  const saveInventoryLocation = async () => {
+    const inventoryPayload = getInventoryLocationPayload();
+    if (!inventoryPayload) {
+      throw new Error(
+        isInternationalInventoryLocation()
+          ? 'Please specify the city and country'
+          : 'Please select an inventory location'
+      );
+    }
+
+    const profile = getBusinessProfile(financialProgress);
+    if (!profile?.legal_name) {
+      throw new Error('Business profile not found');
+    }
+
+    await apiUpdateBusiness(buildBusinessUpdatePayload(profile, inventoryPayload));
+  };
 
   // --- Progress helpers ---
 
@@ -134,6 +248,7 @@ const initFinanceDocsAccountsInventoryPage = async () => {
     const result = await checkProgressUserAndTeams();
     financialProgress = result?.financialProgress;
     updateHelperTexts(financialProgress);
+    updateInventoryLocationFields(financialProgress);
   };
 
   const getDoc = (documentType: FinancialDocumentBody['document_type']) =>
@@ -312,18 +427,40 @@ const initFinanceDocsAccountsInventoryPage = async () => {
       return;
     }
 
+    const inventoryPayload = getInventoryLocationPayload();
+    if (!inventoryPayload) {
+      submitButton.classList.add('is-error');
+      submitButton.value = isInternationalInventoryLocation()
+        ? 'Please specify the city and country'
+        : 'Please select an inventory location';
+      return;
+    }
+
     if (filesToUpload.length === 0) {
-      submitButton.classList.add('is-success');
-      submitButton.value = 'Saved Changes';
-      setTimeout(() => {
-        navigateToPath('/warm/finance-docs-ecommerce-performance');
-      }, 300);
+      try {
+        submitButton.disabled = true;
+        submitButton.value = 'Saving...';
+        await saveInventoryLocation();
+        submitButton.classList.add('is-success');
+        submitButton.value = 'Saved Changes';
+        setTimeout(() => {
+          navigateToPath('/warm/finance-docs-ecommerce-performance');
+        }, 300);
+      } catch (error) {
+        const { message } = error as AxiosError;
+        console.error(error);
+        submitButton.classList.add('is-error');
+        submitButton.value = message || 'There was a problem saving your inventory location';
+        submitButton.disabled = false;
+      }
       return;
     }
 
     try {
       submitButton.disabled = true;
       submitButton.value = 'Uploading…';
+
+      await saveInventoryLocation();
 
       await Promise.all(
         filesToUpload.map(({ file, documentType }) => uploadFile(file, documentType))
