@@ -513,7 +513,7 @@ const initTeamOwnershipPage = async () => {
       setTimeout(() => {
         submitButton.classList.remove('is-success');
         submitButton.value = 'UPLOAD DOCUMENTS';
-        navigateToPath('/invite-team-members');
+        navigateToPath('/thank-you', { useRootPath: true });
       }, 300);
       return;
     }
@@ -553,7 +553,7 @@ const initTeamOwnershipPage = async () => {
         submitButton.classList.remove('is-success');
         submitButton.value = 'UPLOAD DOCUMENTS';
         submitButton.disabled = false;
-        navigateToPath('/invite-team-members');
+        navigateToPath('/thank-you', { useRootPath: true });
       }, 900);
     } catch (error) {
       const { message } = error as AxiosError;

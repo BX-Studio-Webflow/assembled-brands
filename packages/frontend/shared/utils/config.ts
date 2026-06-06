@@ -15,7 +15,11 @@ export const appConfig = {
   REQUEST_HEADER_AUTH_KEY: 'Authorization',
 };
 
-export const navigateToPath = (path: string) => {
+type NavigateToPathOptions = {
+  useRootPath?: boolean;
+};
+
+export const navigateToPath = (path: string, options?: NavigateToPathOptions) => {
   if (!path) {
     console.error('navigateToPath: path is empty or undefined');
     return;
@@ -35,7 +39,9 @@ export const navigateToPath = (path: string) => {
   if (!skipDevMode && (devMode === 'local' || devMode === 'remote-dev')) {
     finalPath = `dev/${normalizedPath}`;
   }*/
-  finalPath = `dev/${normalizedPath}`;
+  if (!options?.useRootPath) {
+    finalPath = `dev/${normalizedPath}`;
+  }
 
   // Prepend the current origin to always stay on the same domain
   const newUrl = `${window.location.origin}/${finalPath}`;
