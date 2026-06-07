@@ -3086,6 +3086,48 @@ var constructNavBarClasses = () => {
     });
   }
 };
+var WARM_LEAD_MIME = {
+  pdf: "application/pdf",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+};
+var WARM_LEAD_EXCEL_MIME_TYPES = [WARM_LEAD_MIME.xls, WARM_LEAD_MIME.xlsx];
+var WARM_LEAD_EXCEL_ACCEPT = ".xls,.xlsx";
+var WARM_LEAD_EXCEL_FORMAT_LABEL = "Allowed file formats: EXCEL";
+var WARM_LEAD_EXCEL_INVALID_MESSAGE = "Invalid file type. Allowed file formats: EXCEL";
+var WARM_LEAD_TEAM_LEADERSHIP_MIME_TYPES = [
+  WARM_LEAD_MIME.pdf,
+  WARM_LEAD_MIME.ppt,
+  WARM_LEAD_MIME.pptx,
+  WARM_LEAD_MIME.doc,
+  WARM_LEAD_MIME.docx,
+  WARM_LEAD_MIME.xls,
+  WARM_LEAD_MIME.xlsx
+];
+var WARM_LEAD_INSTORE_VELOCITY_MIME_TYPES = [
+  WARM_LEAD_MIME.xlsx,
+  WARM_LEAD_MIME.xls,
+  WARM_LEAD_MIME.pdf,
+  WARM_LEAD_MIME.docx
+];
+var WARM_LEAD_BUSINESS_PLAN_MIME_TYPES = [
+  WARM_LEAD_MIME.pdf,
+  WARM_LEAD_MIME.docx,
+  WARM_LEAD_MIME.pptx
+];
+var WARM_LEAD_INTERNATIONAL_LOCATION_PLACEHOLDER = "London, UK or Shanghai, China";
+var configureWarmLeadExcelFileInput = (input) => {
+  input.accept = WARM_LEAD_EXCEL_ACCEPT;
+};
+var configureWarmLeadExcelFileInputs = (...inputs) => {
+  for (const input of inputs) {
+    configureWarmLeadExcelFileInput(input);
+  }
+};
 var fileToBase64 = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();
   reader.onload = () => {
@@ -3164,10 +3206,7 @@ var initCollapsibleSidebar = () => {
 };
 
 // warm-lead/finance-docs-accounts-inventory/index.ts
-var ALLOWED_FILE_TYPES = [
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-];
+var ALLOWED_FILE_TYPES = [...WARM_LEAD_EXCEL_MIME_TYPES];
 var getBusinessProfile = (progress) => progress?.company_profile ?? progress?.business ?? null;
 var buildBusinessUpdatePayload = (profile, inventory) => ({
   legal_name: profile.legal_name,
@@ -3262,6 +3301,12 @@ var initFinanceDocsAccountsInventoryPage = async () => {
   if (missingElements || !monthlyInventoryBox || !monthlyInventoryInput || !monthlyInventoryHelpText || !accountsReceivableBox || !accountsReceivableInput || !accountsReceivableHelpText || !accountsPayableBox || !accountsPayableInput || !accountsPayableHelpText || !inventoryLocationSelect || !internationalLocationInput || !submitButton) {
     return;
   }
+  configureWarmLeadExcelFileInputs(
+    monthlyInventoryInput,
+    accountsReceivableInput,
+    accountsPayableInput
+  );
+  internationalLocationInput.placeholder = WARM_LEAD_INTERNATIONAL_LOCATION_PLACEHOLDER;
   const isInternationalInventoryLocation = () => inventoryLocationSelect.value === "International";
   const toggleInternationalLocationField = () => {
     const showInternationalField = isInternationalInventoryLocation();
@@ -3317,7 +3362,7 @@ var initFinanceDocsAccountsInventoryPage = async () => {
     await apiUpdateBusiness(buildBusinessUpdatePayload(profile, inventoryPayload));
   };
   const updateHelperTexts = (progress) => {
-    const placeholder = "Supported formats: sheets, excel";
+    const placeholder = WARM_LEAD_EXCEL_FORMAT_LABEL;
     monthlyInventoryHelpText.textContent = progress?.accounts_inventory?.find((d) => d.document_type === "monthly_inventory_report")?.asset_name || placeholder;
     accountsReceivableHelpText.textContent = progress?.accounts_inventory?.find((d) => d.document_type === "accounts_receivable_aging")?.asset_name || placeholder;
     accountsPayableHelpText.textContent = progress?.accounts_inventory?.find((d) => d.document_type === "accounts_payable_aging")?.asset_name || placeholder;
@@ -3335,7 +3380,7 @@ var initFinanceDocsAccountsInventoryPage = async () => {
     const file = input.files?.[0];
     if (!file) return;
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      helperText.textContent = "Invalid file type. Please upload Excel (.xls or .xlsx) files only";
+      helperText.textContent = WARM_LEAD_EXCEL_INVALID_MESSAGE;
       helperText.classList.add("is-error");
     } else {
       helperText.textContent = file.name;
@@ -3366,7 +3411,7 @@ var initFinanceDocsAccountsInventoryPage = async () => {
   const handleDeleteDocument = async (documentType, helperText) => {
     const doc = getDoc(documentType);
     if (!doc) {
-      helperText.textContent = "Supported formats: sheets, excel";
+      helperText.textContent = WARM_LEAD_EXCEL_FORMAT_LABEL;
       helperText.classList.remove("is-error");
       return;
     }

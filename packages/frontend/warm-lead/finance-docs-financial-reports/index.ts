@@ -14,16 +14,17 @@ import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
 import {
   checkProgressUserAndTeams,
+  configureWarmLeadExcelFileInputs,
   constructNavBarClasses,
   fileToBase64,
   initCollapsibleSidebar,
+  WARM_LEAD_EXCEL_FORMAT_LABEL,
+  WARM_LEAD_EXCEL_INVALID_MESSAGE,
+  WARM_LEAD_EXCEL_MIME_TYPES,
 } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
-const ALLOWED_FILE_TYPES = [
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-];
+const ALLOWED_FILE_TYPES: string[] = [...WARM_LEAD_EXCEL_MIME_TYPES];
 
 const initFinanceReportsPage = async () => {
   constructNavBarClasses();
@@ -93,10 +94,12 @@ const initFinanceReportsPage = async () => {
     return;
   }
 
+  configureWarmLeadExcelFileInputs(balanceSheetInput, incomeStatementInput);
+
   // --- Progress helpers ---
 
   const updateHelperTexts = (progress: FinancialWizardProgressResponse | undefined) => {
-    const placeholder = 'Supported formats: sheets, excel';
+    const placeholder = WARM_LEAD_EXCEL_FORMAT_LABEL;
     const balanceSheet = progress?.financial_reports?.find(
       (d) => d.document_type === 'monthly_balance_sheet'
     );
@@ -126,7 +129,7 @@ const initFinanceReportsPage = async () => {
     const file = input.files?.[0];
     if (!file) return;
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      helperText.textContent = 'Invalid file type. Please upload Excel (.xls or .xlsx) files only';
+      helperText.textContent = WARM_LEAD_EXCEL_INVALID_MESSAGE;
       helperText.classList.add('is-error');
     } else {
       helperText.textContent = file.name;
@@ -186,7 +189,7 @@ const initFinanceReportsPage = async () => {
   ) => {
     const doc = getFinancialReportDoc(documentType);
     if (!doc) {
-      helperText.textContent = 'Supported formats: sheets, excel';
+      helperText.textContent = WARM_LEAD_EXCEL_FORMAT_LABEL;
       helperText.classList.remove('is-error');
       return;
     }

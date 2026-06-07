@@ -14,35 +14,34 @@ import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
 import {
   checkProgressUserAndTeams,
+  configureWarmLeadFileInputAccept,
   constructNavBarClasses,
   fileToBase64,
   initCollapsibleSidebar,
+  WARM_LEAD_BUSINESS_PLAN_ACCEPT,
+  WARM_LEAD_BUSINESS_PLAN_FORMAT_LABEL,
+  WARM_LEAD_BUSINESS_PLAN_INVALID_MESSAGE,
+  WARM_LEAD_BUSINESS_PLAN_MIME_TYPES,
+  WARM_LEAD_INSTORE_VELOCITY_ACCEPT,
+  WARM_LEAD_INSTORE_VELOCITY_FORMAT_LABEL,
+  WARM_LEAD_INSTORE_VELOCITY_INVALID_MESSAGE,
+  WARM_LEAD_INSTORE_VELOCITY_MIME_TYPES,
 } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
-const FILE_TYPES = {
-  pdf: 'application/pdf',
-  xls: 'application/vnd.ms-excel',
-  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  doc: 'application/msword',
-  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  ppt: 'application/vnd.ms-powerpoint',
-  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-} as const;
-
 const DOC_RULES: Record<
   'instore_velocity_reports' | 'business_plan',
-  { allowed: string[]; message: string; placeholder: string }
+  { allowed: readonly string[]; message: string; placeholder: string }
 > = {
   instore_velocity_reports: {
-    allowed: [FILE_TYPES.doc, FILE_TYPES.docx, FILE_TYPES.pdf, FILE_TYPES.xls, FILE_TYPES.xlsx],
-    message: 'Invalid file type. Allowed: WORD, PDF, or EXCEL',
-    placeholder: 'Supported formats: WORD, PDF, EXCEL',
+    allowed: WARM_LEAD_INSTORE_VELOCITY_MIME_TYPES,
+    message: WARM_LEAD_INSTORE_VELOCITY_INVALID_MESSAGE,
+    placeholder: WARM_LEAD_INSTORE_VELOCITY_FORMAT_LABEL,
   },
   business_plan: {
-    allowed: [FILE_TYPES.pdf, FILE_TYPES.ppt, FILE_TYPES.pptx],
-    message: 'Invalid file type. Allowed: PPT or PDF',
-    placeholder: 'Supported formats: PPT, PDF',
+    allowed: WARM_LEAD_BUSINESS_PLAN_MIME_TYPES,
+    message: WARM_LEAD_BUSINESS_PLAN_INVALID_MESSAGE,
+    placeholder: WARM_LEAD_BUSINESS_PLAN_FORMAT_LABEL,
   },
 };
 
@@ -113,6 +112,9 @@ const initOptionalDocsPage = async () => {
   ) {
     return;
   }
+
+  configureWarmLeadFileInputAccept(instoreVelocityInput, [...WARM_LEAD_INSTORE_VELOCITY_ACCEPT]);
+  configureWarmLeadFileInputAccept(businessPlanInput, [...WARM_LEAD_BUSINESS_PLAN_ACCEPT]);
 
   const updateHelperTexts = (progress: FinancialWizardProgressResponse | undefined) => {
     instoreVelocityHelpText.textContent =
@@ -190,7 +192,10 @@ const initOptionalDocsPage = async () => {
   ) => {
     const doc = getDoc(documentType);
     if (!doc) {
-      helperText.textContent = 'Supported formats: sheets, excel';
+      helperText.textContent =
+        DOC_RULES[
+          documentType === 'instore_velocity_reports' ? 'instore_velocity_reports' : 'business_plan'
+        ].placeholder;
       helperText.classList.remove('is-error');
       return;
     }

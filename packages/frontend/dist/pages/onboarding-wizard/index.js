@@ -2827,6 +2827,36 @@ var fetchProgressData = async (userId) => {
   ]);
   return { financialProgress, user, teams, onboardingProgress };
 };
+var WARM_LEAD_MIME = {
+  pdf: "application/pdf",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+};
+var WARM_LEAD_EXCEL_MIME_TYPES = [WARM_LEAD_MIME.xls, WARM_LEAD_MIME.xlsx];
+var WARM_LEAD_TEAM_LEADERSHIP_MIME_TYPES = [
+  WARM_LEAD_MIME.pdf,
+  WARM_LEAD_MIME.ppt,
+  WARM_LEAD_MIME.pptx,
+  WARM_LEAD_MIME.doc,
+  WARM_LEAD_MIME.docx,
+  WARM_LEAD_MIME.xls,
+  WARM_LEAD_MIME.xlsx
+];
+var WARM_LEAD_INSTORE_VELOCITY_MIME_TYPES = [
+  WARM_LEAD_MIME.xlsx,
+  WARM_LEAD_MIME.xls,
+  WARM_LEAD_MIME.pdf,
+  WARM_LEAD_MIME.docx
+];
+var WARM_LEAD_BUSINESS_PLAN_MIME_TYPES = [
+  WARM_LEAD_MIME.pdf,
+  WARM_LEAD_MIME.docx,
+  WARM_LEAD_MIME.pptx
+];
 
 // pages/onboarding-wizard/index.ts
 var initOnboardingStep1Page = async () => {

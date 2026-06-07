@@ -3086,6 +3086,56 @@ var constructNavBarClasses = () => {
     });
   }
 };
+var WARM_LEAD_MIME = {
+  pdf: "application/pdf",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+};
+var WARM_LEAD_EXCEL_MIME_TYPES = [WARM_LEAD_MIME.xls, WARM_LEAD_MIME.xlsx];
+var WARM_LEAD_EXCEL_ACCEPT = ".xls,.xlsx";
+var WARM_LEAD_TEAM_LEADERSHIP_MIME_TYPES = [
+  WARM_LEAD_MIME.pdf,
+  WARM_LEAD_MIME.ppt,
+  WARM_LEAD_MIME.pptx,
+  WARM_LEAD_MIME.doc,
+  WARM_LEAD_MIME.docx,
+  WARM_LEAD_MIME.xls,
+  WARM_LEAD_MIME.xlsx
+];
+var WARM_LEAD_TEAM_LEADERSHIP_ACCEPT = [
+  ".pdf",
+  ".ppt",
+  ".pptx",
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx"
+];
+var WARM_LEAD_TEAM_LEADERSHIP_FORMAT_LABEL = "Allowed file formats: PDF, PPT, WORD, EXCEL";
+var WARM_LEAD_TEAM_LEADERSHIP_INVALID_MESSAGE = "Invalid file type. Allowed file formats: PDF, PPT, WORD, EXCEL";
+var WARM_LEAD_CAP_TABLE_FORMAT_LABEL = "Allowed file formats: EXCEL";
+var WARM_LEAD_CAP_TABLE_INVALID_MESSAGE = "Invalid file type. Allowed file formats: EXCEL";
+var WARM_LEAD_INSTORE_VELOCITY_MIME_TYPES = [
+  WARM_LEAD_MIME.xlsx,
+  WARM_LEAD_MIME.xls,
+  WARM_LEAD_MIME.pdf,
+  WARM_LEAD_MIME.docx
+];
+var WARM_LEAD_BUSINESS_PLAN_MIME_TYPES = [
+  WARM_LEAD_MIME.pdf,
+  WARM_LEAD_MIME.docx,
+  WARM_LEAD_MIME.pptx
+];
+var configureWarmLeadExcelFileInput = (input) => {
+  input.accept = WARM_LEAD_EXCEL_ACCEPT;
+};
+var configureWarmLeadFileInputAccept = (input, extensions) => {
+  input.accept = extensions.join(",");
+};
 var fileToBase64 = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();
   reader.onload = () => {
@@ -3164,23 +3214,16 @@ var initCollapsibleSidebar = () => {
 };
 
 // warm-lead/finance-docs-team-ownership/index.ts
-var FILE_TYPES = {
-  pdf: "application/pdf",
-  xls: "application/vnd.ms-excel",
-  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  doc: "application/msword",
-  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-};
 var DOC_RULES = {
   management_bios: {
-    allowed: [FILE_TYPES.doc, FILE_TYPES.docx, FILE_TYPES.pdf, FILE_TYPES.xls, FILE_TYPES.xlsx],
-    message: "Invalid file type. Allowed: WORD, PDF, or EXCEL",
-    placeholder: "Supported formats: WORD, PDF, EXCEL"
+    allowed: WARM_LEAD_TEAM_LEADERSHIP_MIME_TYPES,
+    message: WARM_LEAD_TEAM_LEADERSHIP_INVALID_MESSAGE,
+    placeholder: WARM_LEAD_TEAM_LEADERSHIP_FORMAT_LABEL
   },
   cap_table: {
-    allowed: [FILE_TYPES.pdf, FILE_TYPES.xls, FILE_TYPES.xlsx],
-    message: "Invalid file type. Allowed: PDF or EXCEL",
-    placeholder: "Supported formats: PDF, EXCEL"
+    allowed: WARM_LEAD_EXCEL_MIME_TYPES,
+    message: WARM_LEAD_CAP_TABLE_INVALID_MESSAGE,
+    placeholder: WARM_LEAD_CAP_TABLE_FORMAT_LABEL
   }
 };
 var getBusinessProfile = (progress) => progress?.company_profile ?? progress?.business ?? null;
@@ -3255,6 +3298,8 @@ var initTeamOwnershipPage = async () => {
   if (missingElements || !managementBiosBox || !managementBiosInput || !managementBiosHelpText || !raisedExternalEquitySelect || !capTableWrapper || !capitalisationTableBox || !capitalisationTableInput || !capitalisationTableHelpText || !submitButton) {
     return;
   }
+  configureWarmLeadFileInputAccept(managementBiosInput, [...WARM_LEAD_TEAM_LEADERSHIP_ACCEPT]);
+  configureWarmLeadExcelFileInput(capitalisationTableInput);
   const requiresCapTable = () => raisedExternalEquitySelect.value === "yes";
   const toggleCapTableSection = () => {
     capTableWrapper.classList.toggle("hide", !requiresCapTable());
@@ -3341,7 +3386,7 @@ var initTeamOwnershipPage = async () => {
   const handleDeleteDocument = async (documentType, helperText) => {
     const doc = getDoc(documentType);
     if (!doc) {
-      helperText.textContent = "Supported formats: sheets, excel";
+      helperText.textContent = DOC_RULES[documentType === "management_bios" ? "management_bios" : "cap_table"].placeholder;
       helperText.classList.remove("is-error");
       return;
     }

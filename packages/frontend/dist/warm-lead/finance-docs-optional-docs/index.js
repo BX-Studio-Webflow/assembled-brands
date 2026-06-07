@@ -3077,6 +3077,45 @@ var constructNavBarClasses = () => {
     });
   }
 };
+var WARM_LEAD_MIME = {
+  pdf: "application/pdf",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+};
+var WARM_LEAD_EXCEL_MIME_TYPES = [WARM_LEAD_MIME.xls, WARM_LEAD_MIME.xlsx];
+var WARM_LEAD_TEAM_LEADERSHIP_MIME_TYPES = [
+  WARM_LEAD_MIME.pdf,
+  WARM_LEAD_MIME.ppt,
+  WARM_LEAD_MIME.pptx,
+  WARM_LEAD_MIME.doc,
+  WARM_LEAD_MIME.docx,
+  WARM_LEAD_MIME.xls,
+  WARM_LEAD_MIME.xlsx
+];
+var WARM_LEAD_INSTORE_VELOCITY_MIME_TYPES = [
+  WARM_LEAD_MIME.xlsx,
+  WARM_LEAD_MIME.xls,
+  WARM_LEAD_MIME.pdf,
+  WARM_LEAD_MIME.docx
+];
+var WARM_LEAD_INSTORE_VELOCITY_ACCEPT = [".xlsx", ".xls", ".pdf", ".docx"];
+var WARM_LEAD_INSTORE_VELOCITY_FORMAT_LABEL = "Supported formats: .xlsx, .xls, .pdf, or .docx";
+var WARM_LEAD_INSTORE_VELOCITY_INVALID_MESSAGE = "Invalid file type. Supported formats: .xlsx, .xls, .pdf, or .docx";
+var WARM_LEAD_BUSINESS_PLAN_MIME_TYPES = [
+  WARM_LEAD_MIME.pdf,
+  WARM_LEAD_MIME.docx,
+  WARM_LEAD_MIME.pptx
+];
+var WARM_LEAD_BUSINESS_PLAN_ACCEPT = [".pdf", ".docx", ".pptx"];
+var WARM_LEAD_BUSINESS_PLAN_FORMAT_LABEL = "Supported formats: .pdf, .docx, or .pptx";
+var WARM_LEAD_BUSINESS_PLAN_INVALID_MESSAGE = "Invalid file type. Supported formats: .pdf, .docx, or .pptx";
+var configureWarmLeadFileInputAccept = (input, extensions) => {
+  input.accept = extensions.join(",");
+};
 var fileToBase64 = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();
   reader.onload = () => {
@@ -3155,25 +3194,16 @@ var initCollapsibleSidebar = () => {
 };
 
 // warm-lead/finance-docs-optional-docs/index.ts
-var FILE_TYPES = {
-  pdf: "application/pdf",
-  xls: "application/vnd.ms-excel",
-  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  doc: "application/msword",
-  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  ppt: "application/vnd.ms-powerpoint",
-  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-};
 var DOC_RULES = {
   instore_velocity_reports: {
-    allowed: [FILE_TYPES.doc, FILE_TYPES.docx, FILE_TYPES.pdf, FILE_TYPES.xls, FILE_TYPES.xlsx],
-    message: "Invalid file type. Allowed: WORD, PDF, or EXCEL",
-    placeholder: "Supported formats: WORD, PDF, EXCEL"
+    allowed: WARM_LEAD_INSTORE_VELOCITY_MIME_TYPES,
+    message: WARM_LEAD_INSTORE_VELOCITY_INVALID_MESSAGE,
+    placeholder: WARM_LEAD_INSTORE_VELOCITY_FORMAT_LABEL
   },
   business_plan: {
-    allowed: [FILE_TYPES.pdf, FILE_TYPES.ppt, FILE_TYPES.pptx],
-    message: "Invalid file type. Allowed: PPT or PDF",
-    placeholder: "Supported formats: PPT, PDF"
+    allowed: WARM_LEAD_BUSINESS_PLAN_MIME_TYPES,
+    message: WARM_LEAD_BUSINESS_PLAN_INVALID_MESSAGE,
+    placeholder: WARM_LEAD_BUSINESS_PLAN_FORMAT_LABEL
   }
 };
 var initOptionalDocsPage = async () => {
@@ -3229,6 +3259,8 @@ var initOptionalDocsPage = async () => {
   if (missingElements || !instoreVelocityBox || !instoreVelocityInput || !instoreVelocityHelpText || !businessPlanBox || !businessPlanInput || !businessPlanHelpText || !submitButton) {
     return;
   }
+  configureWarmLeadFileInputAccept(instoreVelocityInput, [...WARM_LEAD_INSTORE_VELOCITY_ACCEPT]);
+  configureWarmLeadFileInputAccept(businessPlanInput, [...WARM_LEAD_BUSINESS_PLAN_ACCEPT]);
   const updateHelperTexts = (progress) => {
     instoreVelocityHelpText.textContent = progress?.team_ownership?.find((d) => d.document_type === "instore_velocity_reports")?.asset_name || DOC_RULES.instore_velocity_reports.placeholder;
     businessPlanHelpText.textContent = progress?.team_ownership?.find((d) => d.document_type === "business_plan")?.asset_name || DOC_RULES.business_plan.placeholder;
@@ -3281,7 +3313,7 @@ var initOptionalDocsPage = async () => {
   const handleDeleteDocument = async (documentType, helperText) => {
     const doc = getDoc(documentType);
     if (!doc) {
-      helperText.textContent = "Supported formats: sheets, excel";
+      helperText.textContent = DOC_RULES[documentType === "instore_velocity_reports" ? "instore_velocity_reports" : "business_plan"].placeholder;
       helperText.classList.remove("is-error");
       return;
     }

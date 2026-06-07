@@ -16,33 +16,34 @@ import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
 import {
   checkProgressUserAndTeams,
+  configureWarmLeadExcelFileInput,
+  configureWarmLeadFileInputAccept,
   constructNavBarClasses,
   fileToBase64,
   initCollapsibleSidebar,
+  WARM_LEAD_CAP_TABLE_FORMAT_LABEL,
+  WARM_LEAD_CAP_TABLE_INVALID_MESSAGE,
+  WARM_LEAD_EXCEL_MIME_TYPES,
+  WARM_LEAD_TEAM_LEADERSHIP_ACCEPT,
+  WARM_LEAD_TEAM_LEADERSHIP_FORMAT_LABEL,
+  WARM_LEAD_TEAM_LEADERSHIP_INVALID_MESSAGE,
+  WARM_LEAD_TEAM_LEADERSHIP_MIME_TYPES,
 } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
-const FILE_TYPES = {
-  pdf: 'application/pdf',
-  xls: 'application/vnd.ms-excel',
-  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  doc: 'application/msword',
-  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-} as const;
-
 const DOC_RULES: Record<
   'management_bios' | 'cap_table',
-  { allowed: string[]; message: string; placeholder: string }
+  { allowed: readonly string[]; message: string; placeholder: string }
 > = {
   management_bios: {
-    allowed: [FILE_TYPES.doc, FILE_TYPES.docx, FILE_TYPES.pdf, FILE_TYPES.xls, FILE_TYPES.xlsx],
-    message: 'Invalid file type. Allowed: WORD, PDF, or EXCEL',
-    placeholder: 'Supported formats: WORD, PDF, EXCEL',
+    allowed: WARM_LEAD_TEAM_LEADERSHIP_MIME_TYPES,
+    message: WARM_LEAD_TEAM_LEADERSHIP_INVALID_MESSAGE,
+    placeholder: WARM_LEAD_TEAM_LEADERSHIP_FORMAT_LABEL,
   },
   cap_table: {
-    allowed: [FILE_TYPES.pdf, FILE_TYPES.xls, FILE_TYPES.xlsx],
-    message: 'Invalid file type. Allowed: PDF or EXCEL',
-    placeholder: 'Supported formats: PDF, EXCEL',
+    allowed: WARM_LEAD_EXCEL_MIME_TYPES,
+    message: WARM_LEAD_CAP_TABLE_INVALID_MESSAGE,
+    placeholder: WARM_LEAD_CAP_TABLE_FORMAT_LABEL,
   },
 };
 
@@ -142,6 +143,9 @@ const initTeamOwnershipPage = async () => {
   ) {
     return;
   }
+
+  configureWarmLeadFileInputAccept(managementBiosInput, [...WARM_LEAD_TEAM_LEADERSHIP_ACCEPT]);
+  configureWarmLeadExcelFileInput(capitalisationTableInput);
 
   const requiresCapTable = () => raisedExternalEquitySelect.value === 'yes';
 
@@ -261,7 +265,8 @@ const initTeamOwnershipPage = async () => {
   ) => {
     const doc = getDoc(documentType);
     if (!doc) {
-      helperText.textContent = 'Supported formats: sheets, excel';
+      helperText.textContent =
+        DOC_RULES[documentType === 'management_bios' ? 'management_bios' : 'cap_table'].placeholder;
       helperText.classList.remove('is-error');
       return;
     }
