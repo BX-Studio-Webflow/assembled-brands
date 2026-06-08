@@ -3,6 +3,7 @@ import { eq, like } from 'drizzle-orm';
 import type { AssetRepository } from '../repository/asset.js';
 import type { Asset, NewAsset } from '../schema/schema.js';
 import { assetsSchema } from '../schema/schema.js';
+import { sanitizeDriveDisplayName } from '../util/drive-naming.ts';
 import { createGoogleJWT, generateAssetKey, getKeyFromUrl, normalizeFolderName } from '../util/string.ts';
 import type { AssetQuery } from '../web/validator/asset.js';
 import type { S3Service } from './s3.js';
@@ -568,9 +569,9 @@ export class AssetService {
 	 * @returns {Promise<string>} The ID of the company folder
 	 */
 
-	async CreateFolder(folderName: string, parentId: string): Promise<string> {
+	async CreateFolder(folderName: string, parentId: string, options?: { preserveDisplayFormat?: boolean }): Promise<string> {
 		const accessToken = await this.getGoogleAccessToken();
-		const normalizedName = normalizeFolderName(folderName);
+		const normalizedName = options?.preserveDisplayFormat ? sanitizeDriveDisplayName(folderName) : normalizeFolderName(folderName);
 		// Create folder if not exists
 		const createRes = await fetch('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', {
 			method: 'POST',

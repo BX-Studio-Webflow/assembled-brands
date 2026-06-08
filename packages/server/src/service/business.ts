@@ -3,6 +3,7 @@ import { env } from 'cloudflare:workers';
 import { logger } from '../lib/logger.js';
 import { BusinessRepository } from '../repository/business.ts';
 import { NewFinancialStepFolder } from '../schema/schema.ts';
+import { buildCompanyDriveFolderName } from '../util/drive-naming.ts';
 import { getContentType } from '../util/string.ts';
 import type { BusinessBody, BusinessQuery } from '../web/validator/business.ts';
 import type { AssetService } from './asset.js';
@@ -133,7 +134,7 @@ export class BusinessService {
 	 * @returns {Promise<Business>} Updated business information
 	 * @throws {Error} When business creation/update fails
 	 */
-	public async upsertBusiness(userId: number, business: BusinessBody) {
+	public async upsertBusiness(userId: number, business: BusinessBody, options?: { dealName?: string | null }) {
 		try {
 			const existingBusiness = await this.repository.findByUserId(userId);
 
@@ -166,7 +167,10 @@ export class BusinessService {
 				await this.repository.update(existingBusiness.id, businessData);
 			} else {
 				//first create a folder for this business in drive then create business and team in parallel
-				const company_folder_id = await this.assetService.CreateFolder(businessData.legal_name, env.GOOGLE_DRIVE_FOLDER_ID);
+				const parentFolderName = buildCompanyDriveFolderName(businessData.legal_name, options?.dealName);
+				const company_folder_id = await this.assetService.CreateFolder(parentFolderName, env.GOOGLE_DRIVE_FOLDER_ID, {
+					preserveDisplayFormat: true,
+				});
 
 				//create all needed drive folders and store in advance
 				const pages = [

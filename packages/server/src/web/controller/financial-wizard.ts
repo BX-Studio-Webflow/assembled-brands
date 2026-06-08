@@ -7,6 +7,7 @@ import type { AssetService } from '../../service/asset.js';
 import { BusinessService } from '../../service/business.js';
 import { FinancialWizardPage, FinancialWizardService } from '../../service/financial-wizard.js';
 import type { UserService } from '../../service/user.js';
+import { buildDriveUploadFileName } from '../../util/drive-naming.js';
 import type { FinancialDocumentBody, FinancialOverviewBody, UpdatePageBody } from '../validator/financial-wizard.js';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { serveData } from './resp/resp.js';
@@ -132,7 +133,7 @@ export class FinancialWizardController {
 			const folderPage = this.getDriveFolderPage(page, document_type);
 			const folder = await this.service.findFolderIDByPageAndBusiness(folderPage, business.id);
 
-			const structuredName = `${document_type}-${page}-${Date.now()}-${file_name}`;
+			const structuredName = buildDriveUploadFileName(business.legal_name, document_type, file_name);
 
 			const uploadedFile = await this.assetService.uploadToGoogleDrive(fileData, structuredName, file_mime_type, folder.folder_id);
 

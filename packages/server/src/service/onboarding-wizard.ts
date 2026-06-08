@@ -357,12 +357,16 @@ export class OnboardingWizardService {
 			// Uses legal_name as the company name and incorporation_state as headquarters.
 			// accounting_software defaults to 'other' since warm leads haven't specified it yet.
 			try {
-				await this.businessService.upsertBusiness(userId, {
-					legal_name: body.legal_name,
-					headquarters: body.incorporation_state,
-					accounting_software: 'other',
-				});
-				logger.info({ userId }, 'Business and Google Drive folders provisioned for warm lead');
+				await this.businessService.upsertBusiness(
+					userId,
+					{
+						legal_name: body.legal_name,
+						headquarters: body.incorporation_state,
+						accounting_software: 'other',
+					},
+					{ dealName: dealRow.deal_name },
+				);
+				logger.info({ userId, folderName: dealRow.deal_name }, 'Business and Google Drive folders provisioned for warm lead');
 			} catch (bizErr) {
 				logger.error({ bizErr, userId }, 'Failed to provision business/Drive folders for warm lead (non-fatal)');
 			}
