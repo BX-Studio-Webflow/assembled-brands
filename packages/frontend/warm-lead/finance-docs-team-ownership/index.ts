@@ -31,11 +31,18 @@ import {
 } from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
+type TeamOwnershipDocType = 'management_bios' | 'investor_deck' | 'cap_table';
+
 const DOC_RULES: Record<
-  'management_bios' | 'cap_table',
+  TeamOwnershipDocType,
   { allowed: readonly string[]; message: string; placeholder: string }
 > = {
   management_bios: {
+    allowed: WARM_LEAD_TEAM_LEADERSHIP_MIME_TYPES,
+    message: WARM_LEAD_TEAM_LEADERSHIP_INVALID_MESSAGE,
+    placeholder: WARM_LEAD_TEAM_LEADERSHIP_FORMAT_LABEL,
+  },
+  investor_deck: {
     allowed: WARM_LEAD_TEAM_LEADERSHIP_MIME_TYPES,
     message: WARM_LEAD_TEAM_LEADERSHIP_INVALID_MESSAGE,
     placeholder: WARM_LEAD_TEAM_LEADERSHIP_FORMAT_LABEL,
@@ -91,6 +98,18 @@ const initTeamOwnershipPage = async () => {
     form
   );
 
+  const investorDeckBox = queryElement<HTMLElement>(
+    '[dev-target="investor-deck-upload-box"]',
+    form
+  );
+  const investorDeckInput =
+    queryElement<HTMLInputElement>('[dev-target="investor-deck-input"]', investorDeckBox ?? form) ??
+    queryElement<HTMLInputElement>('[dev-target="file-input"]', investorDeckBox ?? form);
+  const investorDeckHelpText = queryElement<HTMLElement>(
+    '[dev-target="investor-deck-helper"]',
+    form
+  );
+
   const capitalisationTableBox = queryElement<HTMLElement>(
     '[dev-target="capitalisation-table-upload-box"]',
     form
@@ -115,6 +134,12 @@ const initTeamOwnershipPage = async () => {
     ['[dev-target="management-bios-upload-box"]', managementBiosBox],
     ['[dev-target="file-input"] inside management-bios-upload-box', managementBiosInput],
     ['[dev-target="management-bios-helper"]', managementBiosHelpText],
+    ['[dev-target="investor-deck-upload-box"]', investorDeckBox],
+    [
+      '[dev-target="investor-deck-input"] or file-input in investor-deck-upload-box',
+      investorDeckInput,
+    ],
+    ['[dev-target="investor-deck-helper"]', investorDeckHelpText],
     ['select[dev-target="company-raised-equity"]', raisedExternalEquitySelect],
     ['[dev-target="cap-wrapper"]', capTableWrapper],
     ['[dev-target="capitalisation-table-upload-box"]', capitalisationTableBox],
@@ -134,6 +159,9 @@ const initTeamOwnershipPage = async () => {
     !managementBiosBox ||
     !managementBiosInput ||
     !managementBiosHelpText ||
+    !investorDeckBox ||
+    !investorDeckInput ||
+    !investorDeckHelpText ||
     !raisedExternalEquitySelect ||
     !capTableWrapper ||
     !capitalisationTableBox ||
@@ -145,6 +173,7 @@ const initTeamOwnershipPage = async () => {
   }
 
   configureWarmLeadFileInputAccept(managementBiosInput, [...WARM_LEAD_TEAM_LEADERSHIP_ACCEPT]);
+  configureWarmLeadFileInputAccept(investorDeckInput, [...WARM_LEAD_TEAM_LEADERSHIP_ACCEPT]);
   configureWarmLeadExcelFileInput(capitalisationTableInput);
 
   const requiresCapTable = () => raisedExternalEquitySelect.value === 'yes';
@@ -192,6 +221,9 @@ const initTeamOwnershipPage = async () => {
     managementBiosHelpText.textContent =
       progress?.team_ownership?.find((d) => d.document_type === 'management_bios')?.asset_name ||
       DOC_RULES.management_bios.placeholder;
+    investorDeckHelpText.textContent =
+      progress?.team_ownership?.find((d) => d.document_type === 'investor_deck')?.asset_name ||
+      DOC_RULES.investor_deck.placeholder;
     capitalisationTableHelpText.textContent =
       progress?.team_ownership?.find((d) => d.document_type === 'cap_table')?.asset_name ||
       DOC_RULES.cap_table.placeholder;
@@ -213,7 +245,7 @@ const initTeamOwnershipPage = async () => {
   const updateHelperText = (
     input: HTMLInputElement,
     helperText: HTMLElement,
-    documentType: 'management_bios' | 'cap_table'
+    documentType: TeamOwnershipDocType
   ) => {
     const file = input.files?.[0];
     if (!file) return;
@@ -231,7 +263,7 @@ const initTeamOwnershipPage = async () => {
     box: HTMLElement,
     input: HTMLInputElement,
     helperText: HTMLElement,
-    documentType: 'management_bios' | 'cap_table'
+    documentType: TeamOwnershipDocType
   ) => {
     box.addEventListener('click', () => input.click());
     box.addEventListener('dragover', (e) => {
@@ -252,6 +284,7 @@ const initTeamOwnershipPage = async () => {
   };
 
   setupDropZone(managementBiosBox, managementBiosInput, managementBiosHelpText, 'management_bios');
+  setupDropZone(investorDeckBox, investorDeckInput, investorDeckHelpText, 'investor_deck');
   setupDropZone(
     capitalisationTableBox,
     capitalisationTableInput,
@@ -259,14 +292,27 @@ const initTeamOwnershipPage = async () => {
     'cap_table'
   );
 
+  const getTeamOwnershipDocRule = (
+    documentType: FinancialDocumentBody['document_type']
+  ): (typeof DOC_RULES)[TeamOwnershipDocType] | undefined => {
+    if (
+      documentType === 'management_bios' ||
+      documentType === 'investor_deck' ||
+      documentType === 'cap_table'
+    ) {
+      return DOC_RULES[documentType];
+    }
+    return undefined;
+  };
+
   const handleDeleteDocument = async (
     documentType: FinancialDocumentBody['document_type'],
     helperText: HTMLElement
   ) => {
     const doc = getDoc(documentType);
+    const rule = getTeamOwnershipDocRule(documentType);
     if (!doc) {
-      helperText.textContent =
-        DOC_RULES[documentType === 'management_bios' ? 'management_bios' : 'cap_table'].placeholder;
+      helperText.textContent = rule?.placeholder ?? '';
       helperText.classList.remove('is-error');
       return;
     }
@@ -284,6 +330,7 @@ const initTeamOwnershipPage = async () => {
 
   const trashHandlers: [HTMLElement, FinancialDocumentBody['document_type'], HTMLElement][] = [
     [managementBiosBox, 'management_bios', managementBiosHelpText],
+    [investorDeckBox, 'investor_deck', investorDeckHelpText],
     [capitalisationTableBox, 'cap_table', capitalisationTableHelpText],
   ];
   for (const [box, documentType, helperText] of trashHandlers) {
@@ -301,12 +348,7 @@ const initTeamOwnershipPage = async () => {
     file: File,
     documentType: FinancialDocumentBody['document_type']
   ): Promise<void> => {
-    const rule =
-      documentType === 'management_bios'
-        ? DOC_RULES.management_bios
-        : documentType === 'cap_table'
-          ? DOC_RULES.cap_table
-          : undefined;
+    const rule = getTeamOwnershipDocRule(documentType);
     if (rule && !rule.allowed.includes(file.type)) {
       throw new Error(rule.message);
     }
@@ -368,6 +410,10 @@ const initTeamOwnershipPage = async () => {
       filesToUpload.push({ file: managementBiosInput.files[0], documentType: 'management_bios' });
     }
 
+    if (investorDeckInput.files?.[0]) {
+      filesToUpload.push({ file: investorDeckInput.files[0], documentType: 'investor_deck' });
+    }
+
     if (requiresCapTable() && capitalisationTableInput.files?.[0]) {
       filesToUpload.push({ file: capitalisationTableInput.files[0], documentType: 'cap_table' });
     }
@@ -427,8 +473,10 @@ const initTeamOwnershipPage = async () => {
       submitButton.value = 'Documents uploaded successfully!';
 
       managementBiosInput.value = '';
+      investorDeckInput.value = '';
       capitalisationTableInput.value = '';
       managementBiosHelpText.textContent = '';
+      investorDeckHelpText.textContent = '';
       capitalisationTableHelpText.textContent = '';
 
       setTimeout(() => {
