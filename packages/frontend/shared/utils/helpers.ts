@@ -571,29 +571,26 @@ export const WARM_LEAD_INSTORE_VELOCITY_MIME_TYPES = [
   WARM_LEAD_MIME.xlsx,
   WARM_LEAD_MIME.xls,
   WARM_LEAD_MIME.pdf,
-  WARM_LEAD_MIME.docx,
 ] as const;
 
-export const WARM_LEAD_INSTORE_VELOCITY_ACCEPT = ['.xlsx', '.xls', '.pdf', '.docx'];
+export const WARM_LEAD_INSTORE_VELOCITY_ACCEPT = ['.xlsx', '.xls', '.pdf'];
 
-export const WARM_LEAD_INSTORE_VELOCITY_FORMAT_LABEL =
-  'Supported formats: .xlsx, .xls, .pdf, or .docx';
+export const WARM_LEAD_INSTORE_VELOCITY_FORMAT_LABEL = 'Allowed file formats: PDF, EXCEL';
 
 export const WARM_LEAD_INSTORE_VELOCITY_INVALID_MESSAGE =
-  'Invalid file type. Supported formats: .xlsx, .xls, .pdf, or .docx';
+  'Invalid file type. Allowed file formats: PDF, EXCEL';
 
 export const WARM_LEAD_BUSINESS_PLAN_MIME_TYPES = [
   WARM_LEAD_MIME.pdf,
-  WARM_LEAD_MIME.docx,
   WARM_LEAD_MIME.pptx,
 ] as const;
 
-export const WARM_LEAD_BUSINESS_PLAN_ACCEPT = ['.pdf', '.docx', '.pptx'];
+export const WARM_LEAD_BUSINESS_PLAN_ACCEPT = ['.pdf', '.pptx'];
 
-export const WARM_LEAD_BUSINESS_PLAN_FORMAT_LABEL = 'Supported formats: .pdf, .docx, or .pptx';
+export const WARM_LEAD_BUSINESS_PLAN_FORMAT_LABEL = 'Allowed file formats: PDF, PPT';
 
 export const WARM_LEAD_BUSINESS_PLAN_INVALID_MESSAGE =
-  'Invalid file type. Supported formats: .pdf, .docx, or .pptx';
+  'Invalid file type. Allowed file formats: PDF, PPT';
 
 export const WARM_LEAD_INTERNATIONAL_LOCATION_PLACEHOLDER = 'London, UK or Shanghai, China';
 
