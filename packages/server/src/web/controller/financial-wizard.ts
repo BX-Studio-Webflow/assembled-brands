@@ -7,6 +7,7 @@ import type { AssetService } from '../../service/asset.js';
 import { BusinessService } from '../../service/business.js';
 import { FinancialWizardPage, FinancialWizardService } from '../../service/financial-wizard.js';
 import type { UserService } from '../../service/user.js';
+import { getDealApplicationIdFromContext } from '../../util/deal-application-context.js';
 import { buildDriveUploadFileName } from '../../util/drive-naming.js';
 import type { FinancialDocumentBody, FinancialOverviewBody, UpdatePageBody } from '../validator/financial-wizard.js';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
@@ -91,7 +92,8 @@ export class FinancialWizardController {
 
 			const body: FinancialOverviewBody = await c.req.json();
 			const effectiveUserId = this.getEffectiveUserId(c, user);
-			const overview = await this.service.saveFinancialOverview(effectiveUserId, body);
+			const dealApplicationId = getDealApplicationIdFromContext(c);
+			const overview = await this.service.saveFinancialOverview(effectiveUserId, body, dealApplicationId);
 
 			return serveData(c, {
 				message: 'Financial overview saved successfully',
@@ -125,7 +127,10 @@ export class FinancialWizardController {
 			const fileData = Buffer.from(file_data, 'base64');
 
 			const effectiveUserId = this.getEffectiveUserId(c, user);
-			const business = await this.businessService.getBusinessByUserId(effectiveUserId);
+			const dealApplicationId = getDealApplicationIdFromContext(c);
+			const business = dealApplicationId
+				? await this.businessService.getBusinessByDealApplicationId(dealApplicationId)
+				: await this.businessService.getBusinessByUserId(effectiveUserId);
 			if (!business) {
 				return serveBadRequest(c, 'Business not found for user');
 			}
@@ -149,6 +154,7 @@ export class FinancialWizardController {
 				body.document_type,
 				body.asset_id,
 				JSON.stringify(notes),
+				dealApplicationId,
 			);
 
 			return serveData(c, {
@@ -177,9 +183,12 @@ export class FinancialWizardController {
 			const userId = c.req.query('user_id') as string | undefined;
 
 			const effectiveUserId = userId ? Number(userId) : this.getEffectiveUserId(c, user);
+			const dealApplicationId = getDealApplicationIdFromContext(c);
 			const [progress, business] = await Promise.all([
-				this.service.getProgress(effectiveUserId),
-				this.businessService.getBusinessByUserId(effectiveUserId),
+				this.service.getProgress(effectiveUserId, dealApplicationId),
+				dealApplicationId
+					? this.businessService.getBusinessByDealApplicationId(dealApplicationId)
+					: this.businessService.getBusinessByUserId(effectiveUserId),
 			]);
 			if (!progress) {
 				return serveData(c, {
@@ -247,12 +256,13 @@ export class FinancialWizardController {
 			}
 
 			const effectiveUserId = this.getEffectiveUserId(c, user);
-			const application = await this.service.findByUserId(effectiveUserId);
-			if (!application) {
+			const dealApplicationId = getDealApplicationIdFromContext(c);
+			const progress = await this.service.getProgress(effectiveUserId, dealApplicationId);
+			if (!progress) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
-			const documents = await this.service.getDocumentsByPage(effectiveUserId, page);
+			const documents = await this.service.getDocumentsByPage(effectiveUserId, page, dealApplicationId);
 
 			return serveData(c, {
 				documents,
@@ -277,13 +287,14 @@ export class FinancialWizardController {
 			}
 
 			const effectiveUserId = this.getEffectiveUserId(c, user);
-			const application = await this.service.findByUserId(effectiveUserId);
-			if (!application) {
+			const dealApplicationId = getDealApplicationIdFromContext(c);
+			const progress = await this.service.getProgress(effectiveUserId, dealApplicationId);
+			if (!progress) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
 			const body: UpdatePageBody = await c.req.json();
-			const updatedApplication = await this.service.updatePage(effectiveUserId, body.page);
+			const updatedApplication = await this.service.updatePage(effectiveUserId, body.page, dealApplicationId);
 
 			return serveData(c, {
 				message: 'Page updated successfully',
@@ -309,12 +320,13 @@ export class FinancialWizardController {
 			}
 
 			const effectiveUserId = this.getEffectiveUserId(c, user);
-			const application = await this.service.findByUserId(effectiveUserId);
-			if (!application) {
+			const dealApplicationId = getDealApplicationIdFromContext(c);
+			const progress = await this.service.getProgress(effectiveUserId, dealApplicationId);
+			if (!progress) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
-			const completedApplication = await this.service.completeApplication(effectiveUserId);
+			const completedApplication = await this.service.completeApplication(effectiveUserId, dealApplicationId);
 
 			return serveData(c, {
 				message: 'Financial wizard completed successfully',
@@ -340,8 +352,9 @@ export class FinancialWizardController {
 			}
 
 			const effectiveUserId = this.getEffectiveUserId(c, user);
-			const application = await this.service.findByUserId(effectiveUserId);
-			if (!application) {
+			const dealApplicationId = getDealApplicationIdFromContext(c);
+			const progress = await this.service.getProgress(effectiveUserId, dealApplicationId);
+			if (!progress) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
@@ -350,7 +363,7 @@ export class FinancialWizardController {
 				return serveBadRequest(c, 'Invalid document ID');
 			}
 
-			await this.service.deleteDocument(effectiveUserId, documentId);
+			await this.service.deleteDocument(effectiveUserId, documentId, dealApplicationId);
 
 			return serveData(c, {
 				message: 'Document deleted successfully',

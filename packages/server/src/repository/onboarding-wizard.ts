@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import type { NewOnboardingApplication, schema } from '../schema/schema.js';
@@ -42,7 +42,13 @@ export class OnboardingWizardRepository {
 	 */
 	public async findByUserId(userId: number) {
 		return this.db.query.onboardingApplicationSchema.findFirst({
-			where: eq(onboardingApplicationSchema.user_id, userId),
+			where: and(eq(onboardingApplicationSchema.user_id, userId), isNull(onboardingApplicationSchema.deal_application_id)),
+		});
+	}
+
+	public async findByDealApplicationId(dealApplicationId: number) {
+		return this.db.query.onboardingApplicationSchema.findFirst({
+			where: eq(onboardingApplicationSchema.deal_application_id, dealApplicationId),
 		});
 	}
 

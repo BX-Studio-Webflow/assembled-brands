@@ -4,7 +4,6 @@ import { logger } from '../lib/logger.js';
 import { BusinessRepository } from '../repository/business.ts';
 import { NewFinancialStepFolder } from '../schema/schema.ts';
 import { buildCompanyDriveFolderName } from '../util/drive-naming.ts';
-import { getContentType } from '../util/string.ts';
 import type { BusinessBody, BusinessQuery } from '../web/validator/business.ts';
 import type { AssetService } from './asset.js';
 import type { FinancialWizardService } from './financial-wizard.ts';
@@ -35,72 +34,18 @@ export class BusinessService {
 		this.financialWizardService = financialWizardService;
 	}
 
-	/**
-	 * Handles the upload of a business logo
-	 * @private
-	 * @param {number} userId - ID of the user
-	 * @param {string} logoBase64 - Base64 encoded logo image
-	 * @param {string} fileName - Name of the logo file
-	 * @returns {Promise<{assetId: number}>} Created asset ID
-	 * @throws {Error} When logo upload fails
-	 */
-	private async handleLogoUpload(userId: number, logoBase64: string, fileName: string) {
-		try {
-			// Remove the data:image/xyz;base64, prefix
-			const base64Data = logoBase64.replace(/^data:image\/\w+;base64,/, '');
-			const buffer = Buffer.from(base64Data, 'base64');
-			const contentType = getContentType(logoBase64);
-
-			// Let AssetService handle the upload and path generation
-			const assetObject = await this.assetService.createAsset(userId, fileName, contentType, 'profile_picture', buffer.length, 0, buffer);
-
-			return { assetId: assetObject.asset };
-		} catch (error) {
-			logger.error(error);
-			throw error;
-		}
-	}
-
-	/**
-	 * Retrieves business details including logo for a specific user
-	 * @param {number} userId - ID of the user
-	 * @returns {Promise<Business>} Business details with resolved logo URL
-	 */
 	public async getBusinessDetailsByUserId(userId: number) {
-		const business = await this.repository.findByUserId(userId);
-		if (!business?.logo_asset_id) return { ...business, logo: null };
-
-		// Get the asset and its URL
-		const asset = await this.assetService.getAsset(business.logo_asset_id);
-
-		if (!asset || !asset.asset_url) return { ...business, logo: null };
-
-		return {
-			...business,
-			logo: asset.asset_url,
-		};
+		return this.repository.findByUserId(userId);
 	}
 
-	/**
-	 * Retrieves business information with team details for a specific user
-	 * @param {number} userId - UserId of the user
-	 * @returns {Promise<Business>} Business details with team information
-	 * @throws {Error} When business retrieval fails
-	 */
-	public async getBusinessByUserId(userId: number) {
+	public async getBusinessByDealApplicationId(dealApplicationId: number) {
 		try {
-			const business = await this.repository.findByUserId(userId);
-			if (!business?.logo_asset_id) return business;
+			const business = await this.repository.findByDealApplicationId(dealApplicationId);
+			if (!business) return business;
 
-			// Get the asset and its URL
-			const asset = await this.assetService.getAsset(business.logo_asset_id);
-			if (!asset || !asset.asset_url) return business;
-
-			// Get the team where user is host
-			const team = await this.teamService.getTeamByHostId(userId);
+			const team = await this.teamService.getTeamByHostId(business.user_id);
 			return {
 				...business,
-				logo: asset.asset_url,
 				teamDetails: {
 					...team,
 					user: { email: team?.user?.email, first_name: team?.user?.first_name, last_name: team?.user?.last_name },
@@ -112,12 +57,25 @@ export class BusinessService {
 		}
 	}
 
-	/**
-	 * Retrieves all businesses with optional filtering
-	 * @param {BusinessQuery} [query] - Query parameters for filtering businesses
-	 * @returns {Promise<{businesses: Business[], total: number}>} List of businesses and total count
-	 * @throws {Error} When business retrieval fails
-	 */
+	public async getBusinessByUserId(userId: number) {
+		try {
+			const business = await this.repository.findByUserId(userId);
+			if (!business) return business;
+
+			const team = await this.teamService.getTeamByHostId(userId);
+			return {
+				...business,
+				teamDetails: {
+					...team,
+					user: { email: team?.user?.email, first_name: team?.user?.first_name, last_name: team?.user?.last_name },
+				},
+			};
+		} catch (error) {
+			logger.error(error);
+			throw error;
+		}
+	}
+
 	public async getAllBusinesses(query?: BusinessQuery) {
 		try {
 			return await this.repository.findAll(query);
@@ -127,52 +85,29 @@ export class BusinessService {
 		}
 	}
 
-	/**
-	 * Creates or updates a business profile
-	 * @param {number} userId - ID of the user
-	 * @param {BusinessBody} business - Business details to create/update
-	 * @returns {Promise<Business>} Updated business information
-	 * @throws {Error} When business creation/update fails
-	 */
-	public async upsertBusiness(userId: number, business: BusinessBody, options?: { dealName?: string | null }) {
+	public async upsertBusiness(userId: number, business: BusinessBody, options?: { dealName?: string | null; dealApplicationId?: number }) {
 		try {
-			const existingBusiness = await this.repository.findByUserId(userId);
-
-			// Start with existing logo_asset_id if it exists
-			let logoAssetId = existingBusiness?.logo_asset_id || null;
-
-			if (business.logo) {
-				if (business.logo.startsWith('data:image')) {
-					// Handle logo upload if it's a base64 string
-					const fileName = business.logoFileName || `business-logo-${userId}.jpg`;
-					const logoData = await this.handleLogoUpload(userId, business.logo, fileName);
-					logoAssetId = logoData.assetId;
-				} else {
-					// If logo is not a base64 string and not updating, keep existing logo_asset_id
-					logoAssetId = existingBusiness?.logo_asset_id;
-				}
-			}
+			const existingBusiness = options?.dealApplicationId
+				? await this.repository.findByDealApplicationId(options.dealApplicationId)
+				: await this.repository.findByUserId(userId);
 
 			const businessData = {
 				...business,
 				...(business.inventory_location !== undefined && {
 					international_location: business.inventory_location === 'International' ? business.international_location?.trim() || null : null,
 				}),
-				logo_asset_id: logoAssetId,
 				user_id: userId,
+				...(options?.dealApplicationId != null ? { deal_application_id: options.dealApplicationId } : {}),
 			};
 
 			if (existingBusiness) {
-				// Update existing business
 				await this.repository.update(existingBusiness.id, businessData);
 			} else {
-				//first create a folder for this business in drive then create business and team in parallel
 				const parentFolderName = buildCompanyDriveFolderName(businessData.legal_name, options?.dealName);
 				const company_folder_id = await this.assetService.CreateFolder(parentFolderName, env.GOOGLE_DRIVE_FOLDER_ID, {
 					preserveDisplayFormat: true,
 				});
 
-				//create all needed drive folders and store in advance
 				const pages = [
 					'financial-reports',
 					'forecasts',
@@ -185,10 +120,8 @@ export class BusinessService {
 					'financial-screener',
 				];
 				const folderPromises = pages.map((page) => this.assetService.CreateFolder(page, company_folder_id));
-
 				const folderIds = await Promise.all(folderPromises);
 
-				// Map page names to folder IDs
 				const pageFolderMap: Record<string, string> = {};
 				pages.forEach((page, i) => {
 					pageFolderMap[page] = folderIds[i];
@@ -202,7 +135,6 @@ export class BusinessService {
 					this.teamService.createTeam(business.legal_name, userId),
 				]);
 
-				// Transform map into array of NewFinancialStepFolder
 				const stepFolderRecords: NewFinancialStepFolder[] = Object.entries(pageFolderMap).map(([page, folder_id]) => ({
 					user_id: userId,
 					business_id: businessRecord[0].id,
@@ -210,101 +142,24 @@ export class BusinessService {
 					folder_id,
 				}));
 
-				// Bulk insert
 				await Promise.all([
 					this.financialWizardService.insertFinancialStepFolders(stepFolderRecords),
-					this.financialWizardService.trackBusinessProfile(userId),
+					this.financialWizardService.trackBusinessProfile(userId, options?.dealApplicationId),
 				]);
 			}
 
-			// Return business with resolved asset URLs
+			if (options?.dealApplicationId) {
+				const updated = await this.repository.findByDealApplicationId(options.dealApplicationId);
+				if (!updated) {
+					throw new Error('Business not found after upsert');
+				}
+				return updated;
+			}
+
 			return await this.getBusinessByUserId(userId);
 		} catch (error) {
 			logger.error(error);
 			throw error;
 		}
 	}
-
-	/**
-	 * Retrieves business logo information
-	 * @param {number} businessId - ID of the business
-	 * @returns {Promise<{logo: string|null, presignedLogoUrl: string|null}>} Logo URLs
-	 * @throws {Error} When logo retrieval fails
-	 */
-	public async getBusinessLogo(businessId: number) {
-		try {
-			const business = await this.repository.findById(businessId);
-			if (!business?.logo_asset_id) {
-				return { logo: null, presignedLogoUrl: null };
-			}
-
-			const asset = await this.assetService.getAsset(business.logo_asset_id);
-			if (!asset) {
-				return { logo: null, presignedLogoUrl: null };
-			}
-
-			return {
-				logo: asset.asset_url,
-				presignedLogoUrl: asset.presignedUrl,
-			};
-		} catch (error) {
-			logger.error(error);
-			throw error;
-		}
-	}
-
-	/**
-	 * Updates business logo with a new image
-	 * @param {number} businessId - ID of the business
-	 * @param {string} imageBase64 - Base64 encoded logo image
-	 * @param {string} fileName - Name of the logo file
-	 * @returns {Promise<{success: boolean, message: string, business: Business}>} Updated business information
-	 * @throws {Error} When logo update fails
-	 */
-	public updateBusinessLogo = async (businessId: number, imageBase64: string, fileName: string) => {
-		try {
-			// Convert base64 to buffer
-			const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-			const buffer = Buffer.from(base64Data, 'base64');
-
-			// Create asset using AssetService
-			const { asset: assetId } = await this.assetService.createAsset(
-				businessId,
-				fileName,
-				getContentType(imageBase64),
-				'profile_picture',
-				buffer.length,
-				0,
-				buffer,
-			);
-
-			// Update business with just the asset ID
-			await this.repository.update(businessId, {
-				logo_asset_id: assetId,
-			});
-
-			// Get the updated business with presigned URL
-			const business = await this.repository.findById(businessId);
-			if (!business) {
-				throw new Error('Business not found after update');
-			}
-
-			const asset = await this.assetService.getAsset(assetId);
-			if (!asset?.asset_url) {
-				throw new Error('Failed to get asset URL');
-			}
-
-			return {
-				success: true,
-				message: 'Business logo uploaded successfully',
-				business: {
-					...business,
-					logo: asset.asset_url,
-				},
-			};
-		} catch (error) {
-			logger.error(error);
-			throw error;
-		}
-	};
 }

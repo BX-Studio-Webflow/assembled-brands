@@ -1,4 +1,4 @@
-import { and, desc, eq, like } from 'drizzle-orm';
+import { and, desc, eq, isNull, like } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import { businessSchema, schema } from '../schema/schema.js';
@@ -44,7 +44,16 @@ export class BusinessRepository {
 	 * @returns {Promise<typeof businessSchema.$inferSelect|undefined>} Business if found
 	 */
 	async findByUserId(userId: number) {
-		const result = await this.db.select().from(businessSchema).where(eq(businessSchema.user_id, userId)).limit(1);
+		const result = await this.db
+			.select()
+			.from(businessSchema)
+			.where(and(eq(businessSchema.user_id, userId), isNull(businessSchema.deal_application_id)))
+			.limit(1);
+		return result[0];
+	}
+
+	async findByDealApplicationId(dealApplicationId: number) {
+		const result = await this.db.select().from(businessSchema).where(eq(businessSchema.deal_application_id, dealApplicationId)).limit(1);
 		return result[0];
 	}
 

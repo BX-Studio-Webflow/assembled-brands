@@ -7,6 +7,7 @@ import { jwt } from 'hono/jwt';
 import { loadEnvironmentVariables } from '../lib/secrets.ts';
 import { AssetRepository } from '../repository/asset.ts';
 import { BusinessRepository } from '../repository/business.ts';
+import { DealApplicationRepository } from '../repository/deal-application.ts';
 import { EmailRepository } from '../repository/email.ts';
 import { FinancialWizardRepository } from '../repository/financial-wizard.ts';
 import { HubspotContactWebhookRepository } from '../repository/hubspot-contact-webhook.ts';
@@ -18,6 +19,7 @@ import { UserRepository } from '../repository/user.ts';
 import { schema } from '../schema/index.ts';
 import { AssetService } from '../service/asset.ts';
 import { BusinessService } from '../service/business.ts';
+import { DealApplicationService } from '../service/deal-application.ts';
 import { EmailService } from '../service/email.js';
 import { FinancialWizardService } from '../service/financial-wizard.ts';
 import { HubSpotService } from '../service/hubspot.ts';
@@ -36,7 +38,7 @@ import { ERRORS, serveInternalServerError, serveNotFound } from './controller/re
 import { TeamController } from './controller/team.js';
 import { teamAccess } from './middleware/team.js';
 import { assetQueryValidator, completeMultipartUploadValidator, createMultipartAssetValidator } from './validator/asset.ts';
-import { businessQueryValidator, businessValidator, uploadBusinessLogoValidator } from './validator/business.ts';
+import { businessQueryValidator, businessValidator } from './validator/business.ts';
 import {
 	documentUploadValidator,
 	financialOverviewValidator,
@@ -109,6 +111,7 @@ export class Server {
 		const assetRepo = new AssetRepository(db);
 		const teamRepo = new TeamRepository(db);
 		const businessRepo = new BusinessRepository(db);
+		const dealApplicationRepo = new DealApplicationRepository(db);
 		const financialWizardRepo = new FinancialWizardRepository(db);
 		const onboardingWizardRepo = new OnboardingWizardRepository(db);
 		const emailRepo = new EmailRepository(db);
@@ -120,10 +123,17 @@ export class Server {
 		const assetService = new AssetService(assetRepo, s3Service);
 		const userService = new UserService(userRepo);
 		const teamService = new TeamService(teamRepo, userService);
-		const hubSpotService = new HubSpotService(hubspotContactWebhookRepo, hubspotDealWebhookRepo, userService);
+		const dealApplicationService = new DealApplicationService(dealApplicationRepo);
+		const hubSpotService = new HubSpotService(hubspotContactWebhookRepo, hubspotDealWebhookRepo, userService, dealApplicationService);
 		const financialWizardService = new FinancialWizardService(financialWizardRepo, assetService, hubSpotService);
 		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService, financialWizardService);
-		const onboardingWizardService = new OnboardingWizardService(onboardingWizardRepo, hubSpotService, userService, businessService);
+		const onboardingWizardService = new OnboardingWizardService(
+			onboardingWizardRepo,
+			hubSpotService,
+			userService,
+			businessService,
+			dealApplicationService,
+		);
 		const emailService = new EmailService(emailRepo);
 
 		// Setup controllers
@@ -226,7 +236,6 @@ export class Server {
 		// Regular user endpoints
 		business.get('/my', authCheck, businessCtrl.getMyBusiness);
 		business.post('/my', authCheck, businessValidator, businessCtrl.upsertBusiness);
-		business.post('/logo', authCheck, uploadBusinessLogoValidator, businessCtrl.updateBusinessLogo);
 
 		// Admin only endpoint
 		business.get('/', authCheck, businessQueryValidator, businessCtrl.getAllBusinesses);

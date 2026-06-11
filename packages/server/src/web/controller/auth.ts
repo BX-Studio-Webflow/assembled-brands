@@ -3,7 +3,7 @@ import { env } from 'process';
 
 import { sendTemplateEmail } from '../../lib/email-processor.ts';
 import { encrypt, verify } from '../../lib/encryption.js';
-import { encode, type JWTPayload } from '../../lib/jwt.ts';
+import { encodeAuth, type JWTPayload } from '../../lib/jwt.ts';
 import { logger } from '../../lib/logger.ts';
 import type { UserRepository } from '../../repository/user.js';
 import { NewUser } from '../../schema/schema.ts';
@@ -102,7 +102,7 @@ export class AuthController {
 				this.teamService.getUserTeams(user.id),
 			]);
 
-			const token = await encode(user.id, user.email);
+			const token = await encodeAuth(user.id, user.email);
 			const serializedUser = await serializeUser(user);
 			return c.json({
 				token: token,
@@ -286,7 +286,7 @@ export class AuthController {
 				buttonLink: `${env.FRONTEND_URL}`,
 			});
 
-			const token = await encode(user.id, user.email);
+			const token = await encodeAuth(user.id, user.email);
 			const serializedUser = await serializeUser(user);
 			return c.json({ token, user: serializedUser });
 		} catch (err) {
@@ -463,7 +463,7 @@ export class AuthController {
 			await this.service.update(user.id, { password: hashedPassword, email_token: null, is_verified: true });
 
 			//generate token and serialize user
-			const token = await encode(user.id, user.email);
+			const token = await encodeAuth(user.id, user.email);
 			const serializedUser = await serializeUser(user);
 
 			//send template email to user

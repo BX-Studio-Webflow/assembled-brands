@@ -42,8 +42,31 @@ export class FinancialWizardService {
 	 * @returns {Promise<FinancialWizardApplication>} The financial wizard application
 	 * @throws {Error} When application creation or retrieval fails
 	 */
-	public async getOrCreateApplication(userId: number) {
+	private async findApplicationForContext(userId: number, dealApplicationId?: number) {
+		if (dealApplicationId) {
+			return this.repo.findApplicationByDealApplicationId(dealApplicationId);
+		}
+		return this.repo.findApplicationByUserId(userId);
+	}
+
+	public async getOrCreateApplication(userId: number, dealApplicationId?: number) {
 		try {
+			if (dealApplicationId) {
+				let application = await this.repo.findApplicationByDealApplicationId(dealApplicationId);
+				if (!application) {
+					application = await this.repo.createApplication({
+						user_id: userId,
+						deal_application_id: dealApplicationId,
+						current_page: 'company-profile',
+						is_complete: false,
+					});
+					if (!application) {
+						throw new Error('Failed to create application');
+					}
+				}
+				return application;
+			}
+
 			let application = await this.repo.findApplicationByUserId(userId);
 			if (!application) {
 				application = await this.repo.createApplication({
@@ -97,9 +120,9 @@ export class FinancialWizardService {
 	 * @returns {Promise<FinancialOverview>} The saved financial overview
 	 * @throws {Error} When saving financial overview fails
 	 */
-	public async saveFinancialOverview(userId: number, data: FinancialOverviewBody) {
+	public async saveFinancialOverview(userId: number, data: FinancialOverviewBody, dealApplicationId?: number) {
 		try {
-			const application = await this.getOrCreateApplication(userId);
+			const application = await this.getOrCreateApplication(userId, dealApplicationId);
 			if (!application) {
 				throw new Error('Application not found');
 			}
@@ -137,9 +160,10 @@ export class FinancialWizardService {
 		documentType: NewFinancialDocument['document_type'],
 		assetId: number,
 		notes: string,
+		dealApplicationId?: number,
 	) {
 		try {
-			const application = await this.getOrCreateApplication(userId);
+			const application = await this.getOrCreateApplication(userId, dealApplicationId);
 			const hadExistingDocuments = (await this.repo.findDocumentsByApplicationId(application.id, true)).length > 0;
 
 			const asset = await this.assetService.getAsset(assetId);
@@ -164,9 +188,9 @@ export class FinancialWizardService {
 			}
 
 			try {
-				await this.syncHubSpotDealStageAfterUpload(userId, application.id, documentType, hadExistingDocuments);
+				await this.syncHubSpotDealStageAfterUpload(userId, application.id, documentType, hadExistingDocuments, dealApplicationId);
 			} catch (error) {
-				logger.error({ error, userId, documentType }, 'Failed to sync HubSpot deal stage after document upload');
+				logger.error({ error, userId, documentType, dealApplicationId }, 'Failed to sync HubSpot deal stage after document upload');
 			}
 
 			return document;
@@ -181,9 +205,17 @@ export class FinancialWizardService {
 		applicationId: number,
 		documentType: NewFinancialDocument['document_type'],
 		hadExistingDocuments: boolean,
+		dealApplicationId?: number,
 	): Promise<void> {
-		const dealRow = await this.hubSpotService.findProcessedDealByUserId(userId);
-		if (!dealRow) {
+		let hubspotDealObjectId: number | undefined;
+		if (dealApplicationId) {
+			const dealApplication = await this.hubSpotService.findDealApplicationById(dealApplicationId);
+			hubspotDealObjectId = dealApplication?.hubspot_deal_object_id;
+		} else {
+			const dealRow = await this.hubSpotService.findProcessedDealByUserId(userId);
+			hubspotDealObjectId = dealRow?.object_id;
+		}
+		if (!hubspotDealObjectId) {
 			return;
 		}
 
@@ -192,17 +224,17 @@ export class FinancialWizardService {
 			const [managementBios, capTable, business] = await Promise.all([
 				this.repo.findCurrentDocumentByType(applicationId, 'management_bios'),
 				this.repo.findCurrentDocumentByType(applicationId, 'cap_table'),
-				this.repo.findBusinessByUserId(userId),
+				dealApplicationId ? this.repo.findBusinessByDealApplicationId(dealApplicationId) : this.repo.findBusinessByUserId(userId),
 			]);
 			const requiresCapTable = business?.raised_external_equity !== 'no';
 			if (managementBios && (!requiresCapTable || capTable)) {
-				await this.hubSpotService.updateDealStage(dealRow.object_id, FinancialWizardService.HUBSPOT_STAGE_PACKAGE_RECEIVED);
+				await this.hubSpotService.updateDealStage(hubspotDealObjectId, FinancialWizardService.HUBSPOT_STAGE_PACKAGE_RECEIVED);
 				return;
 			}
 		}
 
 		if (!hadExistingDocuments) {
-			await this.hubSpotService.updateDealStage(dealRow.object_id, FinancialWizardService.HUBSPOT_STAGE_MEETING_BOOKED);
+			await this.hubSpotService.updateDealStage(hubspotDealObjectId, FinancialWizardService.HUBSPOT_STAGE_MEETING_BOOKED);
 		}
 	}
 
@@ -254,11 +286,11 @@ export class FinancialWizardService {
 	 * @returns {Promise<FinancialWizardProgressResponse | null>} The progress data or null if not found
 	 * @throws {Error} When progress retrieval fails
 	 */
-	public async getProgress(userId: number): Promise<FinancialWizardProgressResponse | null> {
+	public async getProgress(userId: number, dealApplicationId?: number): Promise<FinancialWizardProgressResponse | null> {
 		try {
 			const [application, business] = await Promise.all([
-				this.repo.findApplicationByUserId(userId),
-				this.repo.findBusinessByUserId(userId),
+				this.findApplicationForContext(userId, dealApplicationId),
+				dealApplicationId ? this.repo.findBusinessByDealApplicationId(dealApplicationId) : this.repo.findBusinessByUserId(userId),
 			]);
 
 			if (!application) {
@@ -326,9 +358,9 @@ export class FinancialWizardService {
 	 * @returns {Promise<FinancialWizardApplication>} The updated application
 	 * @throws {Error} When page update fails or application not found
 	 */
-	public async updatePage(userId: number, page: string) {
+	public async updatePage(userId: number, page: string, dealApplicationId?: number) {
 		try {
-			const application = await this.repo.findApplicationByUserId(userId);
+			const application = await this.findApplicationForContext(userId, dealApplicationId);
 			if (!application) {
 				throw new Error('Application not found');
 			}
@@ -348,9 +380,9 @@ export class FinancialWizardService {
 	 * @returns {Promise<FinancialWizardApplication>} The updated application
 	 * @throws {Error} When completion fails or application not found
 	 */
-	public async completeApplication(userId: number) {
+	public async completeApplication(userId: number, dealApplicationId?: number) {
 		try {
-			const application = await this.repo.findApplicationByUserId(userId);
+			const application = await this.findApplicationForContext(userId, dealApplicationId);
 			if (!application) {
 				throw new Error('Application not found');
 			}
@@ -371,9 +403,9 @@ export class FinancialWizardService {
 	 * @returns {Promise<Array>} List of documents with asset URLs
 	 * @throws {Error} When document retrieval fails
 	 */
-	public async getDocumentsByPage(userId: number, page: FinancialWizardPage) {
+	public async getDocumentsByPage(userId: number, page: FinancialWizardPage, dealApplicationId?: number) {
 		try {
-			const application = await this.repo.findApplicationByUserId(userId);
+			const application = await this.findApplicationForContext(userId, dealApplicationId);
 			if (!application) {
 				throw new Error('Application not found');
 			}
@@ -404,9 +436,9 @@ export class FinancialWizardService {
 	 * @returns {Promise<void>}
 	 * @throws {Error} When tracking fails
 	 */
-	public async trackBusinessProfile(userId: number): Promise<void> {
+	public async trackBusinessProfile(userId: number, dealApplicationId?: number): Promise<void> {
 		try {
-			const application = await this.getOrCreateApplication(userId);
+			const application = await this.getOrCreateApplication(userId, dealApplicationId);
 			if (!application) {
 				throw new Error('Application not found');
 			}
@@ -432,9 +464,9 @@ export class FinancialWizardService {
 	 * @returns {Promise<void>}
 	 * @throws {Error} When document deletion fails, document not found, or access denied
 	 */
-	public async deleteDocument(userId: number, documentId: number): Promise<void> {
+	public async deleteDocument(userId: number, documentId: number, dealApplicationId?: number): Promise<void> {
 		try {
-			const application = await this.repo.findApplicationByUserId(userId);
+			const application = await this.findApplicationForContext(userId, dealApplicationId);
 			if (!application) {
 				throw new Error('Application not found');
 			}

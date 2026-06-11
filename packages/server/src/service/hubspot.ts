@@ -7,6 +7,7 @@ import { HubspotDealWebhookRepository } from '../repository/hubspot-deal-webhook
 import type { NewHubspotContactWebhook, NewHubspotDealWebhook, NewUser, OnboardingApplication, User } from '../schema/schema.ts';
 import { generateSecurePassword } from '../util/string.ts';
 import type { HubspotCrmWebhookEvent, HubspotNewLeadBody } from '../web/validator/user.js';
+import type { DealApplicationService } from './deal-application.ts';
 import type { UserService } from './user.ts';
 
 const HUBSPOT_CONTACTS_URL = 'https://api.hubapi.com/crm/v3/objects/contacts';
@@ -101,15 +102,18 @@ export class HubSpotService {
 	private contactWebhookRepo: HubspotContactWebhookRepository;
 	private dealWebhookRepo: HubspotDealWebhookRepository;
 	private userService: UserService;
+	private dealApplicationService?: DealApplicationService;
 
 	constructor(
 		contactWebhookRepo: HubspotContactWebhookRepository,
 		dealWebhookRepo: HubspotDealWebhookRepository,
 		userService: UserService,
+		dealApplicationService?: DealApplicationService,
 	) {
 		this.contactWebhookRepo = contactWebhookRepo;
 		this.dealWebhookRepo = dealWebhookRepo;
 		this.userService = userService;
+		this.dealApplicationService = dealApplicationService;
 		this.apiKey = env.HUBSPOT_API_KEY || '';
 		if (!this.apiKey) {
 			logger.warn('HubSpot API key not configured');
@@ -194,8 +198,22 @@ export class HubSpotService {
 						logger.info({ userId, email }, 'Created user for deal contact');
 					}
 
-					// Associate this user with the deal webhook row
-					await this.dealWebhookRepo.update(rowId, { user_id: userId });
+					let dealApplicationId: number | undefined;
+					if (this.dealApplicationService) {
+						const dealApplication = await this.dealApplicationService.createForNewDeal({
+							userId,
+							hubspotDealObjectId: event.objectId,
+							hubspotDealWebhookEventId: rowId,
+							legalName: dealname,
+						});
+						dealApplicationId = dealApplication.id;
+					}
+
+					// Associate this user (and deal application) with the deal webhook row
+					await this.dealWebhookRepo.update(rowId, {
+						user_id: userId,
+						...(dealApplicationId != null ? { deal_application_id: dealApplicationId } : {}),
+					});
 
 					await this.sendWarmLeadInvite(email, firstname || 'there', dealname, event.objectId);
 				} catch (contactErr) {
@@ -380,6 +398,10 @@ export class HubSpotService {
 
 	public async findProcessedDealByUserId(userId: number) {
 		return this.dealWebhookRepo.findProcessedByUserId(userId);
+	}
+
+	public async findDealApplicationById(dealApplicationId: number) {
+		return this.dealApplicationService?.findById(dealApplicationId) ?? null;
 	}
 
 	/**

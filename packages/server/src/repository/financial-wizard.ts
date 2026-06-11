@@ -1,4 +1,4 @@
-import { and, desc, eq, max } from 'drizzle-orm';
+import { and, desc, eq, isNull, max } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import type {
@@ -48,7 +48,13 @@ export class FinancialWizardRepository {
 	 */
 	public async findApplicationByUserId(userId: number) {
 		return this.db.query.financialWizardApplicationSchema.findFirst({
-			where: eq(financialWizardApplicationSchema.user_id, userId),
+			where: and(eq(financialWizardApplicationSchema.user_id, userId), isNull(financialWizardApplicationSchema.deal_application_id)),
+		});
+	}
+
+	public async findApplicationByDealApplicationId(dealApplicationId: number) {
+		return this.db.query.financialWizardApplicationSchema.findFirst({
+			where: eq(financialWizardApplicationSchema.deal_application_id, dealApplicationId),
 		});
 	}
 
@@ -223,7 +229,16 @@ export class FinancialWizardRepository {
 	 * @returns {Promise<Business | undefined>} The business if found
 	 */
 	public async findBusinessByUserId(userId: number) {
-		const result = await this.db.select().from(businessSchema).where(eq(businessSchema.user_id, userId)).limit(1);
+		const result = await this.db
+			.select()
+			.from(businessSchema)
+			.where(and(eq(businessSchema.user_id, userId), isNull(businessSchema.deal_application_id)))
+			.limit(1);
+		return result[0];
+	}
+
+	public async findBusinessByDealApplicationId(dealApplicationId: number) {
+		const result = await this.db.select().from(businessSchema).where(eq(businessSchema.deal_application_id, dealApplicationId)).limit(1);
 		return result[0];
 	}
 

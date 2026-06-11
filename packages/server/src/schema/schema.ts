@@ -61,10 +61,10 @@ export const businessSchema = sqliteTable('businesses', {
 	other_accounting_software: text('other_accounting_software'),
 	description: text('description'),
 	folder_id: text('folder_id').notNull().default(''),
-	logo_asset_id: integer('logo_asset_id').references(() => assetsSchema.id),
 	user_id: integer('user_id')
 		.references(() => userSchema.id)
 		.notNull(),
+	deal_application_id: integer('deal_application_id'),
 	updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 	created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 });
@@ -199,16 +199,51 @@ export const hubspotDealWebhookSchema = sqliteTable(
 			.default('pending'),
 		error_message: text('error_message'),
 		user_id: integer('user_id').references(() => userSchema.id),
+		deal_application_id: integer('deal_application_id'),
 		created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 		updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 	},
 	(t) => [uniqueIndex('hubspot_deal_webhook_portal_event_subscription_unique').on(t.portal_id, t.event_id, t.subscription_id)],
 );
 
+export const dealApplicationSchema = sqliteTable(
+	'deal_applications',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		user_id: integer('user_id')
+			.references(() => userSchema.id)
+			.notNull(),
+		hubspot_deal_object_id: integer('hubspot_deal_object_id').notNull(),
+		hubspot_deal_webhook_event_id: integer('hubspot_deal_webhook_event_id').references(() => hubspotDealWebhookSchema.id),
+		status: text('status', { enum: ['active', 'submitted', 'archived', 'superseded'] })
+			.notNull()
+			.default('active'),
+		legal_name: text('legal_name'),
+		created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+		updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+	},
+	(t) => [uniqueIndex('deal_applications_hubspot_deal_object_id_unique').on(t.hubspot_deal_object_id)],
+);
+
 export const hubspotDealWebhookRelations = relations(hubspotDealWebhookSchema, ({ one }) => ({
 	user: one(userSchema, {
 		fields: [hubspotDealWebhookSchema.user_id],
 		references: [userSchema.id],
+	}),
+	dealApplication: one(dealApplicationSchema, {
+		fields: [hubspotDealWebhookSchema.deal_application_id],
+		references: [dealApplicationSchema.id],
+	}),
+}));
+
+export const dealApplicationRelations = relations(dealApplicationSchema, ({ one }) => ({
+	user: one(userSchema, {
+		fields: [dealApplicationSchema.user_id],
+		references: [userSchema.id],
+	}),
+	hubspotDealWebhookEvent: one(hubspotDealWebhookSchema, {
+		fields: [dealApplicationSchema.hubspot_deal_webhook_event_id],
+		references: [hubspotDealWebhookSchema.id],
 	}),
 }));
 
@@ -237,6 +272,7 @@ export const onboardingApplicationSchema = sqliteTable('onboarding_applications'
 	user_id: integer('user_id')
 		.references(() => userSchema.id)
 		.notNull(),
+	deal_application_id: integer('deal_application_id').references(() => dealApplicationSchema.id),
 
 	// Step 1: Company Info
 	legal_name: text('legal_name'),
@@ -283,6 +319,10 @@ export const onboardingApplicationRelations = relations(onboardingApplicationSch
 		fields: [onboardingApplicationSchema.user_id],
 		references: [userSchema.id],
 	}),
+	dealApplication: one(dealApplicationSchema, {
+		fields: [onboardingApplicationSchema.deal_application_id],
+		references: [dealApplicationSchema.id],
+	}),
 }));
 
 export const financialWizardApplicationSchema = sqliteTable('financial_wizard_applications', {
@@ -290,6 +330,7 @@ export const financialWizardApplicationSchema = sqliteTable('financial_wizard_ap
 	user_id: integer('user_id')
 		.references(() => userSchema.id)
 		.notNull(),
+	deal_application_id: integer('deal_application_id').references(() => dealApplicationSchema.id),
 
 	// Progress tracking
 	current_page: text('current_page', {
@@ -410,6 +451,10 @@ export const financialWizardApplicationRelations = relations(financialWizardAppl
 		fields: [financialWizardApplicationSchema.user_id],
 		references: [userSchema.id],
 	}),
+	dealApplication: one(dealApplicationSchema, {
+		fields: [financialWizardApplicationSchema.deal_application_id],
+		references: [dealApplicationSchema.id],
+	}),
 	financialOverview: one(financialOverviewSchema, {
 		fields: [financialWizardApplicationSchema.id],
 		references: [financialOverviewSchema.application_id],
@@ -457,6 +502,9 @@ export type FinancialOverview = typeof financialOverviewSchema.$inferSelect;
 export type NewFinancialOverview = typeof financialOverviewSchema.$inferInsert;
 export type FinancialDocument = typeof financialDocumentSchema.$inferSelect;
 export type NewFinancialDocument = typeof financialDocumentSchema.$inferInsert;
+
+export type DealApplication = typeof dealApplicationSchema.$inferSelect;
+export type NewDealApplication = typeof dealApplicationSchema.$inferInsert;
 
 export type OnboardingApplication = typeof onboardingApplicationSchema.$inferSelect;
 export type NewOnboardingApplication = typeof onboardingApplicationSchema.$inferInsert;
@@ -509,6 +557,10 @@ export const businessRelations = relations(businessSchema, ({ one }) => ({
 		fields: [businessSchema.user_id],
 		references: [userSchema.id],
 	}),
+	dealApplication: one(dealApplicationSchema, {
+		fields: [businessSchema.deal_application_id],
+		references: [dealApplicationSchema.id],
+	}),
 }));
 
 export const teamRelations = relations(teamSchema, ({ many }) => ({
@@ -540,6 +592,7 @@ export const teamInvitationRelations = relations(teamInvitationSchema, ({ one })
 
 export const schema = {
 	userSchema,
+	dealApplicationSchema,
 	businessSchema,
 	assetsSchema,
 	subscriptionSchema,
@@ -559,6 +612,7 @@ export const schema = {
 	notificationRelations,
 	hubspotContactWebhookRelations,
 	hubspotDealWebhookRelations,
+	dealApplicationRelations,
 	businessRelations,
 	teamRelations,
 	teamMemberRelations,
