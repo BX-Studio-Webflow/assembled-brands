@@ -37,6 +37,7 @@ import { FinancialWizardController } from './controller/financial-wizard.ts';
 import { HubSpotController } from './controller/hubspot.ts';
 import { OnboardingWizardController } from './controller/onboarding-wizard.ts';
 import { ERRORS, serveInternalServerError, serveNotFound } from './controller/resp/error.js';
+import { SlackController } from './controller/slack.ts';
 import { TeamController } from './controller/team.js';
 import { teamAccess } from './middleware/team.js';
 import { assetQueryValidator, completeMultipartUploadValidator, createMultipartAssetValidator } from './validator/asset.ts';
@@ -126,7 +127,7 @@ export class Server {
 		const userService = new UserService(userRepo);
 		const teamService = new TeamService(teamRepo, userService);
 		const dealApplicationService = new DealApplicationService(dealApplicationRepo);
-		const slackNotifierService = new SlackNotifierService();
+		const slackNotifierService = new SlackNotifierService(dealApplicationService);
 		const hubSpotService = new HubSpotService(
 			hubspotContactWebhookRepo,
 			hubspotDealWebhookRepo,
@@ -135,7 +136,14 @@ export class Server {
 			slackNotifierService,
 		);
 		const financialWizardService = new FinancialWizardService(financialWizardRepo, assetService, hubSpotService);
-		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService, financialWizardService);
+		const businessService = new BusinessService(
+			businessRepo,
+			s3Service,
+			assetService,
+			teamService,
+			financialWizardService,
+			slackNotifierService,
+		);
 		const onboardingWizardService = new OnboardingWizardService(
 			onboardingWizardRepo,
 			hubSpotService,
@@ -174,11 +182,13 @@ export class Server {
 		const teamController = new TeamController(teamService, userService, businessService);
 		const hubSpotController = new HubSpotController(hubSpotService, userService);
 		const dealApplicationController = new DealApplicationController(dealApplicationService, userService);
+		const slackController = new SlackController(slackNotifierService, userService);
 
 		// Register routes
 
 		this.registerUserRoutes(api, authController);
 		this.registerHubspotWebhookRoutes(api, hubSpotController);
+		this.registerSlackRoutes(api, slackController);
 		this.registerAssetRoutes(api, assetController, teamService);
 		this.registerBusinessRoutes(api, businessController);
 		this.registerTeamRoutes(api, teamController);
@@ -216,6 +226,19 @@ export class Server {
 		hubspotWebhook.get('/pipelines/deals', hubSpotCtrl.getDealPipelines);
 		hubspotWebhook.get('/deals/:id', hubSpotCtrl.getDealById);
 		api.route('/hubspot', hubspotWebhook);
+	}
+
+	private registerSlackRoutes(api: Hono, slackCtrl: SlackController) {
+		const slack = new Hono();
+		const authCheck = jwt({ secret: env.SECRET_KEY });
+
+		if (env.NODE_ENV === 'production') {
+			slack.post('/test', authCheck, slackCtrl.sendTestNotification);
+		} else {
+			slack.post('/test', slackCtrl.sendTestNotification);
+		}
+
+		api.route('/slack', slack);
 	}
 
 	private registerAssetRoutes(api: Hono, assetCtrl: AssetController, teamService: TeamService) {

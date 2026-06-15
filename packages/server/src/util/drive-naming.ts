@@ -66,3 +66,6 @@ export const buildDriveUploadFileName = (companyName: string, documentType: stri
 
 	return sanitizeDriveDisplayName(`${company} - ${reportType}${extension}`);
 };
+
+/** Public Google Drive folder URL for a folder ID. */
+export const buildGoogleDriveFolderUrl = (folderId: string): string => `https://drive.google.com/drive/folders/${folderId}`;

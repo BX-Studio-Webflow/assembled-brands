@@ -30,6 +30,10 @@ export class DealApplicationService {
 		return this.repo.update(id, { legal_name: legalName, updated_at: new Date() });
 	}
 
+	public async updateSlackThreadTs(id: number, slackThreadTs: string) {
+		return this.repo.update(id, { slack_thread_ts: slackThreadTs, updated_at: new Date() });
+	}
+
 	/**
 	 * Creates a new deal-scoped application when HubSpot fires deal.creation.
 	 * Idempotent per HubSpot deal object ID; supersedes prior active applications for the same user.

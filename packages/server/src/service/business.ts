@@ -8,6 +8,7 @@ import type { BusinessBody, BusinessQuery } from '../web/validator/business.ts';
 import type { AssetService } from './asset.js';
 import type { FinancialWizardService } from './financial-wizard.ts';
 import type { S3Service } from './s3.js';
+import type { SlackNotifierService } from './slack-notifier.ts';
 import type { TeamService } from './team.ts';
 
 /**
@@ -19,6 +20,7 @@ export class BusinessService {
 	private assetService: AssetService;
 	private teamService: TeamService;
 	private financialWizardService: FinancialWizardService;
+	private slackNotifierService?: SlackNotifierService;
 
 	constructor(
 		repository: BusinessRepository,
@@ -26,12 +28,14 @@ export class BusinessService {
 		assetService: AssetService,
 		teamService: TeamService,
 		financialWizardService: FinancialWizardService,
+		slackNotifierService?: SlackNotifierService,
 	) {
 		this.repository = repository;
 		this.s3Service = s3Service;
 		this.assetService = assetService;
 		this.teamService = teamService;
 		this.financialWizardService = financialWizardService;
+		this.slackNotifierService = slackNotifierService;
 	}
 
 	public async getBusinessDetailsByUserId(userId: number) {
@@ -146,6 +150,13 @@ export class BusinessService {
 					this.financialWizardService.insertFinancialStepFolders(stepFolderRecords),
 					this.financialWizardService.trackBusinessProfile(userId, options?.dealApplicationId),
 				]);
+
+				void this.slackNotifierService?.sendGoogleDriveFolderCreated({
+					legalName: businessData.legal_name,
+					folderId: company_folder_id,
+					folderName: parentFolderName,
+					dealApplicationId: options?.dealApplicationId,
+				});
 			}
 
 			if (options?.dealApplicationId) {

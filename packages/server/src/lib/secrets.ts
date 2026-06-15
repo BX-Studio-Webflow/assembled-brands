@@ -13,7 +13,8 @@ export const envSchema = z.object({
 	TRANSACTIONAL_EMAIL_TEMPLATE_ID: z.string(),
 
 	// Slack notifications (optional — underwriting alerts skip when unset)
-	SLACK_WEBHOOK_URL: z.string().url().optional(),
+	SLACK_BOT_TOKEN: z.string().optional(),
+	SLACK_CHANNEL_ID: z.string().optional(),
 
 	// R2/S3 storage
 	AWS_REGION: z.string(),
