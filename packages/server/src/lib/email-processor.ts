@@ -3,6 +3,8 @@ import { env } from 'process';
 import { logger } from '../lib/logger.ts';
 
 const SENDGRID_API_URL = 'https://api.sendgrid.com/v3/mail/send';
+const FROM_EMAIL = 'sales@assembledbrands.com';
+const FROM_NAME = 'Assembled Brands';
 
 const formatErrorMessage = (error: unknown): string => {
 	if (error instanceof Error) return error.message;
@@ -34,7 +36,8 @@ const sendTemplateEmail = async (
 					dynamic_template_data: params,
 				},
 			],
-			from: { email: 'support@assembledbrands.com', name: 'Assembled Brands' },
+			from: { email: FROM_EMAIL, name: FROM_NAME },
+			reply_to: { email: FROM_EMAIL, name: FROM_NAME },
 			template_id: templateId,
 			attachments: attachments,
 		};
