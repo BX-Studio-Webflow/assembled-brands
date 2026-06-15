@@ -33,6 +33,7 @@ export class DealApplicationController {
 					id: application.id,
 					deal_id: application.hubspot_deal_object_id,
 					legal_name: application.legal_name,
+					application_link: application.application_link,
 					status: application.status,
 					created_at: application.created_at,
 					updated_at: application.updated_at,

@@ -1,6 +1,7 @@
 import { logger } from '../lib/logger.ts';
 import type { DealApplicationRepository } from '../repository/deal-application.ts';
 import type { DealApplication } from '../schema/schema.ts';
+import { buildWarmLeadApplicationLink } from '../util/frontend-urls.ts';
 
 export class DealApplicationService {
 	private repo: DealApplicationRepository;
@@ -40,8 +41,18 @@ export class DealApplicationService {
 		legalName?: string | null;
 	}): Promise<DealApplication> {
 		try {
+			const applicationLink = buildWarmLeadApplicationLink(params.hubspotDealObjectId);
 			const existing = await this.repo.findByHubspotDealObjectId(params.hubspotDealObjectId);
 			if (existing) {
+				if (!existing.application_link) {
+					const updated = await this.repo.update(existing.id, {
+						application_link: applicationLink,
+						updated_at: new Date(),
+					});
+					if (updated) {
+						return updated;
+					}
+				}
 				return existing;
 			}
 
@@ -52,6 +63,7 @@ export class DealApplicationService {
 				hubspot_deal_object_id: params.hubspotDealObjectId,
 				hubspot_deal_webhook_event_id: params.hubspotDealWebhookEventId,
 				legal_name: params.legalName ?? undefined,
+				application_link: applicationLink,
 				status: 'active',
 			});
 

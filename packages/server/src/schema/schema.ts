@@ -219,6 +219,7 @@ export const dealApplicationSchema = sqliteTable(
 			.notNull()
 			.default('active'),
 		legal_name: text('legal_name'),
+		application_link: text('application_link'),
 		created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 		updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 	},

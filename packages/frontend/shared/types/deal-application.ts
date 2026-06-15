@@ -6,6 +6,7 @@ export type DealApplicationSummary = {
   id: number;
   deal_id: number;
   legal_name: string | null;
+  application_link: string | null;
   status: DealApplicationStatus;
   created_at: string | null;
   updated_at: string | null;

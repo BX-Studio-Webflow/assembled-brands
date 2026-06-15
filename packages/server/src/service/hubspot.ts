@@ -5,6 +5,7 @@ import { logger } from '../lib/logger.ts';
 import { HubspotContactWebhookRepository } from '../repository/hubspot-contact-webhook.ts';
 import { HubspotDealWebhookRepository } from '../repository/hubspot-deal-webhook.ts';
 import type { NewHubspotContactWebhook, NewHubspotDealWebhook, NewUser, OnboardingApplication, User } from '../schema/schema.ts';
+import { buildWarmLeadApplicationLink } from '../util/frontend-urls.ts';
 import { generateSecurePassword } from '../util/string.ts';
 import type { HubspotCrmWebhookEvent, HubspotNewLeadBody } from '../web/validator/user.js';
 import type { DealApplicationService } from './deal-application.ts';
@@ -143,8 +144,8 @@ export class HubSpotService {
 
 	/**
 	 * Idempotently records a deal webhook event, fetches the deal and its associated
-	 * contact from HubSpot, persists everything to the database, and emails the
-	 * contact with the warm-lead onboarding link.
+	 * contact from HubSpot, persists everything to the database.
+	 * Prospect invite email is disabled for internal deal.creation — send application links manually.
 	 * @returns The inserted/loaded deal webhook row id.
 	 */
 	public async processNewDealWebhook(event: HubspotCrmWebhookEvent): Promise<{ rowId: number }> {
@@ -180,11 +181,13 @@ export class HubSpotService {
 			});
 			logger.info({ rowId, dealId: deal.id, dealname }, 'Deal logged to database');
 
-			// 3. Fetch associated contacts and email each one
+			// 3. Fetch associated contacts and provision users / deal applications (no auto-email to prospect)
 			const contactIds = await this.getDealAssociatedContactIds(event.objectId);
 			logger.info({ dealId: deal.id, contactCount: contactIds.length }, 'Fetched deal associations');
 
 			let primaryContact: { email: string; name: string } | null = null;
+
+			let primaryApplicationLink: string | undefined;
 
 			for (const contactId of contactIds) {
 				try {
@@ -230,6 +233,7 @@ export class HubSpotService {
 							legalName: dealname,
 						});
 						dealApplicationId = dealApplication.id;
+						primaryApplicationLink = dealApplication.application_link ?? buildWarmLeadApplicationLink(event.objectId);
 					}
 
 					// Associate this user (and deal application) with the deal webhook row
@@ -242,7 +246,9 @@ export class HubSpotService {
 						primaryContact = { email, name: firstname || 'Contact' };
 					}
 
-					await this.sendWarmLeadInvite(email, firstname || 'there', dealname, event.objectId);
+					// Disabled: do not auto-email prospects when deals are created internally in HubSpot.
+					// Application links should only go out when your team sends them manually.
+					// await this.sendWarmLeadInvite(email, firstname || 'there', dealname, event.objectId);
 				} catch (contactErr) {
 					// Non-fatal: log and continue with remaining contacts
 					logger.error({ contactId, err: contactErr }, 'Failed to process deal contact');
@@ -262,6 +268,7 @@ export class HubSpotService {
 							contactEmail: primaryContact.email,
 							contactName: primaryContact.name,
 							portalId: event.portalId,
+							applicationLink: primaryApplicationLink,
 						});
 					}
 				} catch (ownerAlertErr) {
@@ -511,23 +518,36 @@ export class HubSpotService {
 		contactEmail: string;
 		contactName?: string;
 		portalId?: number;
+		applicationLink?: string | null;
 	}): Promise<void> {
-		const { ownerEmail, ownerName, dealName, dealObjectId, contactEmail, contactName, portalId } = params;
+		const { ownerEmail, ownerName, dealName, dealObjectId, contactEmail, contactName, portalId, applicationLink } = params;
 		const ownerFirstName = ownerName || ownerEmail.split('@')[0] || 'there';
 		const contactLabel = contactName ? `${contactName} (${contactEmail})` : contactEmail;
 		const dealLabel = dealName ?? `Deal #${dealObjectId}`;
 		const hubspotDealLink = portalId != null ? `https://app.hubspot.com/contacts/${portalId}/deal/${dealObjectId}` : undefined;
+		const prospectApplicationLink = applicationLink ?? buildWarmLeadApplicationLink(dealObjectId);
+
+		const bodyLines = [
+			`Hi ${ownerFirstName}, a new warm inbound deal has been created.`,
+			'',
+			`Deal: ${dealLabel}`,
+			`Contact: ${contactLabel}`,
+			`Application link (send to prospect): ${prospectApplicationLink}`,
+		];
+		if (hubspotDealLink) {
+			bodyLines.push(`HubSpot: ${hubspotDealLink}`);
+		}
 
 		await sendTemplateEmail(ownerEmail, ownerFirstName, env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 			subject: `New warm inbound deal: ${dealLabel}`,
 			title: 'New warm inbound application',
 			subtitle: 'Assembled Brands - Underwriting Alert',
 			name: ownerFirstName,
-			body: `Hi ${ownerFirstName}, a new warm inbound deal has been created and the contact has been invited to apply.\n\nDeal: ${dealLabel}\nContact: ${contactLabel}`,
-			buttonText: hubspotDealLink ? 'View deal in HubSpot' : 'Open Assembled Brands',
-			buttonLink: hubspotDealLink ?? env.FRONTEND_URL,
+			body: bodyLines.join('\n'),
+			buttonText: 'Open application link',
+			buttonLink: prospectApplicationLink,
 		});
-		logger.info({ ownerEmail, dealObjectId, contactEmail }, 'Underwriting alert sent to deal owner');
+		logger.info({ ownerEmail, dealObjectId, contactEmail, prospectApplicationLink }, 'Underwriting alert sent to deal owner');
 	}
 
 	/**
@@ -541,7 +561,7 @@ export class HubSpotService {
 			name: firstName,
 			body: `Hi ${firstName}, we have received a referral for you${dealName ? ` (${dealName})` : ''}. Please click the button below to fill in your company profile and start your application with Assembled Brands.`,
 			buttonText: 'Start my application',
-			buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/warm/onboarding-warm-lead?deal_id=${dealId}`,
+			buttonLink: buildWarmLeadApplicationLink(dealId),
 		});
 		logger.info({ email, dealId }, 'Warm-lead invite sent');
 	}
