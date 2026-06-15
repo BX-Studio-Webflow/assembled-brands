@@ -1,4 +1,4 @@
-import type { DealApplicationsResponse } from '../types/deal-application';
+import type { DealApplicationsResponse, WarmLeadSessionResponse } from '../types/deal-application';
 import ApiService from './ApiService';
 
 export async function apiGetMyDealApplications() {
@@ -9,11 +9,7 @@ export async function apiGetMyDealApplications() {
 }
 
 export async function apiExchangeWarmLeadSession(dealId: number) {
-  return ApiService.fetchDataWithAxios<{
-    token: string;
-    user: Record<string, unknown>;
-    teams: { team_id: number }[];
-  }>({
+  return ApiService.fetchDataWithAxios<WarmLeadSessionResponse>({
     url: '/onboarding-wizard/warm-lead/session',
     method: 'post',
     data: { deal_id: dealId },

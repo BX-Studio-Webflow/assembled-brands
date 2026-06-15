@@ -7,7 +7,11 @@ import type { DealApplicationSummary } from 'shared/types/deal-application';
 
 import { processMiddleware, setCookie } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
-import { constructNavBarClasses, initCollapsibleSidebar } from '$utils/helpers';
+import {
+  constructNavBarClasses,
+  initCollapsibleSidebar,
+  resolveWarmDealApplicationPath,
+} from '$utils/helpers';
 import { queryElement } from '$utils/selectors';
 
 const formatDealApplicationStatus = (status: DealApplicationSummary['status']) => {
@@ -57,6 +61,12 @@ const populateApplicationRow = (row: HTMLTableRowElement, application: DealAppli
 
   row.dataset.dealId = String(application.deal_id);
   row.style.cursor = 'pointer';
+
+  row.querySelectorAll('a[href]').forEach((anchor) => {
+    anchor.addEventListener('click', (event) => {
+      event.preventDefault();
+    });
+  });
 };
 
 const openApplication = async (dealId: number) => {
@@ -64,7 +74,13 @@ const openApplication = async (dealId: number) => {
   setCookie('accessToken', response.token, 10);
   localStorage.setItem('user', JSON.stringify(response.user));
   localStorage.removeItem('x-team-id');
-  navigateToPath('/warm/finance-company-profile');
+  navigateToPath(
+    resolveWarmDealApplicationPath(
+      dealId,
+      response.onboardingProgress,
+      response.financialWizardProgress
+    )
+  );
 };
 
 const initFinanceMyApplicationsPage = async () => {
@@ -98,7 +114,10 @@ const initFinanceMyApplicationsPage = async () => {
   }
 
   const bindRowClick = (row: HTMLTableRowElement) => {
-    row.addEventListener('click', async () => {
+    row.addEventListener('click', async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
       const dealId = Number.parseInt(row.dataset.dealId || '', 10);
       if (!Number.isFinite(dealId)) return;
 

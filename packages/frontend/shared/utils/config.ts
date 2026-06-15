@@ -25,26 +25,16 @@ export const navigateToPath = (path: string, options?: NavigateToPathOptions) =>
     return;
   }
 
-  // Read dev mode from localStorage or default to 'prod'
-  //const devMode = localStorage.getItem('api-mode') || 'production';
+  const [pathPart, queryPart] = path.split('?');
+  const normalizedPath = pathPart.replace(/^\/+/, '');
 
-  // Normalize the path: remove any leading slashes
-  const normalizedPath = path.replace(/^\/+/, '');
-
-  // Determine the path based on devMode
   let finalPath = normalizedPath;
-  /*
-  Disable check for now as we have only dev pages!!
-  TODO: Enable this check when we have production pages
-  if (!skipDevMode && (devMode === 'local' || devMode === 'remote-dev')) {
-    finalPath = `dev/${normalizedPath}`;
-  }*/
   if (!options?.useRootPath) {
     finalPath = `dev/${normalizedPath}`;
   }
 
-  // Prepend the current origin to always stay on the same domain
-  const newUrl = `${window.location.origin}/${finalPath}`;
+  const querySuffix = queryPart ? `?${queryPart}` : '';
+  const newUrl = `${window.location.origin}/${finalPath}${querySuffix}`;
 
   window.location.assign(newUrl);
 };

@@ -430,6 +430,22 @@ export class OnboardingWizardService {
 				logger.error({ hsErr, deal_id: body.deal_id }, 'Failed to sync warm-lead fields to HubSpot (non-fatal)');
 			}
 
+			if (body.working_with_team_member && body.team_member_email) {
+				try {
+					const contactName = [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || undefined;
+					await this.hubSpotService.sendUnderwritingAlert({
+						ownerEmail: body.team_member_email,
+						dealName: body.legal_name,
+						dealObjectId: body.deal_id,
+						contactEmail: user.email,
+						contactName,
+						portalId: dealRow.portal_id,
+					});
+				} catch (alertErr) {
+					logger.error({ alertErr, deal_id: body.deal_id }, 'Failed to send underwriting alert (non-fatal)');
+				}
+			}
+
 			return { application: savedApplication, user, dealApplicationId: dealApplication.id };
 		} catch (error) {
 			logger.error(error);
