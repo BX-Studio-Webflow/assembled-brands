@@ -26,9 +26,17 @@ const TeamMembersPage = async () => {
   const acceptButton = document.querySelector('[dev-target="accept"]');
   const rejectButton = document.querySelector('[dev-target="reject"]');
   const adminMessage = document.querySelector('[dev-target="admin-message"]');
+  const errorText = document.querySelector('[dev-target="error-text"]');
 
-  if (!messageElement || !acceptButton || !rejectButton || !adminMessage) {
-    console.error('Message or accept/reject buttons not found');
+  if (!messageElement || !acceptButton || !rejectButton || !adminMessage || !errorText) {
+    console.error('Message or accept/reject buttons or error text not found');
+    return;
+  }
+  if (!invitationId || !teamName || !inviterName) {
+    console.error('Invitation ID, team name, or inviter name not found');
+    errorText.textContent =
+      'Ops! Invalid invitation. Please check the invitation ID, team name, or inviter name.';
+    errorText.classList.add('is-error');
     return;
   }
 
@@ -38,7 +46,7 @@ const TeamMembersPage = async () => {
   acceptButton.addEventListener('click', async () => {
     try {
       await apiAcceptTeamInvitation(Number(invitationId));
-      adminMessage.textContent = 'Invitation accepted successfully!';
+      adminMessage.textContent = 'Please check your inbox for an email with next steps.';
     } catch (error) {
       const { message } = error as AxiosError;
       adminMessage.textContent = message || 'There was a problem accepting the invitation';

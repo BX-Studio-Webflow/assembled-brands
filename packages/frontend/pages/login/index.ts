@@ -242,7 +242,7 @@ const initLoginPage = () => {
       if (nextFinancialWizardStep) {
         navigateToPath(nextFinancialWizardStep);
       } else {
-        navigateToPath('/invite-team-members');
+        navigateToPath('/warm/invite-team-members');
         return;
       }
     } catch (error) {

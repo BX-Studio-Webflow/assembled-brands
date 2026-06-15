@@ -2892,6 +2892,14 @@ var routeMap = {
     nav_attr: "nav-team-member-link",
     nav_class: "is-active-financial"
   },
+  "/dev/warm/invite-team-members": {
+    nav_attr: "nav-team-member-link",
+    nav_class: "is-active-financial"
+  },
+  "/warm/invite-team-members": {
+    nav_attr: "nav-team-member-link",
+    nav_class: "is-active-financial"
+  },
   "/dev/finance-docs-forecasts": {
     nav_attr: "nav-financial-forecasts-link",
     nav_class: "is-active-financial"
@@ -3469,7 +3477,7 @@ var initOptionalDocsPage = async () => {
       submitButton.classList.add("is-success");
       submitButton.value = "Skipped Optional Documents";
       setTimeout(() => {
-        navigateToPath("/thank-you", { useRootPath: true });
+        navigateToPath("/warm/invite-team-members");
       }, 300);
       return;
     }
@@ -3486,7 +3494,7 @@ var initOptionalDocsPage = async () => {
       instoreVelocityHelpText.textContent = "";
       businessPlanHelpText.textContent = "";
       setTimeout(() => {
-        navigateToPath("/thank-you", { useRootPath: true });
+        navigateToPath("/warm/invite-team-members");
       }, 500);
     } catch (error) {
       const { message } = error;

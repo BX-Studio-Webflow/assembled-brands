@@ -2672,15 +2672,6 @@ var logoutUser = () => {
   localStorage.removeItem("user");
   navigateToPath("/login?error=logged-out");
 };
-var getUserRole = () => {
-  const admin = localStorage.getItem("user");
-  const user = admin && JSON.parse(admin);
-  return user && user?.role;
-};
-var isAdmin = () => {
-  const role = getUserRole();
-  return role === "admin";
-};
 
 // shared/services/axios/AxiosRequestIntrceptorConfigCallback.ts
 var AxiosRequestIntrceptorConfigCallback = (config) => {
@@ -2771,40 +2762,31 @@ var ApiService = {
 };
 var ApiService_default = ApiService;
 
-// shared/services/AssetService.ts
-var apiCreateAssetPresignedUrl = (data) => {
+// shared/services/TeamService.ts
+var apiGetTeamInvitations = (params) => {
   return ApiService_default.fetchDataWithAxios({
-    url: "/asset",
-    method: "post",
-    data
-  });
-};
-
-// shared/services/FinancialWizardService.ts
-var apiUploadFinancialDocument = (data) => {
-  return ApiService_default.fetchDataWithAxios({
-    url: "/financial-wizard/document",
-    method: "post",
-    data
-  });
-};
-var apiGetFinancialProgress = (userId) => {
-  return ApiService_default.fetchDataWithAxios({
-    url: "/financial-wizard/progress",
+    url: "/team/invitations",
     method: "get",
-    params: userId ? { user_id: userId } : void 0
+    params
   });
 };
-var apiDeleteFinancialDocument = (id) => {
+var apiGetMyTeams = () => {
   return ApiService_default.fetchDataWithAxios({
-    url: `/financial-wizard/document/${id}`,
-    method: "delete"
-  });
-};
-var apiAdminGetApplications = () => {
-  return ApiService_default.fetchDataWithAxios({
-    url: `/financial-wizard/applications`,
+    url: "/team/my-teams",
     method: "get"
+  });
+};
+var apiInviteTeamMember = (name, user_defined_role, email, teamId, message) => {
+  return ApiService_default.fetchDataWithAxios({
+    url: "/team/invite",
+    method: "post",
+    data: {
+      invitee_name: name,
+      invitee_email: email,
+      team_id: teamId,
+      user_defined_role,
+      message
+    }
   });
 };
 
@@ -2816,18 +2798,19 @@ async function apiGetUserMe() {
   });
 }
 
+// shared/services/FinancialWizardService.ts
+var apiGetFinancialProgress = (userId) => {
+  return ApiService_default.fetchDataWithAxios({
+    url: "/financial-wizard/progress",
+    method: "get",
+    params: userId ? { user_id: userId } : void 0
+  });
+};
+
 // shared/services/OnboardingService.ts
 var apiGetOnboardingProgress = () => {
   return ApiService_default.fetchDataWithAxios({
     url: "/onboarding-wizard/progress",
-    method: "get"
-  });
-};
-
-// shared/services/TeamService.ts
-var apiGetMyTeams = () => {
-  return ApiService_default.fetchDataWithAxios({
-    url: "/team/my-teams",
     method: "get"
   });
 };
@@ -2931,6 +2914,16 @@ var routeMap = {
     nav_attr: "nav-optional-documents-link",
     nav_class: "is-active-financial"
   }
+};
+var isValidEmail = (email) => {
+  if (!email) {
+    return false;
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return false;
+  }
+  return true;
 };
 var sidebarUserControlsInitialized = false;
 var getStoredUser = () => {
@@ -3169,158 +3162,6 @@ var constructNavBarClasses = () => {
     });
   }
 };
-var constructModalFunctionality = () => {
-  const modalWrapper = queryElement('[dev-target="modal-wrapper"]');
-  const modalImage = queryElement('[dev-target="modal-image"]');
-  const modalClose = queryElement('[dev-target="close-button"]');
-  const modalTitle = queryElement('[dev-target="modal-title"]');
-  if (!modalClose) {
-    console.error('Ensure [dev-target="close-button"] is present.');
-    return;
-  }
-  if (!modalTitle) {
-    console.error('Ensure [dev-target="modal-title"] is present.');
-    return;
-  }
-  if (!modalWrapper) {
-    console.error('Ensure [dev-target="modal-wrapper"] is present.');
-    return;
-  }
-  if (!modalImage) {
-    console.error('Ensure [dev-target="modal-image"] is present.');
-    return;
-  }
-  const { pathname } = window.location;
-  modalClose.addEventListener("click", () => {
-    modalWrapper.classList.add("hide");
-  });
-  const modalData = {
-    "monthly-balance-sheet": {
-      title: "Monthly Balance Sheets ** Last 2 years of monthly balance sheets",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "monthly-income-statement": {
-      title: "Monthly Income Statements ** Last 2 years of monthly income statements",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "monthly-income-forecast": {
-      title: "Monthly Income Forecast ** 12-month income forecast projection",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "monthly-inventory-reports": {
-      title: "Monthly Inventory Reports ** Please provide inventory reports for at least the last 24 months, or longer if possible",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "ar-aging-reports": {
-      title: "Accounts Receivable Aging Reports ** Please provide AR aging reports for the last 24 months, or longer if available",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "ap-aging-reports": {
-      title: "Accounts Payable Aging Report ** Please provide the accounts payable aging report for the next 24 months, or longer if possible",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "repeat-customer-reports": {
-      title: "Shopify Repeat Customer Reports ** Please provide reports on repeat customers for at least the last 24 months, or longer if possible",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "monthly-sales-reports": {
-      title: "Shopify Monthly Sales Reports ** Please provide monthly sales reports from Shopify for the last 24 months, or longer if available",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "management-bios": {
-      title: "Management Bios ** Please upload the management bios for our team",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "investor-deck": {
-      title: "Investor Deck ** Please provide the most recent investor deck",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    },
-    "cap-table": {
-      title: "Capitalization Table ** Please provide the most recent capitalization table",
-      imageUrl: "https://cdn.prod.website-files.com/66624bc26087f29222853df8/6975e8a978e87571b90a51a0_image%204.png"
-    }
-  };
-  const showModal = (key) => {
-    const data = modalData[key];
-    modalWrapper.classList.toggle("hide");
-    modalImage.src = data.imageUrl;
-    modalTitle.textContent = data.title;
-  };
-  if (pathname.includes("/dev/finance-docs-financial-reports") || pathname.includes("/finance-docs-financial-reports")) {
-    const monthly_balance_sheet = queryElement('[dev-target="monthly-balance-sheet"]');
-    const monthly_income_statement = queryElement(
-      '[dev-target="monthly-income-statement"]'
-    );
-    const monthly_income_forecast = queryElement(
-      '[dev-target="monthly-income-forecast"]'
-    );
-    monthly_balance_sheet?.addEventListener("click", () => showModal("monthly-balance-sheet"));
-    monthly_income_statement?.addEventListener(
-      "click",
-      () => showModal("monthly-income-statement")
-    );
-    monthly_income_forecast?.addEventListener("click", () => showModal("monthly-income-forecast"));
-  }
-  if (pathname.includes("/dev/finance-docs-accounts-and-inventory") || pathname.includes("/finance-docs-accounts-and-inventory")) {
-    const monthly_inventory_reports = queryElement(
-      '[dev-target="monthly-inventory-reports"]'
-    );
-    const ar_aging_reports = queryElement('[dev-target="ar-aging-reports"]');
-    const ap_aging_reports = queryElement('[dev-target="ap-aging-reports"]');
-    monthly_inventory_reports?.addEventListener(
-      "click",
-      () => showModal("monthly-inventory-reports")
-    );
-    ar_aging_reports?.addEventListener("click", () => showModal("ar-aging-reports"));
-    ap_aging_reports?.addEventListener("click", () => showModal("ap-aging-reports"));
-  }
-  if (pathname.includes("/dev/finance-docs-ecommerce-performance") || pathname.includes("/finance-docs-ecommerce-performance")) {
-    const repeat_customer_reports = queryElement(
-      '[dev-target="repeat-customer-reports"]'
-    );
-    const monthly_sales_reports = queryElement('[dev-target="monthly-sales-reports"]');
-    repeat_customer_reports?.addEventListener("click", () => showModal("repeat-customer-reports"));
-    monthly_sales_reports?.addEventListener("click", () => showModal("monthly-sales-reports"));
-  }
-  if (pathname.includes("/dev/finance-docs-team-and-ownership") || pathname.includes("/finance-docs-team-and-ownership")) {
-    const management_bios = queryElement('[dev-target="management-bios"]');
-    const investor_deck = queryElement('[dev-target="investor-deck"]');
-    const cap_table = queryElement('[dev-target="cap-table"]');
-    management_bios?.addEventListener("click", () => showModal("management-bios"));
-    investor_deck?.addEventListener("click", () => showModal("investor-deck"));
-    cap_table?.addEventListener("click", () => showModal("cap-table"));
-  }
-};
-var constructAdminSelect = async (onChangeCallback) => {
-  const admin = isAdmin();
-  if (admin) {
-    const selectWrapper = queryElement('[dev-target="admin-select-wrapper"]');
-    const select = queryElement('[dev-target="admin-select"]');
-    selectWrapper?.classList.remove("hide");
-    if (!selectWrapper || !select) {
-      console.error(
-        'Ensure [dev-target="admin-select"] and  [dev-target="admin-select-wrapper"] is present.'
-      );
-      return;
-    }
-    const applications = await apiAdminGetApplications();
-    select.innerHTML = "";
-    applications.forEach((app) => {
-      const name = app.first_name || "" + app.last_name || "";
-      const option = document.createElement("option");
-      option.value = app.id.toString();
-      option.textContent = `${name || app.email}`;
-      select.appendChild(option);
-    });
-    select.addEventListener("change", async (e) => {
-      const target = e.target;
-      const { value } = target;
-      if (onChangeCallback) {
-        await onChangeCallback(value);
-      }
-    });
-  }
-};
 var WARM_LEAD_MIME = {
   pdf: "application/pdf",
   xls: "application/vnd.ms-excel",
@@ -3349,16 +3190,6 @@ var WARM_LEAD_BUSINESS_PLAN_MIME_TYPES = [
   WARM_LEAD_MIME.pdf,
   WARM_LEAD_MIME.pptx
 ];
-var fileToBase64 = (file) => new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.onload = () => {
-    const result = reader.result;
-    const parts = result.split(",");
-    resolve(parts.length > 1 ? parts[1] : parts[0]);
-  };
-  reader.onerror = () => reject(new Error("Failed to read file as base64"));
-  reader.readAsDataURL(file);
-});
 var initCollapsibleSidebar = () => {
   initSidebarUserControls();
   const sidebar = queryElement('[dev-target="sidebar-menu"]');
@@ -3427,441 +3258,235 @@ var initCollapsibleSidebar = () => {
   sidebar.style.transition = "width 0.3s ease";
 };
 
-// pages/finance-docs-team-ownership/index.ts
-var initTeamOwnershipPage = async () => {
+// warm-lead/invite-team-members/index.ts
+var populateInviteRow = (row, invite) => {
+  const usernameCell = queryElement('[dev-target="username"]', row);
+  const emailCell = queryElement('[dev-target="email"]', row);
+  const roleCell = queryElement('[dev-target="role"]', row);
+  const statusCell = queryElement('[dev-target="status"]', row);
+  if (!usernameCell || !emailCell || !roleCell || !statusCell) {
+    console.error(
+      'Invite row is missing cell targets. Expected [dev-target="username"], [dev-target="email"], [dev-target="role"], and [dev-target="status"] inside [dev-target="table-row"].'
+    );
+    return false;
+  }
+  usernameCell.textContent = invite.invitee_name?.trim() || "Unknown";
+  emailCell.textContent = invite.invitee_email?.trim() || "Unknown";
+  roleCell.textContent = invite.user_defined_role?.trim() || "Unknown";
+  statusCell.textContent = (invite.status ?? "").trim() || "Unknown";
+  return true;
+};
+var initInviteTeamMembersPage = async () => {
   constructNavBarClasses();
   processMiddleware();
   initCollapsibleSidebar();
-  constructModalFunctionality();
-  const ALLOWED_FILE_TYPES = [
-    "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-  ];
-  const form = document.querySelector('[dev-target="ecommerce-performance-form"]');
-  if (!form) {
+  const progressData = await checkProgressUserAndTeams();
+  const teams = progressData?.teams || [];
+  let teamId = null;
+  if (teams.length > 0) {
+    teamId = teams[0].team_id;
+  }
+  const teamTableWrapper = document.querySelector('[dev-target="member-table-wrapper"]');
+  const teamFormWrapper = document.querySelector('[dev-target="member-form-wrapper"]');
+  if (!teamTableWrapper || !teamFormWrapper) {
     console.error(
-      'Team & Ownership form not found. Element: [dev-target="ecommerce-performance-form"] not found'
+      'Team members table or form wrapper not found. Elements: [dev-target="member-table-wrapper"] or [dev-target="member-form-wrapper"] not found'
     );
     return;
   }
-  const managementBiosBox = queryElement(
-    '[dev-target="management-bios-upload-box"]',
-    form
+  const table = teamTableWrapper.querySelector('[fs-table-element="table"]');
+  const tableBody = table?.querySelector(".fs-table_body");
+  const templateRow = tableBody?.querySelector(
+    '[dev-target="table-row"]'
   );
-  const managementBiosInput = queryElement(
-    '[dev-target="management-bios-input"]',
-    form
+  const addAnotherMemberTableLink = queryElement(
+    '[dev-target="invite-another-member"]',
+    teamTableWrapper
   );
-  const managementBiosHelpText = queryElement(
-    '[dev-target="management-bios-helper"]',
-    form
+  const limitedPrivilegeWrapper = queryElement(
+    '[dev-target="limited-priviledge-wrapper"]'
   );
-  const investorDeckBox = queryElement(
-    '[dev-target="investor-deck-upload-box"]',
-    form
-  );
-  const investorDeckInput = queryElement(
-    '[dev-target="investor-deck-input"]',
-    form
-  );
-  const investorDeckHelpText = queryElement(
-    '[dev-target="investor-deck-helper"]',
-    form
-  );
-  const capitalisationTableBox = queryElement(
-    '[dev-target="capitalisation-table-upload-box"]',
-    form
-  );
-  const capitalisationTableInput = queryElement(
-    '[dev-target="capitalisation-table-input"]',
-    form
-  );
-  const capitalisationTableHelpText = queryElement(
-    '[dev-target="capitalisation-table-helper"]',
-    form
-  );
-  const submitButton = queryElement('[dev-target="submit-button"]', form);
-  if (!managementBiosBox) {
-    console.error('Ensure [dev-target="management-bios-upload-box"] is present.');
-    return;
-  }
-  if (!managementBiosInput) {
-    console.error('Ensure [dev-target="management-bios-input"] is present.');
-    return;
-  }
-  if (!managementBiosHelpText) {
-    console.error('Ensure [dev-target="management-bios-helper"] is present.');
-    return;
-  }
-  if (!investorDeckBox) {
-    console.error('Ensure [dev-target="investor-deck-upload-box"] is present.');
-    return;
-  }
-  if (!investorDeckInput) {
-    console.error('Ensure [dev-target="investor-deck-input"] is present.');
-    return;
-  }
-  if (!investorDeckHelpText) {
-    console.error('Ensure [dev-target="investor-deck-helper"] is present.');
-    return;
-  }
-  if (!capitalisationTableBox || !capitalisationTableInput || !capitalisationTableHelpText) {
+  if (!tableBody || !templateRow) {
     console.error(
-      'Ensure [dev-target="capitalisation-table-upload-box"] and [dev-target="capitalisation-table-input"] and [dev-target="capitalisation-table-helper"] are present.'
+      'Invite table body or template row not found. Ensure [fs-table-element="table"], .fs-table_body, and [dev-target="table-row"] exist inside [dev-target="member-table-wrapper"].'
     );
     return;
   }
-  if (!submitButton) {
-    console.error('Ensure [dev-target="submit-button"] is present.');
-    return;
-  }
-  const updateHelperTexts = (progress) => {
-    if (progress?.team_ownership) {
-      const managementBios = progress.team_ownership.find(
-        (document2) => document2.document_type === "management_bios"
-      );
-      if (managementBios) {
-        managementBiosHelpText.textContent = managementBios.asset_name || "Supported formats: sheets. xcel";
-      } else {
-        managementBiosHelpText.textContent = "Supported formats: sheets. xcel";
-      }
-      const investorDeck = progress.team_ownership.find(
-        (document2) => document2.document_type === "investor_deck"
-      );
-      if (investorDeck) {
-        investorDeckHelpText.textContent = investorDeck.asset_name || "Supported formats: sheets. xcel";
-      } else {
-        investorDeckHelpText.textContent = "Supported formats: sheets. xcel";
-      }
-      const capTable = progress.team_ownership.find(
-        (document2) => document2.document_type === "cap_table"
-      );
-      if (capTable) {
-        capitalisationTableHelpText.textContent = capTable.asset_name || "Supported formats: sheets. xcel";
-      } else {
-        capitalisationTableHelpText.textContent = "Supported formats: sheets. xcel";
-      }
-    } else {
-      managementBiosHelpText.textContent = "Supported formats: sheets. xcel";
-      investorDeckHelpText.textContent = "Supported formats: sheets. xcel";
-      capitalisationTableHelpText.textContent = "Supported formats: sheets. xcel";
-    }
-  };
-  let financialProgress;
-  const loadFinancialProgress = async (userId) => {
-    const result = await checkProgressUserAndTeams(userId);
-    financialProgress = result?.financialProgress;
-    updateHelperTexts(financialProgress);
-  };
-  const getTeamOwnershipDoc = (documentType) => {
-    if (!financialProgress?.team_ownership) return void 0;
-    return financialProgress.team_ownership.find((doc) => doc.document_type === documentType);
-  };
-  await loadFinancialProgress();
-  constructAdminSelect(loadFinancialProgress);
-  const updateHelperText = (input, helperText) => {
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-        input.value = "";
-        helperText.textContent = "Invalid file type. Please upload Excel (.xls or .xlsx) files only";
-        helperText.classList.add("is-error");
+  const loadTeamInvitations = async () => {
+    try {
+      const invites = await apiGetTeamInvitations();
+      const hasInvites = invites.length > 0;
+      teamFormWrapper.classList.toggle("hide", hasInvites);
+      teamTableWrapper.classList.toggle("hide", !hasInvites);
+      const existingRows = Array.from(tableBody.querySelectorAll('[dev-target="table-row"]'));
+      existingRows.slice(1).forEach((row) => row.remove());
+      if (!hasInvites) {
+        templateRow.style.display = "none";
         return;
       }
-      helperText.textContent = file.name;
-      helperText.classList.remove("is-error");
-    } else {
-      helperText.textContent = "";
-      helperText.classList.remove("is-error");
-    }
-  };
-  if (managementBiosBox && managementBiosInput && managementBiosHelpText) {
-    managementBiosBox.addEventListener("click", () => managementBiosInput.click());
-    managementBiosBox.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      managementBiosBox.classList.add("drag");
-    });
-    managementBiosBox.addEventListener("dragleave", () => {
-      managementBiosBox.classList.remove("drag");
-    });
-    managementBiosBox.addEventListener("drop", (e) => {
-      e.preventDefault();
-      managementBiosBox.classList.remove("drag");
-      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-        managementBiosInput.files = e.dataTransfer.files;
-        updateHelperText(managementBiosInput, managementBiosHelpText);
-        managementBiosInput.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-    });
-    managementBiosInput.addEventListener("change", () => {
-      updateHelperText(managementBiosInput, managementBiosHelpText);
-    });
-  }
-  if (investorDeckBox && investorDeckInput && investorDeckHelpText) {
-    investorDeckBox.addEventListener("click", () => investorDeckInput.click());
-    investorDeckBox.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      investorDeckBox.classList.add("drag");
-    });
-    investorDeckBox.addEventListener("dragleave", () => {
-      investorDeckBox.classList.remove("drag");
-    });
-    investorDeckBox.addEventListener("drop", (e) => {
-      e.preventDefault();
-      investorDeckBox.classList.remove("drag");
-      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-        investorDeckInput.files = e.dataTransfer.files;
-        updateHelperText(investorDeckInput, investorDeckHelpText);
-        investorDeckInput.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-    });
-    investorDeckInput.addEventListener("change", () => {
-      updateHelperText(investorDeckInput, investorDeckHelpText);
-    });
-  }
-  if (capitalisationTableBox && capitalisationTableInput && capitalisationTableHelpText) {
-    capitalisationTableBox.addEventListener("click", () => capitalisationTableInput.click());
-    capitalisationTableBox.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      capitalisationTableBox.classList.add("drag");
-    });
-    capitalisationTableBox.addEventListener("dragleave", () => {
-      capitalisationTableBox.classList.remove("drag");
-    });
-    capitalisationTableBox.addEventListener("drop", (e) => {
-      e.preventDefault();
-      capitalisationTableBox.classList.remove("drag");
-      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-        capitalisationTableInput.files = e.dataTransfer.files;
-        updateHelperText(capitalisationTableInput, capitalisationTableHelpText);
-        capitalisationTableInput.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-    });
-    capitalisationTableInput.addEventListener("change", () => {
-      updateHelperText(capitalisationTableInput, capitalisationTableHelpText);
-    });
-  }
-  const managementBiosTrash = queryElement(
-    '[dev-target="management-bios-trash-icon"]',
-    form
-  );
-  const investorDeckTrash = investorDeckBox?.querySelector(
-    '[dev-target="shopify-monthly-trash-icon"]'
-  );
-  const capitalisationTableTrash = capitalisationTableBox?.querySelector(
-    '[dev-target="shopify-monthly-trash-icon"]'
-  );
-  const handleDeleteDocument = async (documentType, helperText) => {
-    const doc = getTeamOwnershipDoc(documentType);
-    if (!doc) {
-      if (helperText) {
-        helperText.textContent = "Supported formats: sheets. xcel";
-        helperText.classList.remove("is-error");
-      }
-      return;
-    }
-    if (helperText) {
-      helperText.classList.remove("is-error");
-      helperText.textContent = "Deleting...";
-    }
-    try {
-      await apiDeleteFinancialDocument(doc.id);
-      await loadFinancialProgress();
+      invites.forEach((invite, index) => {
+        const row = index === 0 ? templateRow : templateRow.cloneNode(true);
+        populateInviteRow(row, invite);
+        row.style.display = "";
+        if (index > 0) {
+          tableBody.appendChild(row);
+        }
+      });
     } catch (error) {
-      console.error(error);
-      if (helperText) {
-        helperText.classList.add("is-error");
-        helperText.textContent = "Failed to delete file. Please try again.";
+      console.error("Failed to load team members:", error);
+      const { message } = error;
+      if (message === "You are not a host of any team") {
+        limitedPrivilegeWrapper?.classList.remove("hide");
+        teamFormWrapper.classList.add("hide");
+        teamTableWrapper.classList.add("hide");
       }
     }
   };
-  if (managementBiosTrash) {
-    managementBiosTrash.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleDeleteDocument("management_bios", managementBiosHelpText);
-    });
+  await loadTeamInvitations();
+  const form = document.querySelector('[dev-target="add-team-member-form"]');
+  if (!form) {
+    console.error(
+      'Add team member form not found. Element: [dev-target="add-team-member-form"] not found'
+    );
+    return;
   }
-  if (investorDeckTrash) {
-    investorDeckTrash.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleDeleteDocument("investor_deck", investorDeckHelpText);
-    });
+  const nameInput = queryElement('[dev-target="name-input"]');
+  const emailInput = queryElement('[dev-target="email-input"]');
+  const roleInput = queryElement('[dev-target="role-input"]');
+  const inviteMessageInput = queryElement('[dev-target="invite-message"]');
+  const addAnotherMemberFormLink = queryElement(
+    '[dev-target="add-another-member-form"]',
+    teamFormWrapper
+  );
+  const submitButton = queryElement('[dev-target="submit-button"]');
+  if (!nameInput || !emailInput || !roleInput || !inviteMessageInput || !submitButton || !addAnotherMemberTableLink || !addAnotherMemberFormLink) {
+    console.error("Invite team members form is missing required dev-target elements.");
+    return;
   }
-  if (capitalisationTableTrash) {
-    capitalisationTableTrash.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleDeleteDocument("cap_table", capitalisationTableHelpText);
-    });
-  }
-  const uploadFile = async (file, documentType) => {
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      throw new Error("Invalid file type. Please upload Excel (.xls or .xlsx) files only");
-    }
-    const assetPayload = {
-      fileName: file.name,
-      contentType: file.type,
-      assetType: "document",
-      fileSize: file.size,
-      duration: 0
-    };
-    const assetResponse = await apiCreateAssetPresignedUrl(assetPayload);
-    const assetId = assetResponse.asset.id;
-    const { presignedUrl } = assetResponse;
-    if (!presignedUrl) {
-      throw new Error("Presigned URL not received from server");
-    }
-    await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.upload.addEventListener("progress", (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.round(event.loaded / event.total * 100);
-        }
-      });
-      xhr.addEventListener("load", () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve();
-        } else {
-          reject(new Error("Failed to upload file to S3"));
-        }
-      });
-      xhr.addEventListener("error", (error) => {
-        console.error(error);
-        reject(new Error("Network error during upload"));
-      });
-      xhr.open("PUT", presignedUrl);
-      xhr.setRequestHeader("Content-Type", file.type);
-      xhr.send(file);
-    });
-    const base64 = await fileToBase64(file);
-    const documentPayload = {
-      page: "team-ownership",
-      document_type: documentType,
-      asset_id: assetId,
-      file_data: base64,
-      file_name: file.name,
-      file_mime_type: file.type
-    };
-    await apiUploadFinancialDocument(documentPayload);
-  };
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     event.stopPropagation();
     const resetErrors = () => {
-      managementBiosBox?.classList.remove("is-error");
-      investorDeckBox?.classList.remove("is-error");
-      capitalisationTableBox?.classList.remove("is-error");
-      managementBiosHelpText?.classList.remove("is-error");
-      investorDeckHelpText?.classList.remove("is-error");
-      capitalisationTableHelpText?.classList.remove("is-error");
+      nameInput.classList.remove("is-error");
+      emailInput.classList.remove("is-error");
+      roleInput.classList.remove("is-error");
+      inviteMessageInput.classList.remove("is-error");
       submitButton.classList.remove("is-error");
-      submitButton.value = "UPLOAD DOCUMENTS";
+      submitButton.value = "SEND INVITE";
     };
-    managementBiosInput?.addEventListener("change", resetErrors, { once: true });
-    investorDeckInput?.addEventListener("change", resetErrors, { once: true });
-    capitalisationTableInput?.addEventListener("change", resetErrors, { once: true });
-    const filesToUpload = [];
-    if (managementBiosInput?.files && managementBiosInput.files[0]) {
-      const file = managementBiosInput.files[0];
-      if (ALLOWED_FILE_TYPES.includes(file.type)) {
-        filesToUpload.push({
-          file,
-          documentType: "management_bios"
-        });
-      } else {
-        managementBiosHelpText?.classList.add("is-error");
-      }
-    }
-    if (investorDeckInput?.files && investorDeckInput.files[0]) {
-      const file = investorDeckInput.files[0];
-      if (ALLOWED_FILE_TYPES.includes(file.type)) {
-        filesToUpload.push({
-          file,
-          documentType: "investor_deck"
-        });
-      } else {
-        investorDeckHelpText?.classList.add("is-error");
-      }
-    }
-    if (capitalisationTableInput?.files && capitalisationTableInput.files[0]) {
-      const file = capitalisationTableInput.files[0];
-      if (ALLOWED_FILE_TYPES.includes(file.type)) {
-        filesToUpload.push({
-          file,
-          documentType: "cap_table"
-        });
-      } else {
-        capitalisationTableHelpText?.classList.add("is-error");
-      }
-    }
-    const hasInvalidFiles = managementBiosInput?.files && managementBiosInput.files[0] && !ALLOWED_FILE_TYPES.includes(managementBiosInput.files[0].type) || investorDeckInput?.files && investorDeckInput.files[0] && !ALLOWED_FILE_TYPES.includes(investorDeckInput.files[0].type) || capitalisationTableInput?.files && capitalisationTableInput.files[0] && !ALLOWED_FILE_TYPES.includes(capitalisationTableInput.files[0].type);
-    if (hasInvalidFiles) {
+    nameInput.addEventListener("input", resetErrors, { once: true });
+    emailInput.addEventListener("input", resetErrors, { once: true });
+    roleInput.addEventListener("input", resetErrors, { once: true });
+    inviteMessageInput.addEventListener("input", resetErrors, { once: true });
+    if (!emailInput.value.trim()) {
+      emailInput.classList.add("is-error");
       submitButton.classList.add("is-error");
-      submitButton.value = "Please upload only Excel (.xls or .xlsx) files";
+      submitButton.value = "Email is required";
       return;
     }
-    const hasManagementBiosDoc = Boolean(managementBiosInput?.files?.[0]) || Boolean(getTeamOwnershipDoc("management_bios"));
-    const hasInvestorDeckDoc = Boolean(investorDeckInput?.files?.[0]) || Boolean(getTeamOwnershipDoc("investor_deck"));
-    const hasCapTableDoc = Boolean(capitalisationTableInput?.files?.[0]) || Boolean(getTeamOwnershipDoc("cap_table"));
-    if (!hasManagementBiosDoc || !hasInvestorDeckDoc || !hasCapTableDoc) {
+    if (!isValidEmail(emailInput.value.trim())) {
+      emailInput.classList.add("is-error");
       submitButton.classList.add("is-error");
-      submitButton.value = "Please upload all required documents";
+      submitButton.value = "Please enter a valid email address";
       return;
     }
-    if (filesToUpload.length === 0) {
-      submitButton.classList.add("is-success");
-      submitButton.value = "Saved Changes";
-      setTimeout(() => {
-        submitButton.classList.remove("is-success");
-        submitButton.value = "UPLOAD DOCUMENTS";
-        navigateToPath("/thank-you", { useRootPath: true });
-      }, 300);
+    if (!teamId) {
+      submitButton.classList.add("is-error");
+      submitButton.value = "No team found. Please create a team first.";
       return;
     }
+    const inputGroupWrapper = queryElement('[dev-target="input-group-wrapper"]');
+    const memberGroups = inputGroupWrapper ? Array.from(inputGroupWrapper.querySelectorAll(".flex-vertical_auth.gap-20")) : [];
+    const emails = [];
+    const errors = [];
+    memberGroups.forEach((group) => {
+      if (group instanceof HTMLElement) {
+        const groupEmailInput = queryElement('[dev-target="email-input"]', group);
+        if (groupEmailInput?.value.trim()) {
+          const email = groupEmailInput.value.trim();
+          if (isValidEmail(email)) {
+            emails.push(email);
+          } else {
+            errors.push("Please enter a valid email address");
+            groupEmailInput.classList.add("is-error");
+          }
+        }
+      }
+    });
+    if (errors.length > 0) {
+      submitButton.classList.add("is-error");
+      const [error] = errors;
+      submitButton.value = error;
+      return;
+    }
+    if (emails.length === 0) {
+      submitButton.classList.add("is-error");
+      submitButton.value = "Please provide at least one email";
+      return;
+    }
+    submitButton.classList.remove("is-error");
+    submitButton.value = "Sending invites...";
     try {
-      submitButton.disabled = true;
-      submitButton.value = "Uploading...";
       await Promise.all(
-        filesToUpload.map(({ file, documentType }) => uploadFile(file, documentType))
+        emails.map(
+          (email) => apiInviteTeamMember(
+            nameInput.value.trim(),
+            roleInput.value.trim(),
+            email,
+            teamId,
+            inviteMessageInput.value.trim()
+          )
+        )
       );
       submitButton.classList.add("is-success");
-      submitButton.value = "Documents uploaded successfully!";
-      if (managementBiosInput) managementBiosInput.value = "";
-      if (investorDeckInput) investorDeckInput.value = "";
-      if (capitalisationTableInput) capitalisationTableInput.value = "";
-      if (managementBiosHelpText) {
-        managementBiosHelpText.textContent = "";
-        managementBiosHelpText.classList.remove("is-error");
-      }
-      if (investorDeckHelpText) {
-        investorDeckHelpText.textContent = "";
-        investorDeckHelpText.classList.remove("is-error");
-      }
-      if (capitalisationTableHelpText) {
-        capitalisationTableHelpText.textContent = "";
-        capitalisationTableHelpText.classList.remove("is-error");
-      }
+      submitButton.value = "Invites sent successfully!";
+      nameInput.value = "";
+      emailInput.value = "";
+      roleInput.value = "";
+      inviteMessageInput.value = "";
+      document.querySelectorAll('[dev-target="is-cloned"]').forEach((group) => group.remove());
+      await loadTeamInvitations();
       setTimeout(() => {
         submitButton.classList.remove("is-success");
-        submitButton.value = "UPLOAD DOCUMENTS";
-        submitButton.disabled = false;
-        navigateToPath("/thank-you", { useRootPath: true });
-      }, 900);
+        submitButton.value = "SEND INVITE";
+      }, 2e3);
     } catch (error) {
       const { message } = error;
       console.error(message);
       submitButton.classList.add("is-error");
-      submitButton.value = message || "There was a problem uploading the documents";
-      submitButton.disabled = false;
+      submitButton.value = message || "Failed to send invites. Please try again.";
     }
+  });
+  addAnotherMemberFormLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const inputGroupWrapper = queryElement('[dev-target="input-group-wrapper"]');
+    if (!inputGroupWrapper) {
+      console.error("Input group wrapper not found");
+      return;
+    }
+    const firstGroup = inputGroupWrapper.querySelector('[dev-target="clone-template"]');
+    if (firstGroup instanceof HTMLElement) {
+      const clonedGroup = firstGroup.cloneNode(true);
+      clonedGroup.setAttribute("dev-target", "is-cloned");
+      clonedGroup.classList.add("is-cloned");
+      clonedGroup.querySelectorAll("input").forEach((input) => {
+        input.value = "";
+      });
+      inputGroupWrapper.appendChild(clonedGroup);
+    }
+  });
+  addAnotherMemberTableLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    teamTableWrapper.classList.add("hide");
+    teamFormWrapper.classList.remove("hide");
   });
 };
 window.Webflow ||= [];
 window.Webflow.push(() => {
   try {
-    initTeamOwnershipPage();
+    initInviteTeamMembersPage();
   } catch (error) {
     console.error(error);
   }

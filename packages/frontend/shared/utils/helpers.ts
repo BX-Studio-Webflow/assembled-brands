@@ -86,6 +86,14 @@ const routeMap: RouteMap = {
     nav_attr: 'nav-team-member-link',
     nav_class: 'is-active-financial',
   },
+  '/dev/warm/invite-team-members': {
+    nav_attr: 'nav-team-member-link',
+    nav_class: 'is-active-financial',
+  },
+  '/warm/invite-team-members': {
+    nav_attr: 'nav-team-member-link',
+    nav_class: 'is-active-financial',
+  },
   '/dev/finance-docs-forecasts': {
     nav_attr: 'nav-financial-forecasts-link',
     nav_class: 'is-active-financial',
