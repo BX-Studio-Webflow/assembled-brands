@@ -68,7 +68,8 @@ export class TeamService {
 			// Create invitation
 			const invitationId = await this.repo.createInvitation(teamId, inviterId, inviteeEmail, inviteeName, userDefinedRole, message);
 
-			const acceptUrl = `${env.FRONTEND_URL}${env.NODE_ENV === 'production' ? '' : '/dev'}/accept-team-invitation?invitation_id=${invitationId}&team_id=${teamId}&team_name=${encodeURIComponent(teamName)}&inviter_name=${encodeURIComponent(inviterName)}&timestamp=${timestamp}`;
+			const devPrefix = env.NODE_ENV === 'development' ? '/dev' : '';
+			const acceptUrl = `${env.FRONTEND_URL}${devPrefix}/warm/accept-team-invitation?invitation_id=${invitationId}&team_id=${teamId}&team_name=${encodeURIComponent(teamName)}&inviter_name=${encodeURIComponent(inviterName)}&timestamp=${timestamp}`;
 
 			// Send invitation email
 			await sendTemplateEmail(inviteeEmail, 'Team Invitation', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
@@ -141,7 +142,8 @@ export class TeamService {
 				if (!user) {
 					throw new Error('Failed to create or find user');
 				}
-
+				const devPrefix = env.NODE_ENV === 'development' ? '/dev' : '';
+				const loginUrl = `${env.FRONTEND_URL}${devPrefix}/login?email=${user.email}&id=${user.id}`;
 				//send transactional email
 				sendTemplateEmail(user.email, 'Temporary Password', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
 					subject: 'New account created',
@@ -149,8 +151,8 @@ export class TeamService {
 					subtitle: 'Change your password',
 					name: user.first_name || 'Dear User',
 					body: `A new account was created with your email ${user.email}. We also created a random temporary password for you. Please change your password immediately after logging in. Your temporary password is ${tempPassword}`,
-					buttonText: 'Ok, got it',
-					buttonLink: `${env.FRONTEND_URL}`,
+					buttonText: 'Login to your account',
+					buttonLink: loginUrl,
 				});
 			}
 
@@ -164,14 +166,16 @@ export class TeamService {
 			// Update invitation status
 			await this.repo.updateInvitationStatus(invitationId, 'accepted');
 			// Send welcome email
+			const devPrefix = env.NODE_ENV === 'development' ? '/dev' : '';
+			const loginUrl = `${env.FRONTEND_URL}${devPrefix}/login?email=${user.email}&id=${user.id}`;
 			await sendTemplateEmail(user.email, 'Welcome to the team', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
 				subject: "You're officially on the team!",
 				title: 'Welcome aboard 🎉',
 				subtitle: 'Team invite accepted',
 				name: user.first_name || 'Dear User',
 				body: "You've successfully joined the team. Start collaborating and making things happen with your teammates!",
-				buttonText: 'Ok, got it',
-				buttonLink: `${env.FRONTEND_URL}`,
+				buttonText: 'Login to your account',
+				buttonLink: loginUrl,
 			});
 
 			return invitation;

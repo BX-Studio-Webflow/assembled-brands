@@ -6,7 +6,7 @@ import {
 } from 'shared/services/TeamService';
 
 const TeamMembersPage = async () => {
-  //get  /accept-team-invitation?invitation_id=6&team_id=2&team_name=BX
+  // /dev/warm/accept-team-invitation?invitation_id=6&team_id=2&team_name=BX
   const invitationId = new URLSearchParams(window.location.search).get('invitation_id');
   const teamName = new URLSearchParams(window.location.search).get('team_name');
   const inviterName = new URLSearchParams(window.location.search).get('inviter_name');
@@ -35,7 +35,7 @@ const TeamMembersPage = async () => {
   if (!invitationId || !teamName || !inviterName) {
     console.error('Invitation ID, team name, or inviter name not found');
     errorText.textContent =
-      'Ops! Invalid invitation. Please check the invitation ID, team name, or inviter name.';
+      'Ops! Invalid invitation link. Please recheck the invitation link or contact your team administrator.';
     errorText.classList.add('is-error');
     return;
   }
