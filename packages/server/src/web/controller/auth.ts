@@ -9,6 +9,7 @@ import type { UserRepository } from '../../repository/user.js';
 import { NewUser } from '../../schema/schema.ts';
 import type { AssetService } from '../../service/asset.js';
 import type { BusinessService } from '../../service/business.js';
+import type { DealApplicationService } from '../../service/deal-application.ts';
 import { FinancialWizardService } from '../../service/financial-wizard.ts';
 import { HubSpotService } from '../../service/hubspot.ts';
 import { OnboardingWizardService } from '../../service/onboarding-wizard.ts';
@@ -41,6 +42,7 @@ export class AuthController {
 	private financialWizardService: FinancialWizardService;
 	private onboardingWizardService: OnboardingWizardService;
 	private teamService: TeamService;
+	private dealApplicationService: DealApplicationService;
 	constructor(
 		userService: UserService,
 		businessService: BusinessService,
@@ -51,6 +53,7 @@ export class AuthController {
 		onboardingWizardService: OnboardingWizardService,
 		teamService: TeamService,
 		hubSpotService: HubSpotService,
+		dealApplicationService: DealApplicationService,
 	) {
 		this.service = userService;
 		this.businessService = businessService;
@@ -61,6 +64,7 @@ export class AuthController {
 		this.onboardingWizardService = onboardingWizardService;
 		this.teamService = teamService;
 		this.hubSpotService = hubSpotService;
+		this.dealApplicationService = dealApplicationService;
 	}
 
 	/**
@@ -96,10 +100,11 @@ export class AuthController {
 			}
 
 			//get progress
-			const [financialWizardProgress, onboardingProgress, teams] = await Promise.all([
+			const [financialWizardProgress, onboardingProgress, teams, dealApplications] = await Promise.all([
 				this.financialWizardService.getProgress(user.id),
 				this.onboardingWizardService.getProgress(user.id),
 				this.teamService.getUserTeams(user.id),
+				this.dealApplicationService.listForUser(user.id),
 			]);
 
 			const token = await encodeAuth(user.id, user.email);
@@ -110,6 +115,14 @@ export class AuthController {
 				financialWizardProgress: financialWizardProgress,
 				onboardingProgress: onboardingProgress,
 				teams: teams,
+				dealApplications: dealApplications.map((application) => ({
+					id: application.id,
+					deal_id: application.hubspot_deal_object_id,
+					legal_name: application.legal_name,
+					status: application.status,
+					created_at: application.created_at,
+					updated_at: application.updated_at,
+				})),
 			});
 		} catch (err) {
 			logger.error(err);

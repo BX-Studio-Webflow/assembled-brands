@@ -21,6 +21,10 @@ export class DealApplicationService {
 		return this.repo.findActiveByUserId(userId);
 	}
 
+	public async listForUser(userId: number) {
+		return this.repo.findByUserId(userId);
+	}
+
 	public async updateLegalName(id: number, legalName: string) {
 		return this.repo.update(id, { legal_name: legalName, updated_at: new Date() });
 	}

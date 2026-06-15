@@ -149,6 +149,7 @@ export const checkProgressUserAndTeams = async (userId?: string) => {
     progressLabel[1].textContent = `${percentage}%`;
 
     logout.addEventListener('click', () => {
+      console.log('logout');
       logoutUser();
     });
 

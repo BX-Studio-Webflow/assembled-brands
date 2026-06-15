@@ -27,6 +27,13 @@ export class DealApplicationRepository {
 		});
 	}
 
+	public async findByUserId(userId: number) {
+		return this.db.query.dealApplicationSchema.findMany({
+			where: eq(dealApplicationSchema.user_id, userId),
+			orderBy: [desc(dealApplicationSchema.updated_at)],
+		});
+	}
+
 	public async findActiveByUserId(userId: number) {
 		return this.db.query.dealApplicationSchema.findFirst({
 			where: and(eq(dealApplicationSchema.user_id, userId), eq(dealApplicationSchema.status, 'active')),

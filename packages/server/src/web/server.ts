@@ -31,6 +31,7 @@ import { UserService } from '../service/user.js';
 import { AssetController } from './controller/asset.js';
 import { AuthController } from './controller/auth.js';
 import { BusinessController } from './controller/business.js';
+import { DealApplicationController } from './controller/deal-application.ts';
 import { FinancialWizardController } from './controller/financial-wizard.ts';
 import { HubSpotController } from './controller/hubspot.ts';
 import { OnboardingWizardController } from './controller/onboarding-wizard.ts';
@@ -147,6 +148,7 @@ export class Server {
 			onboardingWizardService,
 			teamService,
 			hubSpotService,
+			dealApplicationService,
 		);
 		const assetController = new AssetController(assetService, userService, emailService, notificationService);
 
@@ -163,6 +165,7 @@ export class Server {
 
 		const teamController = new TeamController(teamService, userService, businessService);
 		const hubSpotController = new HubSpotController(hubSpotService, userService);
+		const dealApplicationController = new DealApplicationController(dealApplicationService, userService);
 
 		// Register routes
 
@@ -173,6 +176,7 @@ export class Server {
 		this.registerTeamRoutes(api, teamController);
 		this.registerFinancialWizardRoutes(api, financialWizardController, teamService);
 		this.registerOnboardingRoutes(api, onboardingWizardController, teamService);
+		this.registerDealApplicationRoutes(api, dealApplicationController);
 		this.registerGoogleRoutes(api, financialWizardController);
 	}
 
@@ -304,6 +308,16 @@ export class Server {
 		onboardingWizard.post('/complete', onboardingWizardCtrl.completeApplication);
 
 		api.route('/onboarding-wizard', onboardingWizard);
+	}
+
+	private registerDealApplicationRoutes(api: Hono, dealApplicationCtrl: DealApplicationController) {
+		const dealApplications = new Hono();
+		const authCheck = jwt({ secret: env.SECRET_KEY });
+
+		dealApplications.use(authCheck);
+		dealApplications.get('/', dealApplicationCtrl.listMine);
+
+		api.route('/deal-applications', dealApplications);
 	}
 
 	private registerGoogleRoutes(api: Hono, financialWizardCtrl: FinancialWizardController) {
