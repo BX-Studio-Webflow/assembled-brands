@@ -403,7 +403,7 @@ const initOnboardingStep1Page = async () => {
     const payload: OnboardingStep2Body = {
       years_in_business: yearsInBusiness.value,
       asset_type: selectedAssetType.value as OnboardingStep2Body['asset_type'],
-      desired_loan_amount: desiredLoanAmount.value,
+      desired_loan_amount: desiredLoanAmount.value as OnboardingStep2Body['desired_loan_amount'],
     };
 
     try {

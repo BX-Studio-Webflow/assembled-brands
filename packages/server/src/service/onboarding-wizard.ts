@@ -3,6 +3,7 @@ import type { OnboardingWizardRepository } from '../repository/onboarding-wizard
 import type { NewOnboardingApplication, OnboardingApplication, User } from '../schema/schema.ts';
 import type { OnboardingStep1Body, OnboardingStep2Body, OnboardingStep3Body, WarmLeadDetailsBody } from '../web/validator/onboarding.js';
 import type { BusinessService } from './business.ts';
+import type { DealApplicationService } from './deal-application.ts';
 import type { HubSpotService } from './hubspot.ts';
 import type { UserService } from './user.ts';
 
@@ -14,17 +15,20 @@ export class OnboardingWizardService {
 	private hubSpotService: HubSpotService;
 	private userService: UserService;
 	private businessService: BusinessService;
+	private dealApplicationService: DealApplicationService;
 
 	constructor(
 		onboardingWizardRepo: OnboardingWizardRepository,
 		hubSpotService: HubSpotService,
 		userService: UserService,
 		businessService: BusinessService,
+		dealApplicationService: DealApplicationService,
 	) {
 		this.repo = onboardingWizardRepo;
 		this.hubSpotService = hubSpotService;
 		this.userService = userService;
 		this.businessService = businessService;
+		this.dealApplicationService = dealApplicationService;
 	}
 
 	/**
@@ -33,10 +37,11 @@ export class OnboardingWizardService {
 	 * @returns {Promise<OnboardingApplication>} Created application
 	 * @throws {Error} When application creation fails
 	 */
-	public async create(userId: number): Promise<OnboardingApplication> {
+	public async create(userId: number, dealApplicationId?: number): Promise<OnboardingApplication> {
 		try {
 			const record = await this.repo.create({
 				user_id: userId,
+				deal_application_id: dealApplicationId,
 				current_step: 1,
 				is_qualified: false,
 				is_complete: false,
@@ -85,8 +90,16 @@ export class OnboardingWizardService {
 	 * @returns {Promise<OnboardingApplication>} The application
 	 * @throws {Error} When application retrieval/creation fails
 	 */
-	public async getOrCreate(userId: number): Promise<OnboardingApplication> {
+	public async getOrCreate(userId: number, dealApplicationId?: number): Promise<OnboardingApplication> {
 		try {
+			if (dealApplicationId) {
+				let application = await this.repo.findByDealApplicationId(dealApplicationId);
+				if (!application) {
+					application = await this.create(userId, dealApplicationId);
+				}
+				return application;
+			}
+
 			let application = await this.repo.findByUserId(userId);
 			if (!application) {
 				application = await this.create(userId);
@@ -98,6 +111,13 @@ export class OnboardingWizardService {
 		}
 	}
 
+	private async findApplicationForContext(userId: number, dealApplicationId?: number) {
+		if (dealApplicationId) {
+			return this.repo.findByDealApplicationId(dealApplicationId);
+		}
+		return this.repo.findByUserId(userId);
+	}
+
 	/**
 	 * Saves Step 1 data (Company Info)
 	 * @param {number} userId - ID of the user
@@ -105,9 +125,9 @@ export class OnboardingWizardService {
 	 * @returns {Promise<OnboardingApplication>} Updated application
 	 * @throws {Error} When saving step 1 fails
 	 */
-	public async saveStep1(userId: number, data: OnboardingStep1Body): Promise<OnboardingApplication> {
+	public async saveStep1(userId: number, data: OnboardingStep1Body, dealApplicationId?: number): Promise<OnboardingApplication> {
 		try {
-			const application = await this.getOrCreate(userId);
+			const application = await this.getOrCreate(userId, dealApplicationId);
 			await this.repo.update(application.id, {
 				legal_name: data.legal_name,
 				employee_count: data.employee_count,
@@ -133,9 +153,9 @@ export class OnboardingWizardService {
 	 * @returns {Promise<OnboardingApplication>} Updated application
 	 * @throws {Error} When saving step 2 fails
 	 */
-	public async saveStep2(userId: number, data: OnboardingStep2Body): Promise<OnboardingApplication> {
+	public async saveStep2(userId: number, data: OnboardingStep2Body, dealApplicationId?: number): Promise<OnboardingApplication> {
 		try {
-			const application = await this.findByUserId(userId);
+			const application = await this.findApplicationForContext(userId, dealApplicationId);
 			if (!application) {
 				throw new Error('Application not found');
 			}
@@ -164,9 +184,9 @@ export class OnboardingWizardService {
 	 * @returns {Promise<OnboardingApplication>} Updated application
 	 * @throws {Error} When saving step 3 fails
 	 */
-	public async saveStep3(userId: number, data: OnboardingStep3Body): Promise<OnboardingApplication> {
+	public async saveStep3(userId: number, data: OnboardingStep3Body, dealApplicationId?: number): Promise<OnboardingApplication> {
 		try {
-			const application = await this.findByUserId(userId);
+			const application = await this.findApplicationForContext(userId, dealApplicationId);
 			if (!application) {
 				throw new Error('Application not found');
 			}
@@ -227,9 +247,9 @@ export class OnboardingWizardService {
 	 * @returns {Promise<OnboardingApplication>} Updated application
 	 * @throws {Error} When step update fails
 	 */
-	public async updateStep(userId: number, step: number): Promise<OnboardingApplication> {
+	public async updateStep(userId: number, step: number, dealApplicationId?: number): Promise<OnboardingApplication> {
 		try {
-			const application = await this.findByUserId(userId);
+			const application = await this.findApplicationForContext(userId, dealApplicationId);
 			if (!application) {
 				throw new Error('Application not found');
 			}
@@ -254,9 +274,9 @@ export class OnboardingWizardService {
 	 * @returns {Promise<OnboardingApplication>} Completed application
 	 * @throws {Error} When completion fails
 	 */
-	public async completeApplication(userId: number): Promise<OnboardingApplication> {
+	public async completeApplication(userId: number, dealApplicationId?: number): Promise<OnboardingApplication> {
 		try {
-			const application = await this.findByUserId(userId);
+			const application = await this.findApplicationForContext(userId, dealApplicationId);
 			if (!application) {
 				throw new Error('Application not found');
 			}
@@ -281,9 +301,9 @@ export class OnboardingWizardService {
 	 * @returns {Promise<OnboardingApplication|undefined>} The application progress
 	 * @throws {Error} When progress retrieval fails
 	 */
-	public async getProgress(userId: number) {
+	public async getProgress(userId: number, dealApplicationId?: number) {
 		try {
-			return await this.repo.findByUserId(userId);
+			return await this.findApplicationForContext(userId, dealApplicationId);
 		} catch (error) {
 			logger.error(error);
 			throw error;
@@ -315,7 +335,11 @@ export class OnboardingWizardService {
 	 * @returns The upserted onboarding application
 	 * @throws {Error} When deal not found, user not linked, or DB write fails
 	 */
-	public async saveWarmLeadDetails(body: WarmLeadDetailsBody): Promise<{ application: OnboardingApplication; user: User }> {
+	public async saveWarmLeadDetails(body: WarmLeadDetailsBody): Promise<{
+		application: OnboardingApplication;
+		user: User;
+		dealApplicationId: number;
+	}> {
 		try {
 			const dealRow = await this.hubSpotService.findProcessedDealByObjectId(body.deal_id);
 			if (!dealRow) {
@@ -325,6 +349,16 @@ export class OnboardingWizardService {
 				throw new Error(`Deal ${body.deal_id} has no associated user yet`);
 			}
 			const userId = dealRow.user_id;
+
+			let dealApplication = await this.dealApplicationService.findByHubspotDealObjectId(body.deal_id);
+			if (!dealApplication) {
+				dealApplication = await this.dealApplicationService.createForNewDeal({
+					userId,
+					hubspotDealObjectId: body.deal_id,
+					hubspotDealWebhookEventId: dealRow.id,
+					legalName: dealRow.deal_name,
+				});
+			}
 
 			const user = await this.userService.find(userId);
 			if (!user) {
@@ -341,17 +375,23 @@ export class OnboardingWizardService {
 			};
 
 			let savedApplication: OnboardingApplication;
-			const existing = await this.repo.findByUserId(userId);
+			const existing = await this.repo.findByDealApplicationId(dealApplication.id);
 			if (existing) {
 				await this.repo.update(existing.id, update);
 				const refreshed = await this.repo.findById(existing.id);
 				if (!refreshed) throw new Error('Failed to retrieve updated application');
 				savedApplication = refreshed;
 			} else {
-				const [created] = await this.repo.create({ user_id: userId, ...update });
+				const [created] = await this.repo.create({
+					user_id: userId,
+					deal_application_id: dealApplication.id,
+					...update,
+				});
 				if (!created) throw new Error('Failed to create warm-lead application');
 				savedApplication = created;
 			}
+
+			await this.dealApplicationService.updateLegalName(dealApplication.id, body.legal_name);
 
 			// Provision Google Drive folder structure + business record (non-fatal).
 			// Uses legal_name as the company name and incorporation_state as headquarters.
@@ -364,11 +404,17 @@ export class OnboardingWizardService {
 						headquarters: body.incorporation_state,
 						accounting_software: 'other',
 					},
-					{ dealName: dealRow.deal_name },
+					{ dealName: dealRow.deal_name, dealApplicationId: dealApplication.id },
 				);
-				logger.info({ userId, folderName: dealRow.deal_name }, 'Business and Google Drive folders provisioned for warm lead');
+				logger.info(
+					{ userId, dealApplicationId: dealApplication.id, folderName: dealRow.deal_name },
+					'Business and Google Drive folders provisioned for warm lead',
+				);
 			} catch (bizErr) {
-				logger.error({ bizErr, userId }, 'Failed to provision business/Drive folders for warm lead (non-fatal)');
+				logger.error(
+					{ bizErr, userId, dealApplicationId: dealApplication.id },
+					'Failed to provision business/Drive folders for warm lead (non-fatal)',
+				);
 			}
 
 			// Push fields back to HubSpot. Non-fatal: a failure here does not roll back
@@ -384,7 +430,23 @@ export class OnboardingWizardService {
 				logger.error({ hsErr, deal_id: body.deal_id }, 'Failed to sync warm-lead fields to HubSpot (non-fatal)');
 			}
 
-			return { application: savedApplication, user };
+			if (body.working_with_team_member && body.team_member_email) {
+				try {
+					const contactName = [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || undefined;
+					await this.hubSpotService.sendUnderwritingAlert({
+						ownerEmail: body.team_member_email,
+						dealName: body.legal_name,
+						dealObjectId: body.deal_id,
+						contactEmail: user.email,
+						contactName,
+						portalId: dealRow.portal_id,
+					});
+				} catch (alertErr) {
+					logger.error({ alertErr, deal_id: body.deal_id }, 'Failed to send underwriting alert (non-fatal)');
+				}
+			}
+
+			return { application: savedApplication, user, dealApplicationId: dealApplication.id };
 		} catch (error) {
 			logger.error(error);
 			throw error;
@@ -394,18 +456,36 @@ export class OnboardingWizardService {
 	public async saveWarmLeadDetailsForUser(
 		userId: number,
 		body: Omit<WarmLeadDetailsBody, 'deal_id'>,
+		dealApplicationId?: number,
 	): Promise<{ application: OnboardingApplication; user: User }> {
-		const dealRow = await this.hubSpotService.findProcessedDealByUserId(userId);
-		if (!dealRow) {
-			throw new Error(`No processed deal found for user ${userId}`);
+		let resolvedDealApplicationId = dealApplicationId;
+		if (!resolvedDealApplicationId) {
+			const active = await this.dealApplicationService.findActiveByUserId(userId);
+			if (!active) {
+				const dealRow = await this.hubSpotService.findProcessedDealByUserId(userId);
+				if (!dealRow) {
+					throw new Error(`No processed deal found for user ${userId}`);
+				}
+				return this.saveWarmLeadDetails({
+					deal_id: dealRow.object_id,
+					...body,
+				});
+			}
+			resolvedDealApplicationId = active.id;
 		}
+
+		const dealApplication = await this.dealApplicationService.findById(resolvedDealApplicationId);
+		if (!dealApplication) {
+			throw new Error(`No deal application found for id ${resolvedDealApplicationId}`);
+		}
+
 		return this.saveWarmLeadDetails({
-			deal_id: dealRow.object_id,
+			deal_id: dealApplication.hubspot_deal_object_id,
 			...body,
 		});
 	}
 
-	public async getWarmLeadUserByDealId(dealId: number): Promise<User> {
+	public async getWarmLeadContextByDealId(dealId: number): Promise<{ user: User; dealApplicationId: number }> {
 		const dealRow = await this.hubSpotService.findProcessedDealByObjectId(dealId);
 		if (!dealRow) {
 			throw new Error(`No processed deal found for deal_id ${dealId}`);
@@ -417,7 +497,18 @@ export class OnboardingWizardService {
 		if (!user) {
 			throw new Error(`No user found for deal ${dealId}`);
 		}
-		return user;
+
+		let dealApplication = await this.dealApplicationService.findByHubspotDealObjectId(dealId);
+		if (!dealApplication) {
+			dealApplication = await this.dealApplicationService.createForNewDeal({
+				userId: dealRow.user_id,
+				hubspotDealObjectId: dealId,
+				hubspotDealWebhookEventId: dealRow.id,
+				legalName: dealRow.deal_name,
+			});
+		}
+
+		return { user, dealApplicationId: dealApplication.id };
 	}
 
 	/**

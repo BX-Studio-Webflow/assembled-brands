@@ -105,8 +105,8 @@ export class HubSpotController {
 				role: 'user',
 				dial_code: '+1',
 				phone: phone || '',
-				first_name: firstname,
-				last_name: lastname,
+				first_name: firstname || '',
+				last_name: lastname || '',
 			};
 			const [createdUser] = await this.userService.create(newUser);
 			if (!createdUser) {

@@ -1,3 +1,4 @@
+import type { DealApplicationSummary } from './deal-application';
 import type { FinancialWizardProgressResponse } from './financial-wizard';
 import type { OnboardingProgressResponse } from './onboarding';
 import type { TeamMemberRecord } from './team';
@@ -68,6 +69,7 @@ export type SignInResponse = {
   financialWizardProgress: FinancialWizardProgressResponse | null | undefined;
   onboardingProgress: OnboardingProgressResponse | undefined;
   teams: TeamMemberRecord[];
+  dealApplications?: DealApplicationSummary[];
 };
 
 export type SignUpResponse = {

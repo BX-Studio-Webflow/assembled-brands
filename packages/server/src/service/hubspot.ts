@@ -7,12 +7,34 @@ import { HubspotDealWebhookRepository } from '../repository/hubspot-deal-webhook
 import type { NewHubspotContactWebhook, NewHubspotDealWebhook, NewUser, OnboardingApplication, User } from '../schema/schema.ts';
 import { generateSecurePassword } from '../util/string.ts';
 import type { HubspotCrmWebhookEvent, HubspotNewLeadBody } from '../web/validator/user.js';
+import type { DealApplicationService } from './deal-application.ts';
 import type { UserService } from './user.ts';
 
 const HUBSPOT_CONTACTS_URL = 'https://api.hubapi.com/crm/v3/objects/contacts';
 const HUBSPOT_DEALS_URL = 'https://api.hubapi.com/crm/v3/objects/deals';
 /** Deal properties to request from the HubSpot API */
 const DEAL_PROPERTIES = ['dealname', 'amount', 'dealstage', 'pipeline', 'closedate', 'hubspot_owner_id'].join(',');
+
+/** HubSpot owner email → owner ID. Update via GET /api/v1/hubspot/owners. */
+const HUBSPOT_OWNER_EMAIL_TO_ID: Record<string, string> = {
+	'michael@assembledbrands.com': '35891474',
+	'ethan@assembledbrands.com': '57770135',
+	'jackson@bx.studio': '68110406',
+	'abby@assembledbrands.com': '76601592',
+	'kunal@assembledbrands.com': '77266820',
+	'david@bx.studio': '80174606',
+	'seton@assembledbrands.com': '81459207',
+	'ben@assembledbrands.com': '82801322',
+	'brian@bx.studio': '86138627',
+	'christian@assembledbrands.com': '93163169',
+	'jeff@assembledbrands.com': '128994061',
+	'clifford@assembledbrands.com': '340017502',
+	'david@assembledbrands.com': '390237470',
+	'greg@bellaventure.co': '522917518',
+	'anthony@assembledbrands.com': '577268635',
+	'deardata@weeklyaccounting.com': '680064922',
+	'ann@assembledbrands.com': '1251924788',
+};
 
 export interface HubSpotContactProperties {
 	email: string;
@@ -101,15 +123,18 @@ export class HubSpotService {
 	private contactWebhookRepo: HubspotContactWebhookRepository;
 	private dealWebhookRepo: HubspotDealWebhookRepository;
 	private userService: UserService;
+	private dealApplicationService?: DealApplicationService;
 
 	constructor(
 		contactWebhookRepo: HubspotContactWebhookRepository,
 		dealWebhookRepo: HubspotDealWebhookRepository,
 		userService: UserService,
+		dealApplicationService?: DealApplicationService,
 	) {
 		this.contactWebhookRepo = contactWebhookRepo;
 		this.dealWebhookRepo = dealWebhookRepo;
 		this.userService = userService;
+		this.dealApplicationService = dealApplicationService;
 		this.apiKey = env.HUBSPOT_API_KEY || '';
 		if (!this.apiKey) {
 			logger.warn('HubSpot API key not configured');
@@ -159,6 +184,8 @@ export class HubSpotService {
 			const contactIds = await this.getDealAssociatedContactIds(event.objectId);
 			logger.info({ dealId: deal.id, contactCount: contactIds.length }, 'Fetched deal associations');
 
+			let primaryContact: { email: string; name: string } | null = null;
+
 			for (const contactId of contactIds) {
 				try {
 					const contact = await this.getContactById(Number(contactId));
@@ -182,8 +209,8 @@ export class HubSpotService {
 							role: 'user',
 							dial_code: '+1',
 							phone: phone || '',
-							first_name: firstname,
-							last_name: lastname,
+							first_name: firstname || '',
+							last_name: lastname || '',
 						};
 						const [created] = await this.userService.create(newUser);
 						if (!created) {
@@ -194,14 +221,54 @@ export class HubSpotService {
 						logger.info({ userId, email }, 'Created user for deal contact');
 					}
 
-					// Associate this user with the deal webhook row
-					await this.dealWebhookRepo.update(rowId, { user_id: userId });
+					let dealApplicationId: number | undefined;
+					if (this.dealApplicationService) {
+						const dealApplication = await this.dealApplicationService.createForNewDeal({
+							userId,
+							hubspotDealObjectId: event.objectId,
+							hubspotDealWebhookEventId: rowId,
+							legalName: dealname,
+						});
+						dealApplicationId = dealApplication.id;
+					}
+
+					// Associate this user (and deal application) with the deal webhook row
+					await this.dealWebhookRepo.update(rowId, {
+						user_id: userId,
+						...(dealApplicationId != null ? { deal_application_id: dealApplicationId } : {}),
+					});
+
+					if (!primaryContact) {
+						primaryContact = { email, name: firstname || 'Contact' };
+					}
 
 					await this.sendWarmLeadInvite(email, firstname || 'there', dealname, event.objectId);
 				} catch (contactErr) {
 					// Non-fatal: log and continue with remaining contacts
 					logger.error({ contactId, err: contactErr }, 'Failed to process deal contact');
 				}
+			}
+
+			// 4. Notify the deal owner (underwriting alert) when HubSpot already has an owner assigned
+			if (hubspot_owner_id && primaryContact) {
+				try {
+					const owner = await this.resolveOwner(hubspot_owner_id);
+					if (owner) {
+						await this.sendUnderwritingAlert({
+							ownerEmail: owner.email,
+							ownerName: owner.firstName,
+							dealName: dealname,
+							dealObjectId: event.objectId,
+							contactEmail: primaryContact.email,
+							contactName: primaryContact.name,
+							portalId: event.portalId,
+						});
+					}
+				} catch (ownerAlertErr) {
+					logger.error({ ownerAlertErr, hubspot_owner_id }, 'Failed to send underwriting alert to deal owner (non-fatal)');
+				}
+			} else if (hubspot_owner_id && !primaryContact) {
+				logger.warn({ dealId: deal.id, hubspot_owner_id }, 'Deal has an owner but no contact email; skipping underwriting alert');
 			}
 		} catch (err) {
 			const message = err instanceof Error ? err.message : String(err);
@@ -348,26 +415,48 @@ export class HubSpotService {
 	 * @returns The owner's HubSpot ID string, or null if not found.
 	 */
 	public getOwnerIdByEmail(email: string): string | null {
-		const OWNER_MAP: Record<string, string> = {
-			'michael@assembledbrands.com': '35891474',
-			'ethan@assembledbrands.com': '57770135',
-			'jackson@bx.studio': '68110406',
-			'abby@assembledbrands.com': '76601592',
-			'kunal@assembledbrands.com': '77266820',
-			'david@bx.studio': '80174606',
-			'seton@assembledbrands.com': '81459207',
-			'ben@assembledbrands.com': '82801322',
-			'brian@bx.studio': '86138627',
-			'christian@assembledbrands.com': '93163169',
-			'jeff@assembledbrands.com': '128994061',
-			'clifford@assembledbrands.com': '340017502',
-			'david@assembledbrands.com': '390237470',
-			'greg@bellaventure.co': '522917518',
-			'anthony@assembledbrands.com': '577268635',
-			'deardata@weeklyaccounting.com': '680064922',
-			'ann@assembledbrands.com': '1251924788',
-		};
-		return OWNER_MAP[email.toLowerCase()] ?? null;
+		return HUBSPOT_OWNER_EMAIL_TO_ID[email.toLowerCase()] ?? null;
+	}
+
+	public getOwnerEmailById(ownerId: string): string | null {
+		const entry = Object.entries(HUBSPOT_OWNER_EMAIL_TO_ID).find(([, id]) => id === ownerId);
+		return entry?.[0] ?? null;
+	}
+
+	/**
+	 * Resolves a HubSpot owner by ID using the static map, then the Owners API as fallback.
+	 */
+	public async resolveOwner(ownerId: string): Promise<{ email: string; firstName: string } | null> {
+		const staticEmail = this.getOwnerEmailById(ownerId);
+		if (staticEmail) {
+			return { email: staticEmail, firstName: staticEmail.split('@')[0] ?? 'there' };
+		}
+
+		if (!this.apiKey) {
+			logger.warn({ ownerId }, 'HubSpot API key not configured; cannot resolve owner email');
+			return null;
+		}
+
+		const response = await fetch(`https://api.hubapi.com/crm/v3/owners/${ownerId}`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${this.apiKey}`,
+			},
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			logger.warn({ error, ownerId }, 'HubSpot owner lookup failed');
+			return null;
+		}
+
+		const owner = (await response.json()) as { email: string; firstName?: string };
+		if (!owner.email) {
+			return null;
+		}
+
+		return { email: owner.email, firstName: owner.firstName || owner.email.split('@')[0] || 'there' };
 	}
 
 	/**
@@ -380,6 +469,10 @@ export class HubSpotService {
 
 	public async findProcessedDealByUserId(userId: number) {
 		return this.dealWebhookRepo.findProcessedByUserId(userId);
+	}
+
+	public async findDealApplicationById(dealApplicationId: number) {
+		return this.dealApplicationService?.findById(dealApplicationId) ?? null;
 	}
 
 	/**
@@ -405,6 +498,36 @@ export class HubSpotService {
 		}
 		const data = (await response.json()) as HubSpotAssociationsResponse;
 		return data.results.map((r) => r.id);
+	}
+
+	/**
+	 * Sends an underwriting alert to the deal owner when a warm inbound deal is created or assigned.
+	 */
+	public async sendUnderwritingAlert(params: {
+		ownerEmail: string;
+		ownerName?: string;
+		dealName: string | null;
+		dealObjectId: number;
+		contactEmail: string;
+		contactName?: string;
+		portalId?: number;
+	}): Promise<void> {
+		const { ownerEmail, ownerName, dealName, dealObjectId, contactEmail, contactName, portalId } = params;
+		const ownerFirstName = ownerName || ownerEmail.split('@')[0] || 'there';
+		const contactLabel = contactName ? `${contactName} (${contactEmail})` : contactEmail;
+		const dealLabel = dealName ?? `Deal #${dealObjectId}`;
+		const hubspotDealLink = portalId != null ? `https://app.hubspot.com/contacts/${portalId}/deal/${dealObjectId}` : undefined;
+
+		await sendTemplateEmail(ownerEmail, ownerFirstName, env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
+			subject: `New warm inbound deal: ${dealLabel}`,
+			title: 'New warm inbound application',
+			subtitle: 'Assembled Brands - Underwriting Alert',
+			name: ownerFirstName,
+			body: `Hi ${ownerFirstName}, a new warm inbound deal has been created and the contact has been invited to apply.\n\nDeal: ${dealLabel}\nContact: ${contactLabel}`,
+			buttonText: hubspotDealLink ? 'View deal in HubSpot' : 'Open Assembled Brands',
+			buttonLink: hubspotDealLink ?? env.FRONTEND_URL,
+		});
+		logger.info({ ownerEmail, dealObjectId, contactEmail }, 'Underwriting alert sent to deal owner');
 	}
 
 	/**

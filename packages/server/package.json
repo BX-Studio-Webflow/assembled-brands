@@ -13,7 +13,7 @@
 		"lint:fix": "eslint ./src --fix",
 		"start": "wrangler dev",
 		"test": "vitest",
-		"cf-typegen": "wrangler types",
+		"cf-typegen": "wrangler types --env development",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate:development": "wrangler d1 migrations apply DB --env development --remote",
 		"db:migrate:production": "wrangler d1 migrations apply DB --env production --remote",

@@ -7,6 +7,7 @@ import type { FinancialWizardService } from '../../service/financial-wizard.js';
 import type { OnboardingWizardService } from '../../service/onboarding-wizard.js';
 import type { TeamService } from '../../service/team.js';
 import type { UserService } from '../../service/user.js';
+import { getDealApplicationIdFromContext } from '../../util/deal-application-context.js';
 import type { UpdateStepBody } from '../validator/financial-wizard.js';
 import type {
 	OnboardingStep1Body,
@@ -77,7 +78,8 @@ export class OnboardingWizardController {
 
 			const body: OnboardingStep1Body = await c.req.json();
 			const effectiveUserId = this.getEffectiveUserId(c, user);
-			const application = await this.service.saveStep1(effectiveUserId, body);
+			const dealApplicationId = getDealApplicationIdFromContext(c);
+			const application = await this.service.saveStep1(effectiveUserId, body, dealApplicationId);
 
 			return serveData(c, {
 				message: 'Step 1 saved successfully',
@@ -103,13 +105,14 @@ export class OnboardingWizardController {
 			}
 
 			const effectiveUserId = this.getEffectiveUserId(c, user);
-			const application = await this.service.findByUserId(effectiveUserId);
+			const dealApplicationId = getDealApplicationIdFromContext(c);
+			const application = await this.service.getProgress(effectiveUserId, dealApplicationId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
 			const body: OnboardingStep2Body = await c.req.json();
-			const updatedApplication = await this.service.saveStep2(effectiveUserId, body);
+			const updatedApplication = await this.service.saveStep2(effectiveUserId, body, dealApplicationId);
 
 			return serveData(c, {
 				message: 'Step 2 saved successfully',
@@ -135,13 +138,14 @@ export class OnboardingWizardController {
 			}
 
 			const effectiveUserId = this.getEffectiveUserId(c, user);
-			const application = await this.service.findByUserId(effectiveUserId);
+			const dealApplicationId = getDealApplicationIdFromContext(c);
+			const application = await this.service.getProgress(effectiveUserId, dealApplicationId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
 			const body: OnboardingStep3Body = await c.req.json();
-			const updatedApplication = await this.service.saveStep3(effectiveUserId, body);
+			const updatedApplication = await this.service.saveStep3(effectiveUserId, body, dealApplicationId);
 
 			return serveData(c, {
 				message: 'Step 3 saved successfully',
@@ -168,8 +172,9 @@ export class OnboardingWizardController {
 			const userId = c.req.query('user_id') as string | undefined;
 
 			const effectiveUserId = userId ? Number(userId) : this.getEffectiveUserId(c, user);
+			const dealApplicationId = getDealApplicationIdFromContext(c);
 
-			const application = await this.service.getProgress(effectiveUserId);
+			const application = await this.service.getProgress(effectiveUserId, dealApplicationId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
@@ -227,13 +232,14 @@ export class OnboardingWizardController {
 			}
 
 			const effectiveUserId = this.getEffectiveUserId(c, user);
-			const application = await this.service.findByUserId(effectiveUserId);
+			const dealApplicationId = getDealApplicationIdFromContext(c);
+			const application = await this.service.getProgress(effectiveUserId, dealApplicationId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
 			const body: UpdateStepBody = await c.req.json();
-			const updatedApplication = await this.service.updateStep(effectiveUserId, body.step);
+			const updatedApplication = await this.service.updateStep(effectiveUserId, body.step, dealApplicationId);
 
 			return serveData(c, {
 				message: 'Step updated successfully',
@@ -259,12 +265,13 @@ export class OnboardingWizardController {
 			}
 
 			const effectiveUserId = this.getEffectiveUserId(c, user);
-			const application = await this.service.findByUserId(effectiveUserId);
+			const dealApplicationId = getDealApplicationIdFromContext(c);
+			const application = await this.service.getProgress(effectiveUserId, dealApplicationId);
 			if (!application) {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
-			const completedApplication = await this.service.completeApplication(effectiveUserId);
+			const completedApplication = await this.service.completeApplication(effectiveUserId, dealApplicationId);
 
 			return serveData(c, {
 				message: 'Onboarding completed successfully',
@@ -284,13 +291,13 @@ export class OnboardingWizardController {
 	public submitWarmLeadDetails = async (c: Context) => {
 		try {
 			const body: WarmLeadDetailsBody = await c.req.json();
-			const { application, user } = await this.service.saveWarmLeadDetails(body);
+			const { application, user, dealApplicationId } = await this.service.saveWarmLeadDetails(body);
 
 			const [token, serializedUser, financialWizardProgress, onboardingProgress, teams] = await Promise.all([
-				encode(user.id, user.email),
+				encode(user.id, user.email, body.deal_id, dealApplicationId),
 				serializeUser(user),
-				this.financialWizardService.getProgress(user.id),
-				this.service.getProgress(user.id),
+				this.financialWizardService.getProgress(user.id, dealApplicationId),
+				this.service.getProgress(user.id, dealApplicationId),
 				this.teamService.getUserTeams(user.id),
 			]);
 
@@ -321,7 +328,8 @@ export class OnboardingWizardController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 			const body: WarmLeadDetailsForUserBody = await c.req.json();
-			const { application } = await this.service.saveWarmLeadDetailsForUser(user.id, body);
+			const dealApplicationId = getDealApplicationIdFromContext(c);
+			const { application } = await this.service.saveWarmLeadDetailsForUser(user.id, body, dealApplicationId);
 			return serveData(c, {
 				message: 'Details saved successfully',
 				application,
@@ -342,13 +350,13 @@ export class OnboardingWizardController {
 	public createWarmLeadSession = async (c: Context) => {
 		try {
 			const body: WarmLeadSessionBody = await c.req.json();
-			const user = await this.service.getWarmLeadUserByDealId(body.deal_id);
+			const { user, dealApplicationId } = await this.service.getWarmLeadContextByDealId(body.deal_id);
 
 			const [token, serializedUser, financialWizardProgress, onboardingProgress, teams] = await Promise.all([
-				encode(user.id, user.email),
+				encode(user.id, user.email, body.deal_id, dealApplicationId),
 				serializeUser(user),
-				this.financialWizardService.getProgress(user.id),
-				this.service.getProgress(user.id),
+				this.financialWizardService.getProgress(user.id, dealApplicationId),
+				this.service.getProgress(user.id, dealApplicationId),
 				this.teamService.getUserTeams(user.id),
 			]);
 

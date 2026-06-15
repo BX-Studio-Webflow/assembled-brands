@@ -212,6 +212,11 @@ const initLoginPage = () => {
         localStorage.setItem('x-team-id', team.team_id.toString());
       }
 
+      if (response.dealApplications && response.dealApplications.length > 0) {
+        navigateToPath('/warm/finance-my-applications');
+        return;
+      }
+
       const currentOnboardingStep = response.onboardingProgress?.current_step;
       const onboardingIsComplete = response.onboardingProgress?.is_complete;
 

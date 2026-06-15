@@ -29,11 +29,16 @@ export class UserService {
 		try {
 			const hashedPassword = encrypt(user.password);
 
-			// Create user with all fields
+			// HubSpot and other integrations may omit name fields; SQLite NOT NULL rejects explicit nulls.
 			const createdUser = await this.repo.create({
 				...user,
 				password: hashedPassword,
-				auth_provider: 'local',
+				auth_provider: user.auth_provider ?? 'local',
+				phone: user.phone ?? '',
+				dial_code: user.dial_code ?? '+1',
+				first_name: user.first_name ?? '',
+				last_name: user.last_name ?? '',
+				loan_urgency: user.loan_urgency ?? 'none',
 			});
 
 			return createdUser;
