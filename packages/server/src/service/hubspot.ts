@@ -9,6 +9,7 @@ import { buildWarmLeadApplicationLink } from '../util/frontend-urls.ts';
 import { generateSecurePassword } from '../util/string.ts';
 import type { HubspotCrmWebhookEvent, HubspotNewLeadBody } from '../web/validator/user.js';
 import type { DealApplicationService } from './deal-application.ts';
+import { SlackNotifierService } from './slack-notifier.ts';
 import type { UserService } from './user.ts';
 
 const HUBSPOT_CONTACTS_URL = 'https://api.hubapi.com/crm/v3/objects/contacts';
@@ -125,17 +126,20 @@ export class HubSpotService {
 	private dealWebhookRepo: HubspotDealWebhookRepository;
 	private userService: UserService;
 	private dealApplicationService?: DealApplicationService;
+	private slackNotifierService: SlackNotifierService;
 
 	constructor(
 		contactWebhookRepo: HubspotContactWebhookRepository,
 		dealWebhookRepo: HubspotDealWebhookRepository,
 		userService: UserService,
 		dealApplicationService?: DealApplicationService,
+		slackNotifierService?: SlackNotifierService,
 	) {
 		this.contactWebhookRepo = contactWebhookRepo;
 		this.dealWebhookRepo = dealWebhookRepo;
 		this.userService = userService;
 		this.dealApplicationService = dealApplicationService;
+		this.slackNotifierService = slackNotifierService ?? new SlackNotifierService();
 		this.apiKey = env.HUBSPOT_API_KEY || '';
 		if (!this.apiKey) {
 			logger.warn('HubSpot API key not configured');
@@ -548,6 +552,16 @@ export class HubSpotService {
 			buttonLink: prospectApplicationLink,
 		});
 		logger.info({ ownerEmail, dealObjectId, contactEmail, prospectApplicationLink }, 'Underwriting alert sent to deal owner');
+
+		await this.slackNotifierService.sendUnderwritingDealAlert({
+			dealName,
+			dealObjectId,
+			contactEmail,
+			contactName,
+			ownerEmail,
+			portalId,
+			applicationLink: prospectApplicationLink,
+		});
 	}
 
 	/**

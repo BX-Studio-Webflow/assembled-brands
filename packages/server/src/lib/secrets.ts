@@ -12,6 +12,9 @@ export const envSchema = z.object({
 	SENDGRID_API_KEY: z.string(),
 	TRANSACTIONAL_EMAIL_TEMPLATE_ID: z.string(),
 
+	// Slack notifications (optional — underwriting alerts skip when unset)
+	SLACK_WEBHOOK_URL: z.string().url().optional(),
+
 	// R2/S3 storage
 	AWS_REGION: z.string(),
 	R2_ACCOUNT_ID: z.string(),

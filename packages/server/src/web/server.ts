@@ -26,6 +26,7 @@ import { HubSpotService } from '../service/hubspot.ts';
 import { NotificationService } from '../service/notification.ts';
 import { OnboardingWizardService } from '../service/onboarding-wizard.ts';
 import { S3Service } from '../service/s3.ts';
+import { SlackNotifierService } from '../service/slack-notifier.ts';
 import { TeamService } from '../service/team.js';
 import { UserService } from '../service/user.js';
 import { AssetController } from './controller/asset.js';
@@ -125,7 +126,14 @@ export class Server {
 		const userService = new UserService(userRepo);
 		const teamService = new TeamService(teamRepo, userService);
 		const dealApplicationService = new DealApplicationService(dealApplicationRepo);
-		const hubSpotService = new HubSpotService(hubspotContactWebhookRepo, hubspotDealWebhookRepo, userService, dealApplicationService);
+		const slackNotifierService = new SlackNotifierService();
+		const hubSpotService = new HubSpotService(
+			hubspotContactWebhookRepo,
+			hubspotDealWebhookRepo,
+			userService,
+			dealApplicationService,
+			slackNotifierService,
+		);
 		const financialWizardService = new FinancialWizardService(financialWizardRepo, assetService, hubSpotService);
 		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService, financialWizardService);
 		const onboardingWizardService = new OnboardingWizardService(
