@@ -367,8 +367,8 @@ export class AuthController {
 				role: 'user',
 				dial_code: '+1',
 				phone: phone || '',
-				first_name: firstname,
-				last_name: lastname,
+				first_name: firstname || '',
+				last_name: lastname || '',
 			};
 			const [createdUser] = await this.service.create(newUser);
 			if (!createdUser) {

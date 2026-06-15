@@ -5,6 +5,11 @@ import {
 } from 'shared/services/FinancialWizardService';
 import { apiGetOnboardingProgress } from 'shared/services/OnboardingService';
 import { apiGetMyTeams } from 'shared/services/TeamService';
+import type { User } from 'shared/types/auth';
+import type { Business } from 'shared/types/business';
+import type { FinancialWizardProgressResponse } from 'shared/types/financial-wizard';
+import type { OnboardingProgressApiResponse } from 'shared/types/onboarding';
+import type { MyTeam } from 'shared/types/team';
 
 import { isAdmin, logoutUser } from './auth';
 import { queryAllElements, queryElement } from './selectors';
@@ -111,56 +116,145 @@ export const isValidEmail = (email: string) => {
   return true;
 };
 
+let sidebarUserControlsInitialized = false;
+
+const getStoredUser = (): User | null => {
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
+};
+
+const emptyFinancialProgress = (
+  business: Business | null | undefined = null
+): FinancialWizardProgressResponse => ({
+  current_page: 'company-profile',
+  is_complete: false,
+  percentage: 0,
+  company_profile: null,
+  financial_overview: null,
+  financial_reports: [],
+  accounts_inventory: [],
+  ecommerce_performance: [],
+  team_ownership: [],
+  business: business ?? null,
+});
+
+const normalizeFinancialProgress = (
+  data: FinancialWizardProgressResponse | { progress: null; business?: Business | null } | undefined
+): FinancialWizardProgressResponse | undefined => {
+  if (!data) return undefined;
+  if ('percentage' in data && typeof data.percentage === 'number') {
+    return data;
+  }
+  if ('progress' in data && data.progress === null) {
+    return emptyFinancialProgress(data.business);
+  }
+  return undefined;
+};
+
+const updateSidebarUserDisplay = ({
+  percentage = 0,
+  userName,
+  userEmail,
+}: {
+  percentage?: number;
+  userName?: string;
+  userEmail?: string;
+}) => {
+  const progressFill = queryElement<HTMLDivElement>('[dev-target="progress-percentage-fill"]');
+  const progressLabel = queryAllElements<HTMLDivElement>(
+    '[dev-target="progress-percentage-label"]'
+  );
+  const companyUsername = queryElement<HTMLDivElement>('[dev-target="user-name"]');
+  const companyEmail = queryElement<HTMLDivElement>('[dev-target="user-email"]');
+
+  if (progressFill) {
+    progressFill.style.width = `${percentage}%`;
+  }
+  if (progressLabel.length > 0) {
+    progressLabel[0].textContent = `Progress ${percentage}%`;
+    if (progressLabel[1]) {
+      progressLabel[1].textContent = `${percentage}%`;
+    }
+  }
+  if (companyUsername && userName) {
+    companyUsername.innerText = userName;
+  }
+  if (companyEmail && userEmail) {
+    companyEmail.innerText = userEmail;
+  }
+};
+
+/** Binds logout and seeds sidebar user info from localStorage — does not require backend progress. */
+export const initSidebarUserControls = () => {
+  if (sidebarUserControlsInitialized) return;
+
+  const logout = queryElement<HTMLButtonElement>('[dev-target="logout"]');
+  if (!logout) return;
+
+  sidebarUserControlsInitialized = true;
+  logout.addEventListener('click', () => {
+    logoutUser();
+  });
+
+  const storedUser = getStoredUser();
+  if (!storedUser) {
+    updateSidebarUserDisplay({ percentage: 0 });
+    return;
+  }
+
+  updateSidebarUserDisplay({
+    percentage: 0,
+    userName: `${storedUser.first_name || 'Full'} ${storedUser.last_name || 'Name'}`.trim(),
+    userEmail: storedUser.email || 'hello@company.com',
+  });
+};
+
 export const fetchProgressData = async (userId?: string) => {
-  const [financialProgress, user, teams, onboardingProgress] = await Promise.all([
+  const [financialResult, userResult, teamsResult, onboardingResult] = await Promise.allSettled([
     apiGetFinancialProgress(userId),
     apiGetUserMe(),
     apiGetMyTeams(),
     apiGetOnboardingProgress(),
   ]);
 
+  const financialProgress = normalizeFinancialProgress(
+    financialResult.status === 'fulfilled' ? financialResult.value : undefined
+  );
+  const user =
+    userResult.status === 'fulfilled'
+      ? userResult.value
+      : (getStoredUser() ?? { first_name: 'Full', last_name: 'Name', email: 'hello@company.com' });
+  const teams = teamsResult.status === 'fulfilled' ? teamsResult.value : ([] as MyTeam[]);
+  const onboardingProgress =
+    onboardingResult.status === 'fulfilled'
+      ? onboardingResult.value
+      : (undefined as OnboardingProgressApiResponse | undefined);
+
   return { financialProgress, user, teams, onboardingProgress };
 };
 
 export const checkProgressUserAndTeams = async (userId?: string) => {
+  initSidebarUserControls();
+
   try {
-    //get progress percentage
     const { financialProgress, user, teams, onboardingProgress } = await fetchProgressData(userId);
 
-    const percentage = financialProgress?.percentage || 0;
-    const progressFill = queryElement<HTMLDivElement>('[dev-target="progress-percentage-fill"]');
-    const progressLabel = queryAllElements<HTMLDivElement>(
-      '[dev-target="progress-percentage-label"]'
-    );
+    const percentage = financialProgress?.percentage ?? 0;
+    const userName =
+      financialProgress?.business?.legal_name ||
+      `${user.first_name || 'Full'} ${user.last_name || 'Name'}`.trim();
+    const userEmail = financialProgress?.business?.email || user.email || 'hello@company.com';
 
-    const companyUsername = queryElement<HTMLDivElement>('[dev-target="user-name"]');
-    const companyEmail = queryElement<HTMLDivElement>('[dev-target="user-email"]');
-
-    const logout = queryElement<HTMLButtonElement>('[dev-target="logout"]');
-    if (!progressFill || !progressLabel || !logout || !companyUsername || !companyEmail) {
-      console.error(
-        'Ensure [dev-target="progress-percentage-fill"], [dev-target="progress-percentage-label"], [dev-target="user-name"], [dev-target="user-email"], and [dev-target="logout"] are present.'
-      );
-      return;
-    }
-
-    progressFill.style.width = `${percentage}%`;
-    progressLabel[0].textContent = `Progress ${percentage}%`;
-    progressLabel[1].textContent = `${percentage}%`;
-
-    logout.addEventListener('click', () => {
-      console.log('logout');
-      logoutUser();
-    });
-
-    companyUsername.innerText =
-      financialProgress.business?.legal_name ||
-      (user.first_name || 'Full') + ' ' + (user.last_name || 'Name');
-    companyEmail.innerText = financialProgress.business?.email || user.email || 'hello@company.com';
+    updateSidebarUserDisplay({ percentage, userName, userEmail });
 
     return { financialProgress, user, teams, onboardingProgress };
   } catch (error) {
     console.error('Failed to load financial wizard progress:', error);
+    return undefined;
   }
 };
 
@@ -627,6 +721,8 @@ export const fileToBase64 = (file: File): Promise<string> =>
  * Handles sidebar collapse/expand with smooth transitions and content adjustment
  */
 export const initCollapsibleSidebar = () => {
+  initSidebarUserControls();
+
   const sidebar = queryElement<HTMLElement>('[dev-target="sidebar-menu"]');
   const sidebarInner = sidebar?.querySelector<HTMLElement>('.sidebar');
   const trigger = queryElement<HTMLElement>('[dev-target="collapsible-trigger"]');
