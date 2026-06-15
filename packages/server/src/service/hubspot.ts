@@ -374,6 +374,39 @@ export class HubSpotService {
 		}
 
 		logger.info({ dealObjectId, dealStage }, 'HubSpot deal stage updated');
+
+		try {
+			const deal = await this.getDealById(dealObjectId, ['dealname']);
+			const stageLabel = await this.resolveDealStageLabel(dealStage);
+			await this.slackNotifierService.sendDealStageChanged({
+				dealObjectId,
+				dealName: deal.properties.dealname,
+				newStage: dealStage,
+				newStageLabel: stageLabel,
+			});
+		} catch (slackErr) {
+			logger.error({ slackErr, dealObjectId, dealStage }, 'Failed to send deal stage Slack notification (non-fatal)');
+		}
+	}
+
+	/**
+	 * Resolves a HubSpot deal stage ID to its human-readable pipeline stage label.
+	 */
+	public async resolveDealStageLabel(stageId: string): Promise<string> {
+		try {
+			const pipelines = (await this.getDealPipelines()) as {
+				results?: Array<{ stages?: Array<{ id: string; label: string }> }>;
+			};
+			for (const pipeline of pipelines.results ?? []) {
+				const stage = pipeline.stages?.find((entry) => entry.id === stageId);
+				if (stage?.label) {
+					return stage.label;
+				}
+			}
+		} catch (err) {
+			logger.warn({ err, stageId }, 'Failed to resolve HubSpot deal stage label');
+		}
+		return stageId;
 	}
 
 	/**

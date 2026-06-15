@@ -190,4 +190,58 @@ export class SlackNotifierService {
 			);
 		}
 	}
+
+	/**
+	 * Notifies Slack when a HubSpot deal stage changes.
+	 * Replies in the deal thread when slack_thread_ts is stored on the deal application.
+	 */
+	public async sendDealStageChanged(params: {
+		dealObjectId: number;
+		dealName?: string | null;
+		newStage: string;
+		newStageLabel?: string;
+		previousStageLabel?: string | null;
+		portalId?: number;
+	}): Promise<void> {
+		const botToken = env.SLACK_BOT_TOKEN;
+		const channelId = env.SLACK_CHANNEL_ID;
+		if (!botToken || !channelId) {
+			logger.debug('SLACK_BOT_TOKEN or SLACK_CHANNEL_ID not configured, skipping deal stage Slack notification');
+			return;
+		}
+
+		try {
+			const dealApplication = await this.dealApplicationService?.findByHubspotDealObjectId(params.dealObjectId);
+			const threadTs = dealApplication?.slack_thread_ts ?? undefined;
+			const dealLabel = params.dealName ?? `Deal #${params.dealObjectId}`;
+			const stageLabel = params.newStageLabel ?? params.newStage;
+			const hubspotDealLink =
+				params.portalId != null ? `https://app.hubspot.com/contacts/${params.portalId}/deal/${params.dealObjectId}` : undefined;
+
+			const lines = [`📊 Deal stage updated: *${dealLabel}*`, `New stage: ${stageLabel}`];
+			if (params.previousStageLabel) {
+				lines.push(`Previous stage: ${params.previousStageLabel}`);
+			}
+			if (hubspotDealLink) {
+				lines.push(`HubSpot: ${hubspotDealLink}`);
+			}
+
+			await postSlackMessage({
+				botToken,
+				channelId,
+				text: lines.join('\n'),
+				threadTs,
+			});
+
+			logger.info(
+				{ dealObjectId: params.dealObjectId, newStage: params.newStage, isThreadReply: Boolean(threadTs) },
+				'Deal stage change sent to Slack',
+			);
+		} catch (err) {
+			logger.error(
+				{ err, dealObjectId: params.dealObjectId, newStage: params.newStage },
+				'Failed to send deal stage change to Slack (non-fatal)',
+			);
+		}
+	}
 }
