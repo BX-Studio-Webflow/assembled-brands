@@ -517,14 +517,18 @@ export class AuthController {
 			}
 			const token = Math.floor(100000 + Math.random() * 900000).toString();
 			await this.userRepository.update(user.id, { reset_token: token });
-			await sendTemplateEmail(user.email, `${user.first_name || 'Dear User'}`, 'd-fd5ab39952154cf6a94b41e57ff87c43', {
+			const devPrefix = env.NODE_ENV === 'development' ? '/dev' : '';
+			const resetLink = `${env.FRONTEND_URL}${devPrefix}/reset-password?token=${token}&email=${encodeURIComponent(user.email)}`;
+			const recipientName = user.first_name || 'Dear User';
+
+			await sendTemplateEmail(user.email, recipientName, env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 				subject: 'Reset your password',
 				title: 'Reset your password',
-				subtitle: `${token}`,
-				name: user.first_name || 'User',
-				body: `Please click this link to reset your password: ${env.FRONTEND_URL}/reset-password?token=${token}&email=${user.email}`,
-				buttonText: 'Reset password now',
-				buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/reset-password?token=${token}&email=${user.email}`,
+				subtitle: 'Assembled Brands - Account Recovery',
+				name: recipientName,
+				body: `Hi ${recipientName}, we received a request to reset your password. Click the button below to choose a new password. If you did not request this, you can ignore this email.`,
+				buttonText: 'Reset password',
+				buttonLink: resetLink,
 			});
 			return c.json({
 				message: 'Reset password link sent successfully',
@@ -578,13 +582,14 @@ export class AuthController {
 			const hashedPassword = encrypt(body.password);
 			await this.service.update(user.id, { password: hashedPassword, reset_token: null });
 
-			await sendTemplateEmail(user.email, user.first_name || 'User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
-				subject: 'Password reset',
-				title: 'Password reset',
-				subtitle: `Your password has been reset successfully`,
-				body: `Your password has been reset successfully. If this was not you, please contact our support agents. Thanks again for using ${env.FRONTEND_URL}!`,
-				buttonText: 'Ok, got it',
-				buttonLink: `${env.FRONTEND_URL}`,
+			await sendTemplateEmail(user.email, user.first_name || 'Dear User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
+				subject: 'Your password has been reset',
+				title: 'Your password has been reset',
+				subtitle: 'Assembled Brands - Account Recovery',
+				name: user.first_name || 'Dear User',
+				body: `Your password has been reset successfully. If this was not you, please contact our support team.`,
+				buttonText: 'Go to login',
+				buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/login`,
 			});
 			return c.json({
 				message: 'Password reset successfully',
