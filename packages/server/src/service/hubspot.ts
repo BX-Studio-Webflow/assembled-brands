@@ -242,7 +242,9 @@ export class HubSpotService {
 						primaryContact = { email, name: firstname || 'Contact' };
 					}
 
-					await this.sendWarmLeadInvite(email, firstname || 'there', dealname, event.objectId);
+					// Disabled: do not auto-email prospects when deals are created internally in HubSpot.
+					// Application links should only go out when the team sends them manually.
+					// await this.sendWarmLeadInvite(email, firstname || 'there', dealname, event.objectId);
 				} catch (contactErr) {
 					// Non-fatal: log and continue with remaining contacts
 					logger.error({ contactId, err: contactErr }, 'Failed to process deal contact');
