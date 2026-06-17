@@ -219,7 +219,7 @@ const initLoginPage = () => {
         response.teams.length > 0 &&
         response.teams.every((t) => t.role === 'member');
       if (isTeamMemberOnly) {
-        navigateToPath('/warm/finance-company-profile');
+        navigateToPath('/warm/finance-my-applications');
         return;
       }
 
