@@ -192,7 +192,7 @@ export class TeamController {
 				id: invitation.id,
 				team_id: invitation.team_id,
 				team_name: invitation.team?.name || 'Unknown Team',
-				inviter_name: invitation.inviter?.first_name + ' ' + invitation.inviter?.last_name || 'Unknown',
+				inviter_name: (invitation.inviter?.first_name + ' ' + invitation.inviter?.last_name).trim() || 'Unknown',
 				inviter_email: invitation.inviter?.email || 'Unknown',
 				status: invitation.status,
 				created_at: invitation.created_at,
@@ -312,11 +312,11 @@ export class TeamController {
 
 			// Format response to include only name, email, phone, and role
 			const formattedMembers = members.members.map((member) => ({
-				name: member.user?.first_name + ' ' + member.user?.last_name || 'Unknown',
+				name: (member.user?.first_name + ' ' + member.user?.last_name).trim() || 'Unknown',
 				email: member.user?.email || 'Unknown email',
 				phone: member.user?.phone || 'Unknown phone',
 				role: member.role,
-				memberId: member.id,
+				memberId: member.user_id,
 			}));
 
 			return c.json({

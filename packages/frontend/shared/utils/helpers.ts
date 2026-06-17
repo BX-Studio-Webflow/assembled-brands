@@ -200,12 +200,18 @@ const updateSidebarUserDisplay = ({
 export const initSidebarUserControls = () => {
   if (sidebarUserControlsInitialized) return;
 
-  const logout = queryElement<HTMLButtonElement>('[dev-target="logout"]');
-  if (!logout) return;
+  const logout = queryAllElements<HTMLElement>('[dev-target="logout"]');
+  if (!logout.length) {
+    console.error('Ensure [dev-target="logout"] is present.');
+    return;
+  }
 
   sidebarUserControlsInitialized = true;
-  logout.addEventListener('click', () => {
-    logoutUser();
+  logout.forEach((logout) => {
+    logout.addEventListener('click', () => {
+      console.error('Logging out');
+      logoutUser();
+    });
   });
 
   const storedUser = getStoredUser();
