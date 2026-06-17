@@ -22,9 +22,19 @@ export function getDealContextFromJwt(c: Context): DealContext | undefined {
 	return { dealId, dealApplicationId };
 }
 
-/** Returns deal context for warm-lead JWTs; undefined for cold-lead auth tokens. */
+/**
+ * Returns the deal application id for the request.
+ * Prefers the warm-lead JWT (email-link flow); falls back to context set by the `dealContext`
+ * middleware from the `X-Deal-Id` header (logged-in team-member flow). Undefined for cold-lead tokens.
+ */
 export function getDealApplicationIdFromContext(c: Context): number | undefined {
-	return getDealContextFromJwt(c)?.dealApplicationId;
+	const fromJwt = getDealContextFromJwt(c)?.dealApplicationId;
+	if (typeof fromJwt === 'number') {
+		return fromJwt;
+	}
+
+	const fromHeader = c.get('dealApplicationId') as number | undefined;
+	return typeof fromHeader === 'number' ? fromHeader : undefined;
 }
 
 export function requireDealContextFromContext(c: Context): DealContext {

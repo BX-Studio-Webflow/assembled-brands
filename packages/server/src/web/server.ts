@@ -39,6 +39,7 @@ import { OnboardingWizardController } from './controller/onboarding-wizard.ts';
 import { ERRORS, serveInternalServerError, serveNotFound } from './controller/resp/error.js';
 import { SlackController } from './controller/slack.ts';
 import { TeamController } from './controller/team.js';
+import { dealContext } from './middleware/deal-context.js';
 import { teamAccess } from './middleware/team.js';
 import { assetQueryValidator, completeMultipartUploadValidator, createMultipartAssetValidator } from './validator/asset.ts';
 import { businessQueryValidator, businessValidator } from './validator/business.ts';
@@ -190,10 +191,10 @@ export class Server {
 		this.registerHubspotWebhookRoutes(api, hubSpotController);
 		this.registerSlackRoutes(api, slackController);
 		this.registerAssetRoutes(api, assetController, teamService);
-		this.registerBusinessRoutes(api, businessController);
+		this.registerBusinessRoutes(api, businessController, teamService, dealApplicationService);
 		this.registerTeamRoutes(api, teamController);
-		this.registerFinancialWizardRoutes(api, financialWizardController, teamService);
-		this.registerOnboardingRoutes(api, onboardingWizardController, teamService);
+		this.registerFinancialWizardRoutes(api, financialWizardController, teamService, dealApplicationService);
+		this.registerOnboardingRoutes(api, onboardingWizardController, teamService, dealApplicationService);
 		this.registerDealApplicationRoutes(api, dealApplicationController, teamService);
 		this.registerGoogleRoutes(api, financialWizardController);
 	}
@@ -264,16 +265,25 @@ export class Server {
 		api.route('/asset', asset);
 	}
 
-	private registerBusinessRoutes(api: Hono, businessCtrl: BusinessController) {
+	private registerBusinessRoutes(
+		api: Hono,
+		businessCtrl: BusinessController,
+		teamService: TeamService,
+		dealApplicationService: DealApplicationService,
+	) {
 		const business = new Hono();
 		const authCheck = jwt({ secret: env.SECRET_KEY });
 
+		business.use(authCheck);
+		business.use(teamAccess(teamService));
+		business.use(dealContext(dealApplicationService));
+
 		// Regular user endpoints
-		business.get('/my', authCheck, businessCtrl.getMyBusiness);
-		business.post('/my', authCheck, businessValidator, businessCtrl.upsertBusiness);
+		business.get('/my', businessCtrl.getMyBusiness);
+		business.post('/my', businessValidator, businessCtrl.upsertBusiness);
 
 		// Admin only endpoint
-		business.get('/', authCheck, businessQueryValidator, businessCtrl.getAllBusinesses);
+		business.get('/', businessQueryValidator, businessCtrl.getAllBusinesses);
 
 		api.route('/business', business);
 	}
@@ -297,13 +307,19 @@ export class Server {
 		api.route('/team', team);
 	}
 
-	private registerFinancialWizardRoutes(api: Hono, financialWizardCtrl: FinancialWizardController, teamService: TeamService) {
+	private registerFinancialWizardRoutes(
+		api: Hono,
+		financialWizardCtrl: FinancialWizardController,
+		teamService: TeamService,
+		dealApplicationService: DealApplicationService,
+	) {
 		const financialWizard = new Hono();
 		const authCheck = jwt({ secret: env.SECRET_KEY });
 
 		// All routes require authentication
 		financialWizard.use(authCheck);
 		financialWizard.use(teamAccess(teamService));
+		financialWizard.use(dealContext(dealApplicationService));
 
 		financialWizard.post('/financial-overview', financialOverviewValidator, financialWizardCtrl.saveFinancialOverview);
 		financialWizard.post('/document', documentUploadValidator, financialWizardCtrl.uploadDocument);
@@ -318,7 +334,12 @@ export class Server {
 		api.route('/financial-wizard', financialWizard);
 	}
 
-	private registerOnboardingRoutes(api: Hono, onboardingWizardCtrl: OnboardingWizardController, teamService: TeamService) {
+	private registerOnboardingRoutes(
+		api: Hono,
+		onboardingWizardCtrl: OnboardingWizardController,
+		teamService: TeamService,
+		dealApplicationService: DealApplicationService,
+	) {
 		const onboardingWizard = new Hono();
 		const authCheck = jwt({ secret: env.SECRET_KEY });
 
@@ -329,6 +350,7 @@ export class Server {
 		// All routes below require authentication
 		onboardingWizard.use(authCheck);
 		onboardingWizard.use(teamAccess(teamService));
+		onboardingWizard.use(dealContext(dealApplicationService));
 		onboardingWizard.post('/warm-lead/me', warmLeadDetailsForUserValidator, onboardingWizardCtrl.submitWarmLeadDetailsForLoggedInUser);
 
 		onboardingWizard.post('/step1', onboardingStep1Validator, onboardingWizardCtrl.saveStep1);

@@ -46,8 +46,9 @@ const initWarmLeadOnboardingPage = async () => {
       });
       setCookie('accessToken', response.token, 10);
       localStorage.setItem('user', JSON.stringify(response.user));
-      //remove team id
+      //remove team + deal context; the warm-lead token now carries deal scope
       localStorage.removeItem('x-team-id');
+      localStorage.removeItem('x-deal-id');
 
       isLoggedIn = true;
     } catch (error) {
