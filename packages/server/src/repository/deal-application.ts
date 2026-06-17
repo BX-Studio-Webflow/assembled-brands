@@ -1,4 +1,4 @@
-import { and, desc, eq, ne } from 'drizzle-orm';
+import { and, desc, eq, inArray, ne } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import { dealApplicationSchema, type NewDealApplication, type schema } from '../schema/schema.js';
@@ -30,6 +30,16 @@ export class DealApplicationRepository {
 	public async findByUserId(userId: number) {
 		return this.db.query.dealApplicationSchema.findMany({
 			where: eq(dealApplicationSchema.user_id, userId),
+			orderBy: [desc(dealApplicationSchema.updated_at)],
+		});
+	}
+
+	public async findByUserIds(userIds: number[]) {
+		if (userIds.length === 0) {
+			return [];
+		}
+		return this.db.query.dealApplicationSchema.findMany({
+			where: inArray(dealApplicationSchema.user_id, userIds),
 			orderBy: [desc(dealApplicationSchema.updated_at)],
 		});
 	}

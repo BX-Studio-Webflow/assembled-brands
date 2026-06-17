@@ -27,7 +27,8 @@ export class DealApplicationController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
-			const applications = await this.service.listForUser(user.id);
+			const hostId = c.get('hostId') as number | undefined;
+			const applications = await this.service.listForUser(user.id, hostId);
 			return serveData(c, {
 				applications: applications.map((application) => ({
 					id: application.id,

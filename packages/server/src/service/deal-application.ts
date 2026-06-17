@@ -22,7 +22,15 @@ export class DealApplicationService {
 		return this.repo.findActiveByUserId(userId);
 	}
 
-	public async listForUser(userId: number) {
+	/**
+	 * Lists deal applications visible to a user.
+	 * When the request is made under team access (hostId set via X-Team-Id), the host's
+	 * applications are included alongside the user's own so team members can see and open them.
+	 */
+	public async listForUser(userId: number, hostId?: number) {
+		if (hostId && hostId !== userId) {
+			return this.repo.findByUserIds([userId, hostId]);
+		}
 		return this.repo.findByUserId(userId);
 	}
 

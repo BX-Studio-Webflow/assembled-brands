@@ -194,7 +194,7 @@ export class Server {
 		this.registerTeamRoutes(api, teamController);
 		this.registerFinancialWizardRoutes(api, financialWizardController, teamService);
 		this.registerOnboardingRoutes(api, onboardingWizardController, teamService);
-		this.registerDealApplicationRoutes(api, dealApplicationController);
+		this.registerDealApplicationRoutes(api, dealApplicationController, teamService);
 		this.registerGoogleRoutes(api, financialWizardController);
 	}
 
@@ -341,11 +341,12 @@ export class Server {
 		api.route('/onboarding-wizard', onboardingWizard);
 	}
 
-	private registerDealApplicationRoutes(api: Hono, dealApplicationCtrl: DealApplicationController) {
+	private registerDealApplicationRoutes(api: Hono, dealApplicationCtrl: DealApplicationController, teamService: TeamService) {
 		const dealApplications = new Hono();
 		const authCheck = jwt({ secret: env.SECRET_KEY });
 
 		dealApplications.use(authCheck);
+		dealApplications.use(teamAccess(teamService));
 		dealApplications.get('/', dealApplicationCtrl.listMine);
 
 		api.route('/deal-applications', dealApplications);
