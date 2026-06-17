@@ -7,6 +7,7 @@ import type { DealApplicationSummary } from 'shared/types/deal-application';
 import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
 import {
+  checkProgressUserAndTeams,
   constructNavBarClasses,
   initCollapsibleSidebar,
   resolveWarmDealApplicationPath,
@@ -96,6 +97,7 @@ const initFinanceMyApplicationsPage = async () => {
   constructNavBarClasses();
   processMiddleware();
   initCollapsibleSidebar();
+  void checkProgressUserAndTeams();
 
   const tableWrapper = document.querySelector('[dev-target="member-table-wrapper"]');
   if (!tableWrapper) {
