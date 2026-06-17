@@ -16,6 +16,12 @@ export const envSchema = z.object({
 	SLACK_BOT_TOKEN: z.string().optional(),
 	SLACK_CHANNEL_ID: z.string().optional(),
 
+	// Feature flag: when not 'true', internal underwriting alert emails are not sent
+	UNDERWRITING_ALERT_EMAILS_ENABLED: z.string().default('false'),
+
+	// Feature flag: when 'false', Slack notifications are not sent (enabled by default)
+	SLACK_NOTIFICATIONS_ENABLED: z.string().default('true'),
+
 	// R2/S3 storage
 	AWS_REGION: z.string(),
 	R2_ACCOUNT_ID: z.string(),

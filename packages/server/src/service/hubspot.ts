@@ -558,6 +558,7 @@ export class HubSpotService {
 		applicationLink?: string | null;
 	}): Promise<void> {
 		const { ownerEmail, ownerName, dealName, dealObjectId, contactEmail, contactName, portalId, applicationLink } = params;
+
 		const ownerFirstName = ownerName || ownerEmail.split('@')[0] || 'there';
 		const contactLabel = contactName ? `${contactName} (${contactEmail})` : contactEmail;
 		const dealLabel = dealName ?? `Deal #${dealObjectId}`;
@@ -575,17 +576,18 @@ export class HubSpotService {
 			bodyLines.push(`HubSpot: ${hubspotDealLink}`);
 		}
 
-		await sendTemplateEmail(ownerEmail, ownerFirstName, env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
-			subject: `New warm inbound deal: ${dealLabel}`,
-			title: 'New warm inbound application',
-			subtitle: 'Assembled Brands - Underwriting Alert',
-			name: ownerFirstName,
-			body: bodyLines.join('\n'),
-			buttonText: 'Open application link',
-			buttonLink: prospectApplicationLink,
-		});
-		logger.info({ ownerEmail, dealObjectId, contactEmail, prospectApplicationLink }, 'Underwriting alert sent to deal owner');
-
+		if (String(env.UNDERWRITING_ALERT_EMAILS_ENABLED) === 'true') {
+			await sendTemplateEmail(ownerEmail, ownerFirstName, env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
+				subject: `New warm inbound deal: ${dealLabel}`,
+				title: 'New warm inbound application',
+				subtitle: 'Assembled Brands - Underwriting Alert',
+				name: ownerFirstName,
+				body: bodyLines.join('\n'),
+				buttonText: 'Open application link',
+				buttonLink: prospectApplicationLink,
+			});
+			logger.info({ ownerEmail, dealObjectId, contactEmail, prospectApplicationLink }, 'Underwriting alert sent to deal owner');
+		}
 		await this.slackNotifierService.sendUnderwritingDealAlert({
 			dealName,
 			dealObjectId,

@@ -13,6 +13,11 @@ export class SlackNotifierService {
 		this.dealApplicationService = dealApplicationService;
 	}
 
+	/** Feature flag (default on). Set SLACK_NOTIFICATIONS_ENABLED="false" to suppress event-driven Slack notifications. */
+	private slackNotificationsEnabled(): boolean {
+		return String(env.SLACK_NOTIFICATIONS_ENABLED) !== 'false';
+	}
+
 	private getSlackConfig(): { botToken: string; channelId: string } {
 		const botToken = env.SLACK_BOT_TOKEN;
 		const channelId = env.SLACK_CHANNEL_ID;
@@ -96,6 +101,11 @@ export class SlackNotifierService {
 		portalId?: number;
 		applicationLink: string;
 	}): Promise<void> {
+		if (!this.slackNotificationsEnabled()) {
+			logger.debug('Slack notifications disabled, skipping Slack underwriting alert');
+			return;
+		}
+
 		const botToken = env.SLACK_BOT_TOKEN;
 		const channelId = env.SLACK_CHANNEL_ID;
 		if (!botToken || !channelId) {
@@ -154,6 +164,11 @@ export class SlackNotifierService {
 		folderName?: string;
 		dealApplicationId?: number;
 	}): Promise<void> {
+		if (!this.slackNotificationsEnabled()) {
+			logger.debug('Slack notifications disabled, skipping Google Drive Slack notification');
+			return;
+		}
+
 		const botToken = env.SLACK_BOT_TOKEN;
 		const channelId = env.SLACK_CHANNEL_ID;
 		if (!botToken || !channelId) {
@@ -203,6 +218,11 @@ export class SlackNotifierService {
 		previousStageLabel?: string | null;
 		portalId?: number;
 	}): Promise<void> {
+		if (!this.slackNotificationsEnabled()) {
+			logger.debug('Slack notifications disabled, skipping deal stage Slack notification');
+			return;
+		}
+
 		const botToken = env.SLACK_BOT_TOKEN;
 		const channelId = env.SLACK_CHANNEL_ID;
 		if (!botToken || !channelId) {
