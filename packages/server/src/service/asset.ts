@@ -521,6 +521,32 @@ export class AssetService {
 			webViewLink: webViewLink,
 		};
 	};
+
+	/**
+	 * Moves a Google Drive file to the trash (recoverable).
+	 * Used to overwrite a superseded document so the company folder holds
+	 * exactly one current file per document type (no duplicates for reviewers).
+	 * @param {string} fileId - The Drive file ID to trash
+	 * @returns {Promise<void>}
+	 */
+	trashGoogleDriveFile = async (fileId: string): Promise<void> => {
+		const accessToken = await this.getGoogleAccessToken();
+
+		const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?supportsAllDrives=true`, {
+			method: 'PATCH',
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ trashed: true }),
+		});
+
+		if (!response.ok) {
+			const error = await response.text();
+			throw new Error(`Failed to trash Google Drive file ${fileId}: ${error}`);
+		}
+	};
+
 	/**
 	 * Gets or creates a folder in Google Drive
 	 * @param {string} companyName - The name of the company (folder name)

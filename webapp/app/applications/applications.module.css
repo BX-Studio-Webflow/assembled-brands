@@ -1,0 +1,140 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.titleCard {
+  background-color: var(--color-light-beige);
+  border-radius: var(--radius-small);
+  padding: 1.75rem 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-h4);
+  font-weight: 700;
+  letter-spacing: var(--ls-2);
+  color: var(--color-soft-black);
+}
+
+.subtitle {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-body-2);
+  color: var(--color-soft-black);
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.progressTrack {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  border-radius: var(--radius-round);
+  background-color: rgba(38, 38, 38, 0.12);
+  overflow: hidden;
+}
+
+.progressFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background-color: var(--color-coral);
+}
+
+.progressLabel {
+  font-family: var(--font-sans);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: var(--ls-2);
+  color: var(--color-soft-black);
+  white-space: nowrap;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background-color: var(--color-light-beige);
+  border-radius: var(--radius-small);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.row:hover {
+  opacity: 0.85;
+}
+
+.rowMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowTitle {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-body-2);
+  font-weight: 700;
+  letter-spacing: var(--ls-2);
+  color: var(--color-soft-black);
+}
+
+.rowMeta {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-s);
+  letter-spacing: var(--ls-2);
+  color: var(--color-secondary-state);
+}
+
+.badge {
+  flex-shrink: 0;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius-round);
+  font-family: var(--font-sans);
+  font-size: var(--text-s);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.badgeComplete {
+  background-color: rgba(115, 164, 40, 0.16);
+  color: #4a7a17;
+}
+
+.badgeProgress {
+  background-color: rgba(236, 131, 112, 0.16);
+  color: var(--color-coral);
+}
+
+.badgeEmpty {
+  background-color: rgba(38, 38, 38, 0.08);
+  color: var(--color-secondary-state);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-secondary-state);
+}

@@ -81,6 +81,14 @@ const warmLeadSessionSchema = z.object({
 export const warmLeadSessionValidator = zValidator('json', warmLeadSessionSchema);
 export type WarmLeadSessionBody = z.infer<typeof warmLeadSessionSchema>;
 
+// Teammate "Accept Invite" magic-link exchange. The signed token encodes the
+// invitation id; no deal id or password is required from the invitee.
+const inviteAcceptSessionSchema = z.object({
+	token: z.string({ message: 'token is required' }).min(1),
+});
+export const inviteAcceptSessionValidator = zValidator('json', inviteAcceptSessionSchema);
+export type InviteAcceptSessionBody = z.infer<typeof inviteAcceptSessionSchema>;
+
 // Progress Response Type
 export type OnboardingProgressResponse = {
 	current_step: number;

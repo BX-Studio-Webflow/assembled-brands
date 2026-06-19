@@ -1,12 +1,16 @@
 import { env } from 'process';
 
 import { sendTemplateEmail } from '../lib/email-processor.ts';
+import { encodeInviteToken } from '../lib/jwt.ts';
 import { logger } from '../lib/logger.ts';
 import type { TeamRepository } from '../repository/team.ts';
 import type { User } from '../schema/schema.ts';
 import { generateSecurePassword } from '../util/string.ts';
 import type { TeamQuery } from '../web/validator/team.ts';
 import type { UserService } from './user.ts';
+
+/** Base URL of the new web app (Vercel/Webflow Cloud) where teammates land. */
+const webAppUrl = (): string => env.WEBAPP_URL || 'https://webapp-omega-rosy.vercel.app';
 
 /**
  * Service class for managing teams, including member invitations, access control, and team operations
@@ -68,15 +72,19 @@ export class TeamService {
 			// Create invitation
 			const invitationId = await this.repo.createInvitation(teamId, inviterId, inviteeEmail, inviteeName, userDefinedRole, message);
 
-			const acceptUrl = `${env.FRONTEND_URL}${env.NODE_ENV === 'production' ? '' : '/dev'}/accept-team-invitation?invitation_id=${invitationId}&team_id=${teamId}&team_name=${encodeURIComponent(teamName)}&inviter_name=${encodeURIComponent(inviterName)}&timestamp=${timestamp}`;
+			// Magic link into the new web app: a signed token authorizes this
+			// specific invitation, so the teammate is dropped straight into the
+			// active workspace — no portal, Deal ID, or password required.
+			const inviteToken = await encodeInviteToken(invitationId);
+			const acceptUrl = `${webAppUrl()}/invite/accept?token=${encodeURIComponent(inviteToken)}`;
 
 			// Send invitation email
 			await sendTemplateEmail(inviteeEmail, 'Team Invitation', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
-				subject: 'Team Invitation',
-				title: "You've been invited to join a team",
-				subtitle: 'Join the team to collaborate',
-				body: `You've been invited to join the "${teamName}" team. Click the link below to accept the invitation. ${acceptUrl}`,
-				buttonText: 'Accept invitation',
+				subject: `You've been invited to ${teamName}`,
+				title: "You've been invited to join an application",
+				subtitle: 'Open the workspace to collaborate',
+				body: `${inviterName} invited you to collaborate on the "${teamName}" application. Click the button below to open the workspace — no password needed. ${acceptUrl}`,
+				buttonText: 'Open the workspace',
 				buttonLink: acceptUrl,
 			});
 
@@ -112,8 +120,13 @@ export class TeamService {
 	 * @returns {Promise<Object>} The accepted invitation
 	 * @throws {Error} When invitation acceptance fails
 	 */
-	public async acceptInvitation(invitationId: number) {
+	public async acceptInvitation(invitationId: number, options?: { sendCredentialsEmail?: boolean; sendWelcomeEmail?: boolean }) {
 		try {
+			// Magic-link teammates never log in with a password, so the legacy
+			// "temporary password" email is suppressed by the session flow.
+			const sendCredentialsEmail = options?.sendCredentialsEmail ?? true;
+			const sendWelcomeEmail = options?.sendWelcomeEmail ?? true;
+
 			const invitation = await this.repo.getInvitation(invitationId);
 			if (!invitation) {
 				throw new Error('Invitation not found');
@@ -122,13 +135,13 @@ export class TeamService {
 			// Find or create user
 			let user: User | null = (await this.userService.findByEmail(invitation.invitee_email)) ?? null;
 			if (!user) {
-				// Create user with default password (they'll need to reset it)
+				// Create user with a random password (magic-link users never use it).
 				const tempPassword = generateSecurePassword(9);
 				await this.userService.create({
 					email: invitation.invitee_email,
 					phone: '',
 					dial_code: '',
-					password: tempPassword, // User will need to reset this
+					password: tempPassword,
 					role: 'user',
 					is_verified: true,
 					subscription_status: 'active',
@@ -142,16 +155,18 @@ export class TeamService {
 					throw new Error('Failed to create or find user');
 				}
 
-				//send transactional email
-				sendTemplateEmail(user.email, 'Temporary Password', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
-					subject: 'New account created',
-					title: `Welcome to ${env.BRAND_NAME}`,
-					subtitle: 'Change your password',
-					name: user.first_name || 'Dear User',
-					body: `A new account was created with your email ${user.email}. We also created a random temporary password for you. Please change your password immediately after logging in. Your temporary password is ${tempPassword}`,
-					buttonText: 'Ok, got it',
-					buttonLink: `${env.FRONTEND_URL}`,
-				});
+				if (sendCredentialsEmail) {
+					//send transactional email
+					sendTemplateEmail(user.email, 'Temporary Password', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
+						subject: 'New account created',
+						title: `Welcome to ${env.BRAND_NAME}`,
+						subtitle: 'Change your password',
+						name: user.first_name || 'Dear User',
+						body: `A new account was created with your email ${user.email}. We also created a random temporary password for you. Please change your password immediately after logging in. Your temporary password is ${tempPassword}`,
+						buttonText: 'Ok, got it',
+						buttonLink: `${env.FRONTEND_URL}`,
+					});
+				}
 			}
 
 			if (!user) {
@@ -163,16 +178,19 @@ export class TeamService {
 
 			// Update invitation status
 			await this.repo.updateInvitationStatus(invitationId, 'accepted');
-			// Send welcome email
-			await sendTemplateEmail(user.email, 'Welcome to the team', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
-				subject: "You're officially on the team!",
-				title: 'Welcome aboard 🎉',
-				subtitle: 'Team invite accepted',
-				name: user.first_name || 'Dear User',
-				body: "You've successfully joined the team. Start collaborating and making things happen with your teammates!",
-				buttonText: 'Ok, got it',
-				buttonLink: `${env.FRONTEND_URL}`,
-			});
+
+			if (sendWelcomeEmail) {
+				// Send welcome email
+				await sendTemplateEmail(user.email, 'Welcome to the team', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
+					subject: "You're in — open your application workspace",
+					title: 'Welcome aboard 🎉',
+					subtitle: 'Team invite accepted',
+					name: user.first_name || 'Dear User',
+					body: "You've successfully joined the application. Open the workspace to start collaborating with your team.",
+					buttonText: 'Open the workspace',
+					buttonLink: webAppUrl(),
+				});
+			}
 
 			return invitation;
 		} catch (error) {

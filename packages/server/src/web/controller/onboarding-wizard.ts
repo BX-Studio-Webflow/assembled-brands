@@ -1,6 +1,6 @@
 import type { Context } from 'hono';
 
-import { encode } from '../../lib/jwt.js';
+import { decodeInviteToken, encode } from '../../lib/jwt.js';
 import { logger } from '../../lib/logger.js';
 import type { User } from '../../schema/schema.js';
 import type { FinancialWizardService } from '../../service/financial-wizard.js';
@@ -13,6 +13,7 @@ import type {
 	OnboardingStep1Body,
 	OnboardingStep2Body,
 	OnboardingStep3Body,
+	InviteAcceptSessionBody,
 	WarmLeadDetailsBody,
 	WarmLeadDetailsForUserBody,
 	WarmLeadSessionBody,
@@ -339,6 +340,67 @@ export class OnboardingWizardController {
 			if (error instanceof Error && error.message.includes('No processed deal')) {
 				return serveBadRequest(c, 'No HubSpot deal linked to this account yet. Please use your invite link first.');
 			}
+			return serveInternalServerError(c, error);
+		}
+	};
+
+	/**
+	 * Unauthenticated teammate "Accept Invite" exchange.
+	 * Verifies the signed invite token, accepts the invitation (without the
+	 * legacy temp-password email), and mints a session scoped to the inviter's
+	 * active deal — dropping the teammate straight into that workspace.
+	 */
+	public acceptInviteSession = async (c: Context) => {
+		try {
+			const body: InviteAcceptSessionBody = await c.req.json();
+
+			const invitationId = await decodeInviteToken(body.token);
+			if (!invitationId) {
+				return serveBadRequest(c, 'This invite link is invalid or has expired. Please ask for a new invite.');
+			}
+
+			const invitation = await this.teamService.getInvitation(invitationId);
+			if (!invitation) {
+				return serveBadRequest(c, 'Invitation not found.');
+			}
+
+			// Resolve the deal context from the inviter (the applicant) before
+			// minting a session, so a teammate can't be onboarded into nothing.
+			const dealContext = await this.service.getActiveDealContextForUser(invitation.inviter_id);
+			if (!dealContext) {
+				return serveBadRequest(c, "We couldn't find an active application for this invite. Please contact your team.");
+			}
+
+			// Accept the invitation (create/find user, add to team), suppressing
+			// the temp-password email since teammates use the magic link instead.
+			if (invitation.status !== 'accepted') {
+				await this.teamService.acceptInvitation(invitationId, { sendCredentialsEmail: false });
+			}
+
+			const inviteeUser = await this.userService.findByEmail(invitation.invitee_email);
+			if (!inviteeUser) {
+				return serveBadRequest(c, 'Failed to set up your teammate account.');
+			}
+
+			const [token, serializedUser, financialWizardProgress, onboardingProgress, teams] = await Promise.all([
+				encode(inviteeUser.id, inviteeUser.email, dealContext.dealId, dealContext.dealApplicationId),
+				serializeUser(inviteeUser),
+				this.financialWizardService.getProgress(inviteeUser.id, dealContext.dealApplicationId),
+				this.service.getProgress(inviteeUser.id, dealContext.dealApplicationId),
+				this.teamService.getUserTeams(inviteeUser.id),
+			]);
+
+			return c.json({
+				token,
+				team_id: invitation.team_id,
+				deal_application_id: dealContext.dealApplicationId,
+				user: serializedUser,
+				financialWizardProgress,
+				onboardingProgress,
+				teams,
+			});
+		} catch (error) {
+			logger.error(error);
 			return serveInternalServerError(c, error);
 		}
 	};

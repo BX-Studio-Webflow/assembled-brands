@@ -166,6 +166,10 @@ export class FinancialWizardService {
 			const application = await this.getOrCreateApplication(userId, dealApplicationId);
 			const hadExistingDocuments = (await this.repo.findDocumentsByApplicationId(application.id, true)).length > 0;
 
+			// Capture the document this upload supersedes (same type) so we can
+			// overwrite its Drive file rather than leaving a duplicate behind.
+			const previousCurrent = await this.repo.findCurrentDocumentByType(application.id, documentType);
+
 			const asset = await this.assetService.getAsset(assetId);
 			if (!asset || asset.user_id !== userId) {
 				throw new Error('Asset not found or access denied');
@@ -177,6 +181,20 @@ export class FinancialWizardService {
 				document_type: documentType,
 				notes: notes,
 			});
+
+			// Overwrite semantics in Google Drive: trash the superseded file so the
+			// company folder holds exactly one current file per document type. The
+			// prior Drive file id is stored on the previous document's notes JSON.
+			if (previousCurrent?.notes) {
+				try {
+					const parsed = JSON.parse(previousCurrent.notes) as { id?: string };
+					if (parsed?.id) {
+						await this.assetService.trashGoogleDriveFile(parsed.id);
+					}
+				} catch (error) {
+					logger.error({ error, documentType, applicationId: application.id }, 'Failed to trash superseded Drive file');
+				}
+			}
 
 			// Update current_page to the highest page in order
 			const currentPageIndex = PAGE_ORDER.indexOf(application.current_page as FinancialWizardPage);
@@ -477,6 +495,19 @@ export class FinancialWizardService {
 			}
 
 			await this.repo.deleteDocument(documentId);
+
+			// Keep the Drive folder clean: trash the underlying file when a user
+			// removes a document outright (the Drive file id lives on notes JSON).
+			if (document.notes) {
+				try {
+					const parsed = JSON.parse(document.notes) as { id?: string };
+					if (parsed?.id) {
+						await this.assetService.trashGoogleDriveFile(parsed.id);
+					}
+				} catch (error) {
+					logger.error({ error, documentId }, 'Failed to trash Drive file on document delete');
+				}
+			}
 		} catch (error) {
 			logger.error(error);
 			throw error;

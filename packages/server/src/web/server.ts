@@ -47,6 +47,7 @@ import {
 	updateStepValidator,
 } from './validator/financial-wizard.ts';
 import {
+	inviteAcceptSessionValidator,
 	onboardingStep1Validator,
 	onboardingStep2Validator,
 	onboardingStep3Validator,
@@ -294,6 +295,8 @@ export class Server {
 		// Unauthenticated warm-lead submission (identified by deal_id)
 		onboardingWizard.post('/warm-lead/session', warmLeadSessionValidator, onboardingWizardCtrl.createWarmLeadSession);
 		onboardingWizard.post('/warm-lead', warmLeadDetailsValidator, onboardingWizardCtrl.submitWarmLeadDetails);
+		// Unauthenticated teammate magic-link exchange (identified by signed token)
+		onboardingWizard.post('/invite/accept-session', inviteAcceptSessionValidator, onboardingWizardCtrl.acceptInviteSession);
 
 		// All routes below require authentication
 		onboardingWizard.use(authCheck);

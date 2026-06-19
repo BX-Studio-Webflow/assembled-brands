@@ -512,6 +512,18 @@ export class OnboardingWizardService {
 	}
 
 	/**
+	 * Resolves the active deal context (deal_id + deal_application_id) for a user,
+	 * e.g. the inviter/applicant whose workspace a teammate is joining.
+	 */
+	public async getActiveDealContextForUser(userId: number): Promise<{ dealId: number; dealApplicationId: number } | null> {
+		const dealApplication = await this.dealApplicationService.findActiveByUserId(userId);
+		if (!dealApplication || typeof dealApplication.hubspot_deal_object_id !== 'number') {
+			return null;
+		}
+		return { dealId: dealApplication.hubspot_deal_object_id, dealApplicationId: dealApplication.id };
+	}
+
+	/**
 	 * Deletes an application
 	 * @param {number} id - ID of the application to delete
 	 * @returns {Promise<void>}
