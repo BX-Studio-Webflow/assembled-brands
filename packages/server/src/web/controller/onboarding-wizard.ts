@@ -1,6 +1,9 @@
+import { env } from 'cloudflare:workers';
 import type { Context } from 'hono';
 
-import { decodeInviteToken, encode } from '../../lib/jwt.js';
+import { sendTemplateEmail } from '../../lib/email-processor.js';
+import { verify } from '../../lib/encryption.js';
+import { decodeInviteToken, decodeLoginToken, decodeWarmLeadToken, encode, encodeLoginToken } from '../../lib/jwt.js';
 import { logger } from '../../lib/logger.js';
 import type { User } from '../../schema/schema.js';
 import type { FinancialWizardService } from '../../service/financial-wizard.js';
@@ -10,13 +13,18 @@ import type { UserService } from '../../service/user.js';
 import { getDealApplicationIdFromContext } from '../../util/deal-application-context.js';
 import type { UpdateStepBody } from '../validator/financial-wizard.js';
 import type {
+	InviteAcceptSessionBody,
+	LoginLinkBody,
+	LoginSessionBody,
 	OnboardingStep1Body,
 	OnboardingStep2Body,
 	OnboardingStep3Body,
-	InviteAcceptSessionBody,
+	PasswordLoginSessionBody,
 	WarmLeadDetailsBody,
 	WarmLeadDetailsForUserBody,
+	WarmLeadPasswordSessionBody,
 	WarmLeadSessionBody,
+	WarmLeadTokenSessionBody,
 } from '../validator/onboarding.ts';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.js';
 import { serveData } from './resp/resp.js';
@@ -338,7 +346,7 @@ export class OnboardingWizardController {
 		} catch (error) {
 			logger.error(error);
 			if (error instanceof Error && error.message.includes('No processed deal')) {
-				return serveBadRequest(c, 'No HubSpot deal linked to this account yet. Please use your invite link first.');
+				return serveBadRequest(c, 'No application is linked to this account yet. Please use your invitation link first.');
 			}
 			return serveInternalServerError(c, error);
 		}
@@ -364,9 +372,12 @@ export class OnboardingWizardController {
 				return serveBadRequest(c, 'Invitation not found.');
 			}
 
-			// Resolve the deal context from the inviter (the applicant) before
-			// minting a session, so a teammate can't be onboarded into nothing.
-			const dealContext = await this.service.getActiveDealContextForUser(invitation.inviter_id);
+			const invitedTeam = await this.teamService.getTeamById(invitation.team_id);
+			const scopedDealApplicationId = invitedTeam?.deal_application_id ?? null;
+			const dealContext =
+				scopedDealApplicationId != null
+					? await this.service.getDealContextByDealApplicationId(scopedDealApplicationId)
+					: await this.service.getActiveDealContextForUser(invitation.inviter_id);
 			if (!dealContext) {
 				return serveBadRequest(c, "We couldn't find an active application for this invite. Please contact your team.");
 			}
@@ -437,6 +448,259 @@ export class OnboardingWizardController {
 			if (error instanceof Error && error.message.includes('no associated user')) {
 				return serveBadRequest(c, 'No account linked to this deal yet. Please wait for your invite email.');
 			}
+			return serveInternalServerError(c, error);
+		}
+	};
+
+	/**
+	 * Unauthenticated warm-lead signed-link exchange retained for legacy clients.
+	 * New webapp entry uses createWarmLeadPasswordSession so the HubSpot temporary
+	 * password is required before minting a session.
+	 */
+	public createWarmLeadTokenSession = async (c: Context) => {
+		try {
+			const body: WarmLeadTokenSessionBody = await c.req.json();
+
+			const dealId = await decodeWarmLeadToken(body.token);
+			if (!dealId) {
+				return serveBadRequest(c, 'This link is invalid or has expired. Please request a new invite.');
+			}
+
+			const { user, dealApplicationId } = await this.service.getWarmLeadContextByDealId(dealId);
+
+			const [token, serializedUser, financialWizardProgress, onboardingProgress, teams] = await Promise.all([
+				encode(user.id, user.email, dealId, dealApplicationId),
+				serializeUser(user),
+				this.financialWizardService.getProgress(user.id, dealApplicationId),
+				this.service.getProgress(user.id, dealApplicationId),
+				this.teamService.getUserTeams(user.id),
+			]);
+
+			return c.json({
+				token,
+				deal_application_id: dealApplicationId,
+				user: serializedUser,
+				financialWizardProgress,
+				onboardingProgress,
+				teams,
+			});
+		} catch (error) {
+			logger.error(error);
+			if (error instanceof Error && error.message.includes('No processed deal')) {
+				return serveBadRequest(c, 'Deal not found or not yet processed. Please try again shortly.');
+			}
+			if (error instanceof Error && error.message.includes('no associated user')) {
+				return serveBadRequest(c, 'No account linked to this deal yet. Please wait for your invite email.');
+			}
+			return serveInternalServerError(c, error);
+		}
+	};
+
+	public createWarmLeadPasswordSession = async (c: Context) => {
+		try {
+			const body: WarmLeadPasswordSessionBody = await c.req.json();
+
+			const dealId = await decodeWarmLeadToken(body.token);
+			if (!dealId) {
+				return serveBadRequest(c, 'This link is invalid or has expired. Please request a new invite.');
+			}
+
+			const { user, dealApplicationId } = await this.service.getWarmLeadContextByDealId(dealId);
+			if (!(await this.service.verifyApplicationPassword(dealApplicationId, body.password, user.password))) {
+				return serveBadRequest(c, 'That temporary password is incorrect. Check the email from Assembled Brands and try again.');
+			}
+
+			const [token, serializedUser, financialWizardProgress, onboardingProgress, teams] = await Promise.all([
+				encode(user.id, user.email, dealId, dealApplicationId),
+				serializeUser(user),
+				this.financialWizardService.getProgress(user.id, dealApplicationId),
+				this.service.getProgress(user.id, dealApplicationId),
+				this.teamService.getUserTeams(user.id),
+			]);
+
+			return c.json({
+				token,
+				deal_application_id: dealApplicationId,
+				user: serializedUser,
+				financialWizardProgress,
+				onboardingProgress,
+				teams,
+			});
+		} catch (error) {
+			logger.error(error);
+			if (error instanceof Error && error.message.includes('No processed deal')) {
+				return serveBadRequest(c, 'Deal not found or not yet processed. Please try again shortly.');
+			}
+			if (error instanceof Error && error.message.includes('no associated user')) {
+				return serveBadRequest(c, 'No account linked to this deal yet. Please wait for your invite email.');
+			}
+			return serveInternalServerError(c, error);
+		}
+	};
+
+	/**
+	 * Unauthenticated magic-link re-login fallback.
+	 * Takes only an email, resolves the user's active deal, and emails a fresh
+	 * signed deep link (the /signin?token flow) so returning applicants and
+	 * teammates can sign back in if they do not have the temp password handy. Returns { ok: true } when a
+	 * link was sent and { ok: false } when no matching account/application exists,
+	 * so the UI can show a clear "we couldn't find your account" message.
+	 */
+	public requestLoginLink = async (c: Context) => {
+		try {
+			const body: LoginLinkBody = await c.req.json();
+			const email = body.email.trim().toLowerCase();
+
+			// Applicants own a deal directly; teammates reach it through the host of
+			// a team they belong to. Resolve either path before emailing.
+			const user = await this.userService.findByEmail(email);
+			let dealContext: { dealId: number; dealApplicationId: number } | null = null;
+			if (user) {
+				dealContext = await this.service.getActiveDealContextForUser(user.id);
+				if (!dealContext) {
+					const memberships = await this.teamService.getUserTeams(user.id);
+					for (const membership of memberships) {
+						const hostId = await this.teamService.getTeamHostUserId(membership.team_id);
+						if (!hostId || hostId === user.id) continue;
+						const hostContext = await this.service.getActiveDealContextForUser(hostId);
+						if (hostContext) {
+							dealContext = hostContext;
+							break;
+						}
+					}
+				}
+			}
+
+			if (!user || !dealContext) {
+				logger.info({ email }, 'Login link requested for unknown account');
+				return c.json({ ok: false });
+			}
+
+			// Carry the exact user (not the deal's owner) so teammates sign in as
+			// themselves, scoped to the host's deal.
+			const token = await encodeLoginToken(user.id, dealContext.dealId, dealContext.dealApplicationId);
+			const webAppUrl = env.WEBAPP_URL || 'https://webapp-omega-rosy.vercel.app';
+			const loginUrl = `${webAppUrl}/signin?token=${encodeURIComponent(token)}`;
+			const firstName = user.first_name || 'there';
+
+			await sendTemplateEmail(email, firstName, env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
+				subject: 'Your sign-in link for Assembled Brands',
+				title: 'Sign back in',
+				subtitle: 'Assembled Brands',
+				name: firstName,
+				body: `Hi ${firstName}, click the button below to securely sign back in to your Assembled Brands application. For your security, this link will expire after a while — just request a new one any time.`,
+				buttonText: 'Sign in to my application',
+				buttonLink: loginUrl,
+			});
+			logger.info({ email }, 'Login link sent');
+
+			return c.json({ ok: true });
+		} catch (error) {
+			logger.error(error);
+			return serveInternalServerError(c, error);
+		}
+	};
+
+	/**
+	 * Unauthenticated re-login "magic link" exchange.
+	 * Verifies the signed login token (which carries the exact user + their deal
+	 * context) and mints a session for that user — works for applicants and
+	 * teammates alike, signing each in as themselves.
+	 */
+	public createLoginSession = async (c: Context) => {
+		try {
+			const body: LoginSessionBody = await c.req.json();
+
+			const decoded = await decodeLoginToken(body.token);
+			if (!decoded) {
+				return serveBadRequest(c, 'This sign-in link is invalid or has expired. Please request a new one.');
+			}
+
+			const user = await this.userService.find(decoded.userId);
+			if (!user) {
+				return serveBadRequest(c, 'This sign-in link is invalid or has expired. Please request a new one.');
+			}
+
+			const { dealId, dealApplicationId } = decoded;
+
+			const [token, serializedUser, financialWizardProgress, onboardingProgress, teams] = await Promise.all([
+				encode(user.id, user.email, dealId, dealApplicationId),
+				serializeUser(user),
+				this.financialWizardService.getProgress(user.id, dealApplicationId),
+				this.service.getProgress(user.id, dealApplicationId),
+				this.teamService.getUserTeams(user.id),
+			]);
+
+			return c.json({
+				token,
+				deal_application_id: dealApplicationId,
+				user: serializedUser,
+				financialWizardProgress,
+				onboardingProgress,
+				teams,
+			});
+		} catch (error) {
+			logger.error(error);
+			return serveInternalServerError(c, error);
+		}
+	};
+
+	public createPasswordLoginSession = async (c: Context) => {
+		try {
+			const body: PasswordLoginSessionBody = await c.req.json();
+			const email = body.email.trim().toLowerCase();
+			const user = await this.userService.findByEmail(email);
+			if (!user) {
+				return serveBadRequest(c, 'Invalid email or temporary password.');
+			}
+
+			let dealContext = await this.service.getDealContextForUserByPassword(user.id, body.password);
+			const legacyPasswordValid = !dealContext && verify(body.password, user.password);
+			if (!dealContext && !legacyPasswordValid) {
+				return serveBadRequest(c, 'Invalid email or temporary password.');
+			}
+			if (!dealContext) {
+				dealContext = await this.service.getActiveDealContextForUser(user.id);
+			}
+			if (!dealContext) {
+				const memberships = await this.teamService.getUserTeams(user.id);
+				for (const membership of memberships) {
+					const team = await this.teamService.getTeamById(membership.team_id);
+					if (team?.deal_application_id != null) {
+						dealContext = await this.service.getDealContextByDealApplicationId(team.deal_application_id);
+					}
+					if (!dealContext) {
+						const hostId = await this.teamService.getTeamHostUserId(membership.team_id);
+						if (!hostId || hostId === user.id) continue;
+						dealContext = await this.service.getActiveDealContextForUser(hostId);
+					}
+					if (dealContext) break;
+				}
+			}
+
+			if (!dealContext) {
+				return serveBadRequest(c, "We couldn't find an active application for this account.");
+			}
+
+			const { dealId, dealApplicationId } = dealContext;
+			const [token, serializedUser, financialWizardProgress, onboardingProgress, teams] = await Promise.all([
+				encode(user.id, user.email, dealId, dealApplicationId),
+				serializeUser(user),
+				this.financialWizardService.getProgress(user.id, dealApplicationId),
+				this.service.getProgress(user.id, dealApplicationId),
+				this.teamService.getUserTeams(user.id),
+			]);
+
+			return c.json({
+				token,
+				deal_application_id: dealApplicationId,
+				user: serializedUser,
+				financialWizardProgress,
+				onboardingProgress,
+				teams,
+			});
+		} catch (error) {
+			logger.error(error);
 			return serveInternalServerError(c, error);
 		}
 	};

@@ -101,8 +101,8 @@ const hubspotCrmWebhookEventSchema = z.object({
 	subscriptionType: z.string(),
 	attemptNumber: z.number(),
 	objectId: z.number(),
-	changeSource: z.string(),
-	changeFlag: z.string(),
+	changeSource: z.string().optional().default(''),
+	changeFlag: z.string().optional().default(''),
 });
 
 const hubspotNewLeadSchema = z.array(hubspotCrmWebhookEventSchema);

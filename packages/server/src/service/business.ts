@@ -132,7 +132,7 @@ export class BusinessService {
 						...businessData,
 						folder_id: company_folder_id,
 					}),
-					this.teamService.createTeam(business.legal_name, userId),
+					this.teamService.createTeam(business.legal_name, userId, options?.dealApplicationId),
 				]);
 
 				const stepFolderRecords: NewFinancialStepFolder[] = Object.entries(pageFolderMap).map(([page, folder_id]) => ({

@@ -260,42 +260,40 @@ export class FinancialWizardService {
 	 * Calculates the percentage progress based on completion status
 	 * @param {boolean} isComplete - Whether the application is marked as complete
 	 * @param {Object | null} business - Business/company profile data (required for calculation)
-	 * @param {Object | null} financialOverview - Financial overview data
 	 * @param {Record<string, Array>} documentsByPage - Documents grouped by page
 	 * @returns {number} Percentage completion (0-100)
 	 */
 	private calculatePercentage(
 		isComplete: boolean,
 		business: { id: number } | null,
-		financialOverview: { revenue_last_12_months: string | null } | null,
 		documentsByPage: Record<string, Array<unknown>>,
 	): number {
 		if (isComplete) {
 			return 100;
 		}
 
-		const totalPages = PAGE_ORDER.length;
-		let completedPages = 0;
+		// Steps the applicant actually completes in the current webapp: the
+		// company profile plus the four document pages. The legacy
+		// 'financial-overview' step was folded into the company profile and is
+		// never saved separately here, so counting it in the denominator would
+		// cap progress at 83% (5/6) forever.
+		const totalSteps = 5;
+		let completedSteps = 0;
 
 		// Check company-profile completion
 		if (business) {
-			completedPages += 1;
-		}
-
-		// Check financial-overview completion
-		if (financialOverview) {
-			completedPages += 1;
+			completedSteps += 1;
 		}
 
 		// Check document pages completion
 		const documentPages = ['financial-reports', 'accounts-inventory', 'ecommerce-performance', 'team-ownership'];
 		for (const page of documentPages) {
 			if (documentsByPage[page] && documentsByPage[page].length > 0) {
-				completedPages += 1;
+				completedSteps += 1;
 			}
 		}
 
-		return Math.round((completedPages / totalPages) * 100);
+		return Math.min(100, Math.round((completedSteps / totalSteps) * 100));
 	}
 
 	/**
@@ -345,7 +343,6 @@ export class FinancialWizardService {
 			const percentage = this.calculatePercentage(
 				application.is_complete ?? false,
 				business ?? null,
-				financialOverviewData,
 				documentsByPage,
 			);
 

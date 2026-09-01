@@ -1,7 +1,5 @@
-import { env } from 'cloudflare:workers';
 import type { Context } from 'hono';
 
-import { sendTemplateEmail } from '../../lib/email-processor.ts';
 import { logger } from '../../lib/logger.js';
 import type { NewUser } from '../../schema/schema.ts';
 import type { HubSpotService } from '../../service/hubspot.js';
@@ -10,6 +8,15 @@ import { generateSecurePassword } from '../../util/string.ts';
 import { hubspotCrmWebhookEventSchema } from '../validator/user.js';
 import { getErrorPhrase } from '../validator/validator.js';
 import { serveBadRequest, serveInternalServerError, serveUnprocessableEntity } from './resp/error.js';
+
+export const isDealCredentialRecoveryEvent = (subscriptionType: string): boolean =>
+	[
+		'deal.associationChange',
+		'deal.contactAssociationChange',
+		'deal.association.change',
+		'deal.contactAssociation.change',
+		'deal.propertyChange',
+	].includes(subscriptionType) || subscriptionType.startsWith('deal.association');
 
 export class HubSpotController {
 	private hubSpotService: HubSpotService;
@@ -27,6 +34,7 @@ export class HubSpotController {
 	 * Supported types:
 	 *  - contact.creation → provision a new platform user
 	 *  - deal.creation    → record / process the new deal
+	 *  - deal association changes → recover credentials if contact is attached later
 	 *
 	 * Register in HubSpot as: POST /api/v1/hubspot/webhook
 	 */
@@ -51,6 +59,9 @@ export class HubSpotController {
 				case 'deal.creation':
 					return this.handleDealCreation(c, first);
 				default:
+					if (this.isDealAssociationChange(first.subscriptionType)) {
+						return this.handleDealAssociationChange(c, first);
+					}
 					logger.warn({ subscriptionType: first.subscriptionType }, 'Unhandled HubSpot subscription type');
 					return c.json({ message: `Unhandled subscription type: ${first.subscriptionType}` });
 			}
@@ -95,6 +106,7 @@ export class HubSpotController {
 			const existingUser = await this.userService.findByEmail(email);
 			if (existingUser) {
 				await this.hubSpotService.markContactWebhookSkipped(webhookRowId, 'User already exists');
+				await this.recoverMissingDealCredentialsForContact(objectId);
 				return c.json({ message: 'User already exists' });
 			}
 
@@ -114,18 +126,15 @@ export class HubSpotController {
 				return c.json({ message: 'Failed to create user', code: 'FAILED_TO_CREATE_USER' }, 400);
 			}
 
-			const devPrefix = env.NODE_ENV === 'development' ? '/dev' : '';
-			await sendTemplateEmail(email, firstname || 'Dear User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
-				subject: 'Welcome to Assembled Brands',
-				title: 'Welcome to Assembled Brands',
-				subtitle: 'Welcome to Assembled Brands',
-				name: firstname || 'Dear User',
-				body: `Welcome to Assembled Brands. We are glad to have you on board. Your credentials — Email: ${email}, Password: ${password}. Click below to complete onboarding: ${env.FRONTEND_URL}${devPrefix}/account-setup-finish-verification?email=${email}&id=${createdUser.id}`,
-				buttonText: 'Complete onboarding',
-				buttonLink: `${env.FRONTEND_URL}${devPrefix}/login?email=${email}&id=${createdUser.id}`,
-			});
+			// Per product decision (2026-06-29): no automatic email is sent to prospects
+			// when a contact/deal is created in HubSpot. The application link + temporary
+			// password are surfaced as HubSpot deal properties for the originator to send
+			// manually after their discovery call. The only prospect-facing automated email
+			// is the post-submission confirmation. Account is still provisioned here.
+			void password;
 
 			await this.hubSpotService.markContactWebhookProcessedForNewUser(webhookRowId, createdUser.id);
+			await this.recoverMissingDealCredentialsForContact(objectId);
 			return c.json({ message: 'User created successfully, please check your email for your verification code' });
 		} catch (err) {
 			await this.hubSpotService.markContactWebhookError(webhookRowId, err);
@@ -133,10 +142,30 @@ export class HubSpotController {
 		}
 	};
 
+	private recoverMissingDealCredentialsForContact = async (contactObjectId: number) => {
+		try {
+			await this.hubSpotService.recoverMissingDealCredentialsForContact(contactObjectId);
+		} catch (err) {
+			logger.error({ err, contactObjectId }, 'Failed to recover deal credentials from contact webhook (non-fatal)');
+		}
+	};
+
 	private handleDealCreation = async (c: Context, event: Parameters<HubSpotService['processNewDealWebhook']>[0]) => {
 		await this.hubSpotService.processNewDealWebhook(event);
 		return c.json({ message: 'Deal webhook processed' });
 	};
+
+	private handleDealAssociationChange = async (
+		c: Context,
+		event: Parameters<HubSpotService['recoverDealCredentialsFromAssociationWebhook']>[0],
+	) => {
+		await this.hubSpotService.recoverDealCredentialsFromAssociationWebhook(event);
+		return c.json({ message: 'Deal association webhook processed' });
+	};
+
+	private isDealAssociationChange(subscriptionType: string) {
+		return isDealCredentialRecoveryEvent(subscriptionType);
+	}
 
 	/** Proxies GET /crm/v3/owners?limit=100 from HubSpot. */
 	public getOwners = async (c: Context) => {

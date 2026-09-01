@@ -168,8 +168,8 @@ export class AssetController {
     This means faster playback, better quality, and seamless streaming across all devices.
     You can now use it in your events with confidence.
   `,
-								button_text: 'View Your Video',
-								button_link: `${process.env.FRONTEND_URL}`,
+								button_text: '',
+								button_link: '',
 							}),
 
 							this.notificationService.create({
@@ -299,8 +299,8 @@ export class AssetController {
   Once you've uploaded a new video, our system will automatically attempt to process and optimize it again.
   We apologize for the inconvenience and appreciate your patience.
 `,
-							button_text: 'Try Again',
-							button_link: `${process.env.FRONTEND_URL}`,
+							button_text: '',
+							button_link: '',
 						}),
 						this.notificationService.create({
 							user_id: asset.user_id,

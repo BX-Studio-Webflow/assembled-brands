@@ -165,3 +165,10 @@ dist
 .env*
 !.env.example
 .wrangler/
+
+# Local secrets used by scripts/deploy.mjs (never commit real values)
+secrets/
+.wrangler.jsonc.deploy-backup
+
+# Generated email HTML previews
+.email-previews/

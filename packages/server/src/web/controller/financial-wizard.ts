@@ -1,11 +1,13 @@
 import { env } from 'cloudflare:workers';
 import type { Context } from 'hono';
 
+import { sendTemplateEmail } from '../../lib/email-processor.js';
 import { logger } from '../../lib/logger.js';
 import type { User } from '../../schema/schema.js';
 import type { AssetService } from '../../service/asset.js';
 import { BusinessService } from '../../service/business.js';
 import { FinancialWizardPage, FinancialWizardService } from '../../service/financial-wizard.js';
+import type { HubSpotService } from '../../service/hubspot.js';
 import type { UserService } from '../../service/user.js';
 import { getDealApplicationIdFromContext } from '../../util/deal-application-context.js';
 import { buildDriveUploadFileName } from '../../util/drive-naming.js';
@@ -18,11 +20,19 @@ export class FinancialWizardController {
 	private userService: UserService;
 	private assetService: AssetService;
 	private businessService: BusinessService;
-	constructor(service: FinancialWizardService, userService: UserService, assetService: AssetService, businessService: BusinessService) {
+	private hubSpotService: HubSpotService;
+	constructor(
+		service: FinancialWizardService,
+		userService: UserService,
+		assetService: AssetService,
+		businessService: BusinessService,
+		hubSpotService: HubSpotService,
+	) {
 		this.service = service;
 		this.userService = userService;
 		this.assetService = assetService;
 		this.businessService = businessService;
+		this.hubSpotService = hubSpotService;
 	}
 
 	/**
@@ -326,7 +336,37 @@ export class FinancialWizardController {
 				return serveBadRequest(c, "Ops, we can't find your application. Have you started it yet?");
 			}
 
+			const wasAlreadyComplete = progress.is_complete === true;
 			const completedApplication = await this.service.completeApplication(effectiveUserId, dealApplicationId);
+
+			// The only automated prospect-facing email in the warm-lead flow: a one-time
+			// confirmation when the applicant first submits. Gated on the prior state so
+			// re-submits / idempotent calls don't re-notify. Non-fatal.
+			if (!wasAlreadyComplete) {
+				if (dealApplicationId != null) {
+					try {
+						await this.hubSpotService.sendSubmissionUnderwritingAlerts(dealApplicationId);
+					} catch (alertErr) {
+						logger.error({ alertErr, dealApplicationId }, 'Failed to send submission underwriting alerts (non-fatal)');
+					}
+				}
+				try {
+					const firstName = user.first_name || 'there';
+					const webAppUrl = env.WEBAPP_URL || 'https://webapp-omega-rosy.vercel.app';
+					await sendTemplateEmail(user.email, firstName, env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
+						subject: "We've received your application — Assembled Brands",
+						title: 'Application received',
+						subtitle: 'Assembled Brands',
+						name: firstName,
+						body: `Hi ${firstName}, thank you for submitting your application to Assembled Brands. Our team has received your information and documents and will be in touch with next steps shortly. If you need to return to your application, use the button below and we will email you a secure sign-in link.`,
+						buttonText: 'Sign in to view my application',
+						buttonLink: `${webAppUrl}/login`,
+					});
+					logger.info({ userId: user.id }, 'Submission confirmation email sent');
+				} catch (emailErr) {
+					logger.error({ emailErr, userId: user.id }, 'Failed to send submission confirmation email (non-fatal)');
+				}
+			}
 
 			return serveData(c, {
 				message: 'Financial wizard completed successfully',
@@ -387,7 +427,7 @@ export class FinancialWizardController {
 			}
 
 			// Upload to Google Drive using asset service
-			const folderId = env.GOOGLE_DRIVE_FOLDER_ID || undefined;
+			const folderId = env.GOOGLE_DRIVE_FOLDER_ID || '';
 			const folder = await this.assetService.getOrCreateFolder('Test Upload Folder', folderId);
 			return serveData(c, {
 				folder,

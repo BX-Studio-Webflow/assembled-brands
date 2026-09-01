@@ -1,3 +1,5 @@
+import { env } from 'process';
+
 import { sendTemplateEmail } from '../lib/email-processor.ts';
 import { logger } from '../lib/logger.ts';
 import type { EmailRepository } from '../repository/email.ts';
@@ -20,7 +22,7 @@ export class EmailService {
 		try {
 			const email = await this.repository.createEmail(data);
 			// Queue the email for processing
-			await sendTemplateEmail(data.email, data.email.split('@')[0], 'd-85053bc3d243484cbe9e3d493ae3b56b', {
+			await sendTemplateEmail(data.email, data.email.split('@')[0], env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 				subject: data.subject,
 				title: data.title,
 				subtitle: data.subtitle,
@@ -53,7 +55,7 @@ export class EmailService {
 		try {
 			// Queue each email for processing
 			const promises = data.map((item) =>
-				sendTemplateEmail(item.email, item.name, 'd-85053bc3d243484cbe9e3d493ae3b56b', {
+				sendTemplateEmail(item.email, item.name, env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 					subject: item.params.subject,
 					title: item.params.title,
 					subtitle: item.params.subtitle,

@@ -48,12 +48,15 @@ import {
 } from './validator/financial-wizard.ts';
 import {
 	inviteAcceptSessionValidator,
+	loginLinkValidator,
+	loginSessionValidator,
 	onboardingStep1Validator,
 	onboardingStep2Validator,
 	onboardingStep3Validator,
+	passwordLoginSessionValidator,
 	warmLeadDetailsForUserValidator,
-	warmLeadDetailsValidator,
-	warmLeadSessionValidator,
+	warmLeadPasswordSessionValidator,
+	warmLeadTokenSessionValidator,
 } from './validator/onboarding.ts';
 import { createTeamValidator, inviteMemberValidator, revokeAccessValidator, teamQueryValidator } from './validator/team.ts';
 import {
@@ -69,6 +72,7 @@ import {
 
 export class Server {
 	private app: Hono;
+	private hubSpotService?: HubSpotService;
 
 	constructor(app: Hono) {
 		this.app = app;
@@ -127,6 +131,7 @@ export class Server {
 		const teamService = new TeamService(teamRepo, userService);
 		const dealApplicationService = new DealApplicationService(dealApplicationRepo);
 		const hubSpotService = new HubSpotService(hubspotContactWebhookRepo, hubspotDealWebhookRepo, userService, dealApplicationService);
+		this.hubSpotService = hubSpotService;
 		const financialWizardService = new FinancialWizardService(financialWizardRepo, assetService, hubSpotService);
 		const businessService = new BusinessService(businessRepo, s3Service, assetService, teamService, financialWizardService);
 		const onboardingWizardService = new OnboardingWizardService(
@@ -154,7 +159,13 @@ export class Server {
 		const assetController = new AssetController(assetService, userService, emailService, notificationService);
 
 		const businessController = new BusinessController(businessService, userService);
-		const financialWizardController = new FinancialWizardController(financialWizardService, userService, assetService, businessService);
+		const financialWizardController = new FinancialWizardController(
+			financialWizardService,
+			userService,
+			assetService,
+			businessService,
+			hubSpotService,
+		);
 		const onboardingWizardController = new OnboardingWizardController(
 			onboardingWizardService,
 			userService,
@@ -179,6 +190,13 @@ export class Server {
 		this.registerOnboardingRoutes(api, onboardingWizardController, teamService);
 		this.registerDealApplicationRoutes(api, dealApplicationController);
 		this.registerGoogleRoutes(api, financialWizardController);
+	}
+
+	public async reconcilePendingDealCredentials() {
+		if (!this.hubSpotService) {
+			throw new Error('Server has not been configured');
+		}
+		return this.hubSpotService.reconcilePendingDealCredentials();
 	}
 
 	private registerUserRoutes(api: Hono, authCtrl: AuthController) {
@@ -292,11 +310,21 @@ export class Server {
 		const onboardingWizard = new Hono();
 		const authCheck = jwt({ secret: env.SECRET_KEY });
 
-		// Unauthenticated warm-lead submission (identified by deal_id)
-		onboardingWizard.post('/warm-lead/session', warmLeadSessionValidator, onboardingWizardCtrl.createWarmLeadSession);
-		onboardingWizard.post('/warm-lead', warmLeadDetailsValidator, onboardingWizardCtrl.submitWarmLeadDetails);
+		// Unauthenticated warm-lead deep link exchanges (identified by signed token)
+		onboardingWizard.post('/warm-lead/token-session', warmLeadTokenSessionValidator, onboardingWizardCtrl.createWarmLeadTokenSession);
+		onboardingWizard.post(
+			'/warm-lead/password-session',
+			warmLeadPasswordSessionValidator,
+			onboardingWizardCtrl.createWarmLeadPasswordSession,
+		);
 		// Unauthenticated teammate magic-link exchange (identified by signed token)
 		onboardingWizard.post('/invite/accept-session', inviteAcceptSessionValidator, onboardingWizardCtrl.acceptInviteSession);
+		// Unauthenticated magic-link fallback: email -> signed sign-in link
+		onboardingWizard.post('/login-link', loginLinkValidator, onboardingWizardCtrl.requestLoginLink);
+		// Unauthenticated re-login magic-link exchange (identified by signed token)
+		onboardingWizard.post('/login/session', loginSessionValidator, onboardingWizardCtrl.createLoginSession);
+		// Unauthenticated email + temporary password login.
+		onboardingWizard.post('/login/password-session', passwordLoginSessionValidator, onboardingWizardCtrl.createPasswordLoginSession);
 
 		// All routes below require authentication
 		onboardingWizard.use(authCheck);

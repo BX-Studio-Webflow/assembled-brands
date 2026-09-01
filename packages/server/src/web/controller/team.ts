@@ -5,6 +5,7 @@ import type { TeamMember, User } from '../../schema/schema.ts';
 import { BusinessService } from '../../service/business.ts';
 import { TeamService } from '../../service/team.ts';
 import type { UserService } from '../../service/user.ts';
+import { getDealApplicationIdFromContext } from '../../util/deal-application-context.ts';
 import { type CreateTeamBody, type InviteMemberBody, type RevokeAccessBody } from '../validator/team.ts';
 import { ERRORS, serveBadRequest, serveInternalServerError } from './resp/error.ts';
 import { serveData } from './resp/resp.ts';
@@ -45,7 +46,7 @@ export class TeamController {
 			const body: CreateTeamBody = await c.req.json();
 			const { name } = body;
 
-			const team = await this.service.createTeam(name, user.id);
+			const team = await this.service.createTeam(name, user.id, getDealApplicationIdFromContext(c));
 
 			return c.json({
 				message: 'Team created successfully',
@@ -76,6 +77,14 @@ export class TeamController {
 			const isHost = await this.service.isTeamHost(team_id, user.id);
 			if (!isHost) {
 				return serveBadRequest(c, 'Only the team host can invite members');
+			}
+
+			const dealApplicationId = getDealApplicationIdFromContext(c);
+			if (dealApplicationId != null) {
+				const scopedTeam = await this.service.getTeamByHostId(user.id, dealApplicationId);
+				if (!scopedTeam || scopedTeam.team_id !== team_id) {
+					return serveBadRequest(c, 'This team does not belong to the active application');
+				}
 			}
 
 			// Get team details
@@ -135,7 +144,7 @@ export class TeamController {
 			}
 
 			//get the team where the user is host
-			const team = await this.service.getTeamByHostId(user.id);
+			const team = await this.service.getTeamByHostId(user.id, getDealApplicationIdFromContext(c));
 			if (!team) {
 				return serveBadRequest(c, 'You are not a host of any team');
 			}
@@ -300,7 +309,7 @@ export class TeamController {
 			};
 
 			// Get the team where user is host
-			const teamMember = await this.service.getTeamByHostId(user.id);
+			const teamMember = await this.service.getTeamByHostId(user.id, getDealApplicationIdFromContext(c));
 			if (!teamMember) {
 				return serveBadRequest(c, 'You are not a host of any team');
 			}
@@ -355,6 +364,7 @@ export class TeamController {
 						return {
 							team_id: member.team_id,
 							team_name: teamInfo?.name || 'Unknown Team',
+							deal_application_id: teamInfo?.deal_application_id ?? null,
 							role: member.role,
 							created_at: member.created_at,
 							updated_at: member.updated_at,
@@ -365,6 +375,7 @@ export class TeamController {
 					return {
 						team_id: member.team_id,
 						team_name: teamInfo?.name || 'Unknown Team',
+						deal_application_id: teamInfo?.deal_application_id ?? null,
 						role: member.role,
 						created_at: member.created_at,
 						updated_at: member.updated_at,

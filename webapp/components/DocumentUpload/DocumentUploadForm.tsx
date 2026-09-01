@@ -288,14 +288,21 @@ export default function DocumentUploadForm({
     }
   };
 
+  // The last document page has no next step, so its action submits the whole
+  // application rather than just saving the page.
+  const isFinalStep = !config.nextKey;
   const buttonLabel =
     formStatus === "saving"
-      ? "Saving\u2026"
+      ? isFinalStep
+        ? "Submitting\u2026"
+        : "Saving\u2026"
       : formStatus === "success"
-        ? "Saved \u2713"
-        : config.nextKey
-          ? "Save & Continue"
-          : "Save";
+        ? isFinalStep
+          ? "Submitted \u2713"
+          : "Saved \u2713"
+        : isFinalStep
+          ? "Submit application"
+          : "Save & Continue";
 
   return (
     <div className={styles.page}>

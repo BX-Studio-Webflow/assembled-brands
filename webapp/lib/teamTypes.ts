@@ -20,6 +20,7 @@ export type TeamInvitation = {
 export type MyTeam = {
   team_id: number;
   team_name: string;
+  deal_application_id?: number | null;
   role: string;
 };
 

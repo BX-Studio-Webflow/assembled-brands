@@ -84,6 +84,7 @@ export default async function MyApplicationsPage() {
       companyName={companyName}
       contactEmail="My Applications"
       sectionStatuses={getDocumentSectionStatuses(progress)}
+      isComplete={progress?.is_complete ?? false}
     >
       <div className={styles.page}>
         <header className={styles.titleCard}>

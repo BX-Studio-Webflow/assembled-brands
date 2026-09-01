@@ -12,4 +12,7 @@ export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		return app.fetch(request, env, ctx);
 	},
+	async scheduled(_controller, _env, ctx): Promise<void> {
+		ctx.waitUntil(server.reconcilePendingDealCredentials());
+	},
 } satisfies ExportedHandler<Env>;

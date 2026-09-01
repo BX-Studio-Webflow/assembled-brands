@@ -36,9 +36,9 @@ export class TeamService {
 	 * @returns {Promise<Object>} Created team
 	 * @throws {Error} When team creation fails
 	 */
-	public async createTeam(name: string, hostId: number) {
+	public async createTeam(name: string, hostId: number, dealApplicationId?: number) {
 		try {
-			const team = await this.repo.createTeam(name, hostId);
+			const team = await this.repo.createTeam(name, hostId, dealApplicationId);
 			return team;
 		} catch (error) {
 			logger.error(error);
@@ -79,7 +79,7 @@ export class TeamService {
 			const acceptUrl = `${webAppUrl()}/invite/accept?token=${encodeURIComponent(inviteToken)}`;
 
 			// Send invitation email
-			await sendTemplateEmail(inviteeEmail, 'Team Invitation', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
+			await sendTemplateEmail(inviteeEmail, 'Team Invitation', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 				subject: `You've been invited to ${teamName}`,
 				title: "You've been invited to join an application",
 				subtitle: 'Open the workspace to collaborate',
@@ -157,14 +157,14 @@ export class TeamService {
 
 				if (sendCredentialsEmail) {
 					//send transactional email
-					sendTemplateEmail(user.email, 'Temporary Password', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
-						subject: 'New account created',
-						title: `Welcome to ${env.BRAND_NAME}`,
-						subtitle: 'Change your password',
+					sendTemplateEmail(user.email, 'Temporary Password', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
+						subject: 'Your Assembled Brands account is ready',
+						title: 'Your account is ready',
+						subtitle: 'Temporary password enclosed',
 						name: user.first_name || 'Dear User',
-						body: `A new account was created with your email ${user.email}. We also created a random temporary password for you. Please change your password immediately after logging in. Your temporary password is ${tempPassword}`,
-						buttonText: 'Ok, got it',
-						buttonLink: `${env.FRONTEND_URL}`,
+						body: `A teammate account was created for ${user.email}. Your temporary password is ${tempPassword}. Sign in and change this password before using the workspace.`,
+						buttonText: 'Sign in',
+						buttonLink: `${webAppUrl()}/login`,
 					});
 				}
 			}
@@ -181,14 +181,14 @@ export class TeamService {
 
 			if (sendWelcomeEmail) {
 				// Send welcome email
-				await sendTemplateEmail(user.email, 'Welcome to the team', 'd-85053bc3d243484cbe9e3d493ae3b56b', {
-					subject: "You're in — open your application workspace",
-					title: 'Welcome aboard 🎉',
+				await sendTemplateEmail(user.email, 'Welcome to the team', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
+					subject: "You're in — return to your application workspace",
+					title: 'Welcome to the workspace',
 					subtitle: 'Team invite accepted',
 					name: user.first_name || 'Dear User',
-					body: "You've successfully joined the application. Open the workspace to start collaborating with your team.",
-					buttonText: 'Open the workspace',
-					buttonLink: webAppUrl(),
+					body: "You've successfully joined the application. If you need to return later, sign in with your email and we will send you a secure link back to the workspace.",
+					buttonText: 'Sign in to the workspace',
+					buttonLink: `${webAppUrl()}/login`,
 				});
 			}
 
@@ -231,8 +231,14 @@ export class TeamService {
 	 * @param {number} userId - ID of the host
 	 * @returns {Promise<Object>} The team
 	 */
-	public async getTeamByHostId(userId: number) {
-		return await this.repo.getTeamByHostId(userId);
+	public async getTeamByHostId(userId: number, dealApplicationId?: number) {
+		const teams = await this.repo.getTeamByUserId(userId);
+		const hosted = teams.filter((membership) => membership.role === 'host');
+		if (dealApplicationId != null) {
+			const exact = hosted.find((membership) => membership.team?.deal_application_id === dealApplicationId);
+			if (exact) return exact;
+		}
+		return hosted[0] ?? null;
 	}
 
 	/**
@@ -284,6 +290,15 @@ export class TeamService {
 	 * @returns {Promise<Array>} List of user's teams
 	 * @throws {Error} When team retrieval fails
 	 */
+	/**
+	 * Resolve the host (applicant/owner) user id for a team.
+	 * @param {number} teamId - Team ID
+	 * @returns {Promise<number|null>} The host user id, or null if none
+	 */
+	public async getTeamHostUserId(teamId: number) {
+		return await this.repo.getTeamHostUserId(teamId);
+	}
+
 	public async getUserTeams(userId: number) {
 		try {
 			return await this.repo.getUserTeams(userId);

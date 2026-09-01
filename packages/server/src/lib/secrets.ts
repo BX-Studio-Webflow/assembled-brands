@@ -11,6 +11,8 @@ export const envSchema = z.object({
 	// Email service
 	SENDGRID_API_KEY: z.string(),
 	TRANSACTIONAL_EMAIL_TEMPLATE_ID: z.string(),
+	SENDGRID_FROM_EMAIL: z.string().optional(),
+	SENDGRID_FROM_NAME: z.string().optional(),
 
 	// R2/S3 storage
 	AWS_REGION: z.string(),
@@ -23,6 +25,25 @@ export const envSchema = z.object({
 	GOOGLE_CLIENT_EMAIL: z.string(),
 	GOOGLE_PRIVATE_KEY: z.string(),
 	GOOGLE_DRIVE_FOLDER_ID: z.string(),
+
+	// Web app (magic-link / invite emails build URLs from this). Optional in the
+	// schema so local `wrangler dev` boots without it, but enforced in production
+	// by requireProductionVars() below.
+	WEBAPP_URL: z.string().optional(),
+
+	// HubSpot CRM (deal ingestion + stage sync). Optional locally; required in prod.
+	HUBSPOT_API_KEY: z.string().optional(),
+	HUBSPOT_PORTAL_ID: z.string().optional(),
+
+	// Slack notifications (scope-disputed; fully optional + flag-gated).
+	SLACK_BOT_TOKEN: z.string().optional(),
+	SLACK_CHANNEL_ID: z.string().optional(),
+	SLACK_NOTIFICATIONS_ENABLED: z.string().optional(),
+	SLACK_NOTIFICATION_WEBHOOK_URL: z.string().optional(),
+
+	// Underwriting submission alerts (optional; skipped when empty/disabled).
+	UNDERWRITING_ALERT_EMAILS: z.string().optional(),
+	UNDERWRITING_ALERT_EMAILS_ENABLED: z.string().optional(),
 
 	// Optional/legacy variables (for backward compatibility)
 	PORT: z.string().default('3500').optional(),
@@ -38,7 +59,53 @@ export const envSchema = z.object({
 	WEBSOCKET_PORT: z.string().default('8081').optional(),
 });
 
+// Vars that are tolerated as placeholders/empty locally but MUST be real in
+// production. Keeping this separate lets `wrangler dev` boot with placeholders
+// while a misconfigured production worker fails fast at startup instead of
+// silently emailing broken links or skipping HubSpot ingestion.
+const PRODUCTION_REQUIRED_VARS = [
+	'SECRET_KEY',
+	'FRONTEND_URL',
+	'WEBAPP_URL',
+	'SENDGRID_API_KEY',
+	'TRANSACTIONAL_EMAIL_TEMPLATE_ID',
+	'HUBSPOT_API_KEY',
+	'R2_ACCOUNT_ID',
+	'R2_SECRET_ACCESS_KEY_ID',
+	'R2_SECRET_ACCESS_KEY',
+	'R2_BUCKET_NAME',
+	'GOOGLE_CLIENT_EMAIL',
+	'GOOGLE_PRIVATE_KEY',
+	'GOOGLE_DRIVE_FOLDER_ID',
+] as const;
+
+// Values that obviously aren't real (so prod doesn't boot with leftover dev
+// placeholders or the dev signing key).
+const PLACEHOLDER_PATTERNS = [/placeholder/i, /change-me/i, /^local-dev-/i, /^$/];
+
+function requireProductionVars(parsed: z.infer<typeof envSchema>): void {
+	if (parsed.NODE_ENV !== 'production') {
+		return;
+	}
+	const problems: string[] = [];
+	for (const key of PRODUCTION_REQUIRED_VARS) {
+		const value = (parsed as Record<string, unknown>)[key];
+		if (typeof value !== 'string' || PLACEHOLDER_PATTERNS.some((re) => re.test(value))) {
+			problems.push(key);
+		}
+	}
+	if (problems.length > 0) {
+		throw new Error(
+			`Production environment is misconfigured. The following variables are missing or still ` +
+				`placeholders: ${problems.join(', ')}. Refusing to start.`,
+		);
+	}
+}
+
 export function loadEnvironmentVariables(CloudflareEnv: Cloudflare.Env) {
-	//if vars ar eunset, this will throw an error
-	return envSchema.parse(CloudflareEnv);
+	// Throws if any base-required var is unset.
+	const parsed = envSchema.parse(CloudflareEnv);
+	// Additionally enforce prod-critical vars are real (not dev placeholders).
+	requireProductionVars(parsed);
+	return parsed;
 }

@@ -37,10 +37,12 @@ export default async function InviteTeamMembersPage() {
 
   let percentage = 10;
   let companyName = "Your application";
+  let isComplete = false;
   let sectionStatuses: Record<DocumentNavKey, SectionStatus> | undefined;
   try {
     const progress = await getFinancialProgress(token);
     percentage = progress?.percentage ?? percentage;
+    isComplete = progress?.is_complete === true;
     companyName =
       progress?.company_profile?.legal_name ||
       progress?.company_profile?.name ||
@@ -59,6 +61,7 @@ export default async function InviteTeamMembersPage() {
       companyName={companyName}
       contactEmail="Document Upload Center"
       sectionStatuses={sectionStatuses}
+      isComplete={isComplete}
     >
       <InviteTeamMembers initialInvitations={invitations} />
     </AppShell>

@@ -89,6 +89,43 @@ const inviteAcceptSessionSchema = z.object({
 export const inviteAcceptSessionValidator = zValidator('json', inviteAcceptSessionSchema);
 export type InviteAcceptSessionBody = z.infer<typeof inviteAcceptSessionSchema>;
 
+// Warm-lead deep link. The signed token encodes the deal id; the applicant must
+// also enter the HubSpot temporary password before a session is minted.
+const warmLeadTokenSessionSchema = z.object({
+	token: z.string({ message: 'token is required' }).min(1),
+});
+export const warmLeadTokenSessionValidator = zValidator('json', warmLeadTokenSessionSchema);
+export type WarmLeadTokenSessionBody = z.infer<typeof warmLeadTokenSessionSchema>;
+
+const warmLeadPasswordSessionSchema = z.object({
+	token: z.string({ message: 'token is required' }).min(1),
+	password: z.string({ message: 'password is required' }).min(1, 'Temporary password is required'),
+});
+export const warmLeadPasswordSessionValidator = zValidator('json', warmLeadPasswordSessionSchema);
+export type WarmLeadPasswordSessionBody = z.infer<typeof warmLeadPasswordSessionSchema>;
+
+// Password-less "email me a sign-in link" request. The applicant enters only
+// their email; the backend resolves their active deal and emails a signed link.
+const loginLinkSchema = z.object({
+	email: z.string({ message: 'email is required' }).email('Enter a valid email address'),
+});
+export const loginLinkValidator = zValidator('json', loginLinkSchema);
+export type LoginLinkBody = z.infer<typeof loginLinkSchema>;
+
+// Re-login deep link. The signed token carries the user + deal context.
+const loginSessionSchema = z.object({
+	token: z.string({ message: 'token is required' }).min(1),
+});
+export const loginSessionValidator = zValidator('json', loginSessionSchema);
+export type LoginSessionBody = z.infer<typeof loginSessionSchema>;
+
+const passwordLoginSessionSchema = z.object({
+	email: z.string({ message: 'email is required' }).email('Enter a valid email address'),
+	password: z.string({ message: 'password is required' }).min(1, 'Temporary password is required'),
+});
+export const passwordLoginSessionValidator = zValidator('json', passwordLoginSessionSchema);
+export type PasswordLoginSessionBody = z.infer<typeof passwordLoginSessionSchema>;
+
 // Progress Response Type
 export type OnboardingProgressResponse = {
 	current_step: number;

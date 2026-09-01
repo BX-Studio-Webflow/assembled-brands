@@ -189,7 +189,16 @@ export const getKeyFromUrl = (url: string): string => {
 		return url.replace('s3://brianxxx/', '');
 	}
 	const urlParts = url.split('.amazonaws.com/');
-	return urlParts[1] || '';
+	if (urlParts[1]) return urlParts[1];
+
+	try {
+		const parsed = new URL(url);
+		const path = decodeURIComponent(parsed.pathname.replace(/^\/+/, ''));
+		const bucketPrefix = `${env.R2_BUCKET_NAME}/`;
+		return path.startsWith(bucketPrefix) ? path.slice(bucketPrefix.length) : path;
+	} catch {
+		return '';
+	}
 };
 
 export const generateAssetKey = (fileName: string, assetType: string): string => {

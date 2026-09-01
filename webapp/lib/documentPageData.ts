@@ -20,6 +20,7 @@ export type DocumentPageData = {
   companyName: string;
   contactEmail: string;
   percentage: number;
+  isComplete: boolean;
   initialDocs: Partial<Record<FinanceDocumentType, ExistingDoc | null>>;
   initialAnswers: Record<string, string>;
   businessProfile: BusinessProfile | null;
@@ -78,6 +79,7 @@ export async function loadDocumentPageData(
     companyName,
     contactEmail: "Document Upload Center",
     percentage: progress?.percentage ?? 0,
+    isComplete: progress?.is_complete ?? false,
     initialDocs,
     initialAnswers,
     businessProfile: profile,

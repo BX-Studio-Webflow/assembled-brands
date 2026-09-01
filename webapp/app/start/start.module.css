@@ -15,11 +15,11 @@
 
 .card {
   width: 100%;
-  max-width: 420px;
+  max-width: 520px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 2.5rem;
+  padding: 3rem;
   background-color: var(--color-light-beige);
   border-radius: var(--radius-small);
 }
@@ -50,6 +50,21 @@
   line-height: 1.5;
   letter-spacing: var(--ls-2);
   color: var(--color-soft-black);
+}
+
+.note {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-label);
+  line-height: 1.5;
+  letter-spacing: var(--ls-2);
+  color: var(--color-secondary-state);
+}
+
+.link {
+  color: var(--color-coral);
+  font-weight: 500;
+  text-decoration: underline;
 }
 
 .field {
@@ -97,6 +112,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  align-self: flex-start;
   padding: 0.875rem 1.75rem;
   background-color: var(--color-black);
   color: var(--color-off-white);
@@ -108,6 +124,7 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   cursor: pointer;
+  text-decoration: none;
   transition: opacity 0.15s ease;
 }
 
@@ -118,4 +135,14 @@
 .button:disabled {
   cursor: default;
   opacity: 0.5;
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: 2rem;
+  }
+
+  .button {
+    width: 100%;
+  }
 }

@@ -7,10 +7,11 @@ import {
 } from "@/lib/documentSections";
 
 import SidebarProfile from "./SidebarProfile";
+import SubmitApplicationButton from "./SubmitApplicationButton";
 import styles from "./AppShell.module.css";
 
 // Support opens an email; Invite is now an in-app page under the /app mount.
-const SUPPORT_HREF = "mailto:support@assembledbrands.com";
+const SUPPORT_HREF = "mailto:sales@assembledbrands.com";
 
 // Business Info group — Company Profile maps to the onboarding form (which
 // collects the company profile / financial overview).
@@ -30,6 +31,7 @@ type Props = {
   companyName: string;
   contactEmail: string;
   sectionStatuses?: Record<DocumentNavKey, SectionStatus>;
+  isComplete?: boolean;
   children: React.ReactNode;
 };
 
@@ -51,6 +53,7 @@ export default function AppShell({
   companyName,
   contactEmail,
   sectionStatuses,
+  isComplete = false,
   children,
 }: Props) {
   const pct = Math.max(0, Math.min(100, Math.round(percentage)));
@@ -59,7 +62,7 @@ export default function AppShell({
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
         <div className={styles.sidebarTop}>
-          <a className={styles.logoLink} href={withBasePath("/onboarding")} aria-label="Assembled Brands">
+          <a className={styles.logoLink} href="https://assembledbrands.com" aria-label="Assembled Brands">
             {/* Plain <img>: next/image would re-prepend basePath and 404. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -150,6 +153,8 @@ export default function AppShell({
               <span className={styles.progressFill} style={{ width: `${pct}%` }} />
             </span>
           </div>
+
+          <SubmitApplicationButton canSubmit={pct >= 100} isComplete={isComplete} />
 
           <SidebarProfile companyName={companyName} contactEmail={contactEmail} />
         </div>

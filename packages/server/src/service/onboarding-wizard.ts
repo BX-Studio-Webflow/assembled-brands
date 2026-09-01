@@ -1,3 +1,4 @@
+import { verify } from '../lib/encryption.ts';
 import { logger } from '../lib/logger.ts';
 import type { OnboardingWizardRepository } from '../repository/onboarding-wizard.ts';
 import type { NewOnboardingApplication, OnboardingApplication, User } from '../schema/schema.ts';
@@ -430,22 +431,6 @@ export class OnboardingWizardService {
 				logger.error({ hsErr, deal_id: body.deal_id }, 'Failed to sync warm-lead fields to HubSpot (non-fatal)');
 			}
 
-			if (body.working_with_team_member && body.team_member_email) {
-				try {
-					const contactName = [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || undefined;
-					await this.hubSpotService.sendUnderwritingAlert({
-						ownerEmail: body.team_member_email,
-						dealName: body.legal_name,
-						dealObjectId: body.deal_id,
-						contactEmail: user.email,
-						contactName,
-						portalId: dealRow.portal_id,
-					});
-				} catch (alertErr) {
-					logger.error({ alertErr, deal_id: body.deal_id }, 'Failed to send underwriting alert (non-fatal)');
-				}
-			}
-
 			return { application: savedApplication, user, dealApplicationId: dealApplication.id };
 		} catch (error) {
 			logger.error(error);
@@ -521,6 +506,39 @@ export class OnboardingWizardService {
 			return null;
 		}
 		return { dealId: dealApplication.hubspot_deal_object_id, dealApplicationId: dealApplication.id };
+	}
+
+	public async getDealContextByDealApplicationId(dealApplicationId: number): Promise<{ dealId: number; dealApplicationId: number } | null> {
+		const dealApplication = await this.dealApplicationService.findById(dealApplicationId);
+		if (!dealApplication || typeof dealApplication.hubspot_deal_object_id !== 'number') {
+			return null;
+		}
+		return { dealId: dealApplication.hubspot_deal_object_id, dealApplicationId: dealApplication.id };
+	}
+
+	public async verifyApplicationPassword(dealApplicationId: number, password: string, legacyUserPassword: string): Promise<boolean> {
+		const dealApplication = await this.dealApplicationService.findById(dealApplicationId);
+		if (!dealApplication) return false;
+		if (dealApplication.temporary_password) {
+			return this.dealApplicationService.verifyTemporaryPassword(dealApplication, password);
+		}
+		try {
+			return verify(password, legacyUserPassword);
+		} catch {
+			return false;
+		}
+	}
+
+	public async getDealContextForUserByPassword(
+		userId: number,
+		password: string,
+	): Promise<{ dealId: number; dealApplicationId: number } | null> {
+		const application = await this.dealApplicationService.findByUserAndTemporaryPassword(userId, password);
+		if (!application) return null;
+		return {
+			dealId: application.hubspot_deal_object_id,
+			dealApplicationId: application.id,
+		};
 	}
 
 	/**

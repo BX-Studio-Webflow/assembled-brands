@@ -19,10 +19,9 @@ export type OnboardingProgressResponse = {
   } | null;
 };
 
-// Submit mode mirrors the existing warm-lead bundle:
-// - "authenticated": user already has a session -> POST /warm-lead/me
-// - "create": first-time invite -> POST /warm-lead with deal_id
-export type SubmitMode = "authenticated" | "create";
+// The launch flow only saves onboarding after a signed link has established a
+// session. Deal-ID based creation is intentionally not exposed.
+export type SubmitMode = "authenticated";
 
 export type OnboardingFormValues = {
   legalName: string;

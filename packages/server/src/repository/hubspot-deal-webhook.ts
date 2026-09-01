@@ -61,6 +61,17 @@ export class HubspotDealWebhookRepository {
 		});
 	}
 
+	public async findPendingCredentialRecovery(limit = 100) {
+		return this.db.query.hubspotDealWebhookSchema.findMany({
+			where: and(
+				eq(hubspotDealWebhookSchema.status, 'skipped'),
+				eq(hubspotDealWebhookSchema.error_message, 'No associated contacts found; waiting for a contact association event'),
+			),
+			orderBy: [desc(hubspotDealWebhookSchema.created_at)],
+			limit,
+		});
+	}
+
 	public async delete(id: number) {
 		return this.db.delete(hubspotDealWebhookSchema).where(eq(hubspotDealWebhookSchema.id, id));
 	}

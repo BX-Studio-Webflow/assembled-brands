@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import { schema, teamInvitationSchema, teamMemberSchema, teamSchema } from '../schema/schema.ts';
@@ -27,11 +27,12 @@ export class TeamRepository {
 	 * @param {number} hostId - Host user ID
 	 * @returns {Promise<Team>} Created team record
 	 */
-	public async createTeam(name: string, hostId: number) {
+	public async createTeam(name: string, hostId: number, dealApplicationId?: number) {
 		const [team] = await this.db
 			.insert(teamSchema)
 			.values({
 				name,
+				...(dealApplicationId != null ? { deal_application_id: dealApplicationId } : {}),
 				created_at: new Date(),
 				updated_at: new Date(),
 			})
@@ -132,6 +133,7 @@ export class TeamRepository {
 	public async getUserTeams(userId: number) {
 		return await this.db.query.teamMemberSchema.findMany({
 			where: (member, { eq }) => eq(member.user_id, userId),
+			orderBy: (member, { desc }) => desc(member.created_at),
 		});
 	}
 
@@ -146,6 +148,18 @@ export class TeamRepository {
 			where: (member, { and, eq }) => and(eq(member.team_id, teamId), eq(member.user_id, userId), eq(member.role, 'host')),
 		});
 		return !!member;
+	}
+
+	/**
+	 * Resolve the host (owner/applicant) user id for a team.
+	 * @param {number} teamId - Team ID
+	 * @returns {Promise<number|null>} The host user id, or null if none
+	 */
+	public async getTeamHostUserId(teamId: number) {
+		const host = await this.db.query.teamMemberSchema.findFirst({
+			where: (member, { and, eq }) => and(eq(member.team_id, teamId), eq(member.role, 'host')),
+		});
+		return host?.user_id ?? null;
 	}
 
 	/**
@@ -304,8 +318,10 @@ export class TeamRepository {
 	public async getTeamByUserId(userId: number) {
 		return await this.db.query.teamMemberSchema.findMany({
 			where: eq(teamMemberSchema.user_id, userId),
+			orderBy: [desc(teamMemberSchema.created_at)],
 			with: {
 				team: true,
+				user: true,
 			},
 		});
 	}
@@ -318,6 +334,7 @@ export class TeamRepository {
 	public async getTeamByHostId(userId: number) {
 		return await this.db.query.teamMemberSchema.findFirst({
 			where: and(eq(teamMemberSchema.user_id, userId), eq(teamMemberSchema.role, 'host')),
+			orderBy: (member, { desc }) => desc(member.created_at),
 			with: {
 				team: true,
 				user: true,

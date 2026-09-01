@@ -14,6 +14,25 @@ const formatErrorMessage = (error: unknown): string => {
 	}
 };
 
+const normalizeEmailParams = (params: Record<string, string>): Record<string, string> => {
+	const normalized = { ...params };
+	const buttonText = normalized.buttonText?.trim();
+	const buttonLink = normalized.buttonLink?.trim();
+	const hasRealButtonLink = buttonLink && !['#', 'about:blank'].includes(buttonLink.toLowerCase());
+
+	if (!buttonText || !hasRealButtonLink) {
+		delete normalized.buttonText;
+		delete normalized.buttonLink;
+	}
+
+	return normalized;
+};
+
+const sender = () => ({
+	email: env.SENDGRID_FROM_EMAIL || 'sales@assembledbrands.com',
+	name: env.SENDGRID_FROM_NAME || 'Assembled Brands',
+});
+
 const sendTemplateEmail = async (
 	email: string,
 	name: string,
@@ -31,10 +50,10 @@ const sendTemplateEmail = async (
 			personalizations: [
 				{
 					to: [{ email: email }],
-					dynamic_template_data: params,
+					dynamic_template_data: normalizeEmailParams(params),
 				},
 			],
-			from: { email: 'support@assembledbrands.com', name: 'Assembled Brands' },
+			from: sender(),
 			template_id: templateId,
 			attachments: attachments,
 		};

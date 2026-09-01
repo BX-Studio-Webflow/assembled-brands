@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers';
 
 import { sendTemplateEmail } from '../lib/email-processor.ts';
+import { encodeWarmLeadToken } from '../lib/jwt.ts';
 import { logger } from '../lib/logger.ts';
 import { HubspotContactWebhookRepository } from '../repository/hubspot-contact-webhook.ts';
 import { HubspotDealWebhookRepository } from '../repository/hubspot-deal-webhook.ts';
@@ -14,6 +15,14 @@ const HUBSPOT_CONTACTS_URL = 'https://api.hubapi.com/crm/v3/objects/contacts';
 const HUBSPOT_DEALS_URL = 'https://api.hubapi.com/crm/v3/objects/deals';
 /** Deal properties to request from the HubSpot API */
 const DEAL_PROPERTIES = ['dealname', 'amount', 'dealstage', 'pipeline', 'closedate', 'hubspot_owner_id'].join(',');
+const DEAL_CREDENTIAL_PROPERTIES = ['application_link', 'application_temporary_password'];
+
+type HubSpotDealWithCredentialProperties = HubSpotDeal & {
+	properties: HubSpotDeal['properties'] & {
+		application_link?: string | null;
+		application_temporary_password?: string | null;
+	};
+};
 
 /** HubSpot owner email → owner ID. Update via GET /api/v1/hubspot/owners. */
 const HUBSPOT_OWNER_EMAIL_TO_ID: Record<string, string> = {
@@ -168,7 +177,8 @@ export class HubSpotService {
 			const deal = await this.getDealById(event.objectId);
 			const { dealname, amount, dealstage, pipeline, closedate, hubspot_owner_id } = deal.properties;
 
-			// 2. Persist deal properties
+			// 2. Persist deal properties. Do not mark the row processed until a
+			// contact/user/application link is actually provisioned below.
 			await this.dealWebhookRepo.update(rowId, {
 				deal_name: dealname ?? undefined,
 				amount: amount ?? undefined,
@@ -176,102 +186,21 @@ export class HubSpotService {
 				pipeline: pipeline ?? undefined,
 				close_date: closedate ?? undefined,
 				hubspot_owner_id: hubspot_owner_id ?? undefined,
-				status: 'processed',
 			});
 			logger.info({ rowId, dealId: deal.id, dealname }, 'Deal logged to database');
 
-			// 3. Fetch associated contacts and email each one
-			const contactIds = await this.getDealAssociatedContactIds(event.objectId);
-			logger.info({ dealId: deal.id, contactCount: contactIds.length }, 'Fetched deal associations');
+			await this.provisionDealCredentialsFromAssociatedContacts({
+				rowId,
+				dealObjectId: event.objectId,
+				dealName: dealname,
+			});
 
-			let primaryContact: { email: string; name: string } | null = null;
-
-			for (const contactId of contactIds) {
-				try {
-					const contact = await this.getContactById(Number(contactId));
-					const { email, firstname, lastname, phone } = contact.properties;
-					if (!email) {
-						logger.warn({ contactId }, 'Associated contact has no email, skipping');
-						continue;
-					}
-
-					let userId: number;
-					const existingUser = await this.userService.findByEmail(email);
-
-					if (existingUser) {
-						userId = existingUser.id;
-						logger.info({ userId, email }, 'User already exists for deal contact');
-					} else {
-						const password = generateSecurePassword(8);
-						const newUser: NewUser = {
-							email,
-							password,
-							role: 'user',
-							dial_code: '+1',
-							phone: phone || '',
-							first_name: firstname || '',
-							last_name: lastname || '',
-						};
-						const [created] = await this.userService.create(newUser);
-						if (!created) {
-							logger.error({ email }, 'Failed to create user for deal contact');
-							continue;
-						}
-						userId = created.id;
-						logger.info({ userId, email }, 'Created user for deal contact');
-					}
-
-					let dealApplicationId: number | undefined;
-					if (this.dealApplicationService) {
-						const dealApplication = await this.dealApplicationService.createForNewDeal({
-							userId,
-							hubspotDealObjectId: event.objectId,
-							hubspotDealWebhookEventId: rowId,
-							legalName: dealname,
-						});
-						dealApplicationId = dealApplication.id;
-					}
-
-					// Associate this user (and deal application) with the deal webhook row
-					await this.dealWebhookRepo.update(rowId, {
-						user_id: userId,
-						...(dealApplicationId != null ? { deal_application_id: dealApplicationId } : {}),
-					});
-
-					if (!primaryContact) {
-						primaryContact = { email, name: firstname || 'Contact' };
-					}
-
-					// Disabled: do not auto-email prospects when deals are created internally in HubSpot.
-					// Application links should only go out when the team sends them manually.
-					// await this.sendWarmLeadInvite(email, firstname || 'there', dealname, event.objectId);
-				} catch (contactErr) {
-					// Non-fatal: log and continue with remaining contacts
-					logger.error({ contactId, err: contactErr }, 'Failed to process deal contact');
-				}
-			}
-
-			// 4. Notify the deal owner (underwriting alert) when HubSpot already has an owner assigned
-			if (hubspot_owner_id && primaryContact) {
-				try {
-					const owner = await this.resolveOwner(hubspot_owner_id);
-					if (owner) {
-						await this.sendUnderwritingAlert({
-							ownerEmail: owner.email,
-							ownerName: owner.firstName,
-							dealName: dealname,
-							dealObjectId: event.objectId,
-							contactEmail: primaryContact.email,
-							contactName: primaryContact.name,
-							portalId: event.portalId,
-						});
-					}
-				} catch (ownerAlertErr) {
-					logger.error({ ownerAlertErr, hubspot_owner_id }, 'Failed to send underwriting alert to deal owner (non-fatal)');
-				}
-			} else if (hubspot_owner_id && !primaryContact) {
-				logger.warn({ dealId: deal.id, hubspot_owner_id }, 'Deal has an owner but no contact email; skipping underwriting alert');
-			}
+			// 4. Disabled (2026-06-29 sync): do NOT auto-email the deal owner on deal
+			// creation. Deals are created at the lead/meeting-booked stage before any
+			// discovery call, so a creation-time alert is premature noise (this was the
+			// email owners like Kunal kept receiving). The owner is still alerted when the
+			// applicant actually fills in their warm-lead details (see onboarding-wizard
+			// `saveWarmLeadDetails`). No automated email fires when a deal is created.
 		} catch (err) {
 			const message = err instanceof Error ? err.message : String(err);
 			await this.dealWebhookRepo.update(rowId, { status: 'failed', error_message: message });
@@ -279,6 +208,256 @@ export class HubSpotService {
 		}
 
 		return { rowId };
+	}
+
+	/**
+	 * Recover credentials when a contact is associated after deal.creation.
+	 * This is intentionally idempotent and silent: it writes HubSpot deal
+	 * properties only when they are missing and never emails the prospect.
+	 */
+	public async recoverDealCredentialsFromAssociationWebhook(event: HubspotCrmWebhookEvent): Promise<{ rowId: number }> {
+		const existing = await this.dealWebhookRepo.findByPortalEventSubscription(event.portalId, event.eventId, event.subscriptionId);
+		if (existing) {
+			logger.info({ rowId: existing.id }, 'Deal association webhook event already recorded, skipping');
+			return { rowId: existing.id };
+		}
+
+		const [row] = await this.dealWebhookRepo.create(eventToDealRow(event));
+		if (!row) {
+			throw new Error('Failed to persist deal association webhook event');
+		}
+		const rowId = row.id;
+
+		try {
+			const deal = (await this.getDealById(event.objectId, [
+				'dealname',
+				'amount',
+				'dealstage',
+				'pipeline',
+				'closedate',
+				'hubspot_owner_id',
+				...DEAL_CREDENTIAL_PROPERTIES,
+			])) as HubSpotDealWithCredentialProperties;
+			const { dealname, amount, dealstage, pipeline, closedate, hubspot_owner_id, application_link, application_temporary_password } =
+				deal.properties;
+
+			await this.dealWebhookRepo.update(rowId, {
+				deal_name: dealname ?? undefined,
+				amount: amount ?? undefined,
+				deal_stage: dealstage ?? undefined,
+				pipeline: pipeline ?? undefined,
+				close_date: closedate ?? undefined,
+				hubspot_owner_id: hubspot_owner_id ?? undefined,
+			});
+
+			if (application_link && application_temporary_password) {
+				await this.dealWebhookRepo.update(rowId, {
+					status: 'skipped',
+					error_message: 'Application credentials already exist on deal',
+				});
+				return { rowId };
+			}
+
+			await this.provisionDealCredentialsFromAssociatedContacts({
+				rowId,
+				dealObjectId: event.objectId,
+				dealName: dealname,
+			});
+		} catch (err) {
+			const message = err instanceof Error ? err.message : String(err);
+			await this.dealWebhookRepo.update(rowId, { status: 'failed', error_message: message });
+			throw err;
+		}
+
+		return { rowId };
+	}
+
+	/**
+	 * Fallback for the existing contact.creation subscription: if HubSpot creates
+	 * or syncs a contact after a deal already exists, recover any associated deals
+	 * that are still missing application credentials. This complements the more
+	 * precise deal association-change webhook.
+	 */
+	public async recoverMissingDealCredentialsForContact(contactObjectId: number): Promise<number> {
+		const dealIds = await this.getContactAssociatedDealIds(contactObjectId);
+		let recovered = 0;
+
+		for (const dealIdText of dealIds) {
+			const dealObjectId = Number(dealIdText);
+			if (!Number.isFinite(dealObjectId)) continue;
+
+			const deal = (await this.getDealById(dealObjectId, [
+				'dealname',
+				...DEAL_CREDENTIAL_PROPERTIES,
+			])) as HubSpotDealWithCredentialProperties;
+
+			if (deal.properties.application_link && deal.properties.application_temporary_password) {
+				continue;
+			}
+
+			const [row] = await this.dealWebhookRepo.findByObjectId(dealObjectId);
+			if (!row) {
+				logger.warn({ contactObjectId, dealObjectId }, 'Cannot recover deal credentials: no deal webhook row exists');
+				continue;
+			}
+
+			await this.provisionDealCredentialsFromAssociatedContacts({
+				rowId: row.id,
+				dealObjectId,
+				dealName: deal.properties.dealname,
+			});
+			recovered += 1;
+		}
+
+		if (recovered > 0) {
+			logger.info({ contactObjectId, recovered }, 'Recovered missing deal credentials from contact association');
+		}
+		return recovered;
+	}
+
+	public async reconcilePendingDealCredentials(): Promise<{ checked: number; recovered: number }> {
+		const pending = await this.dealWebhookRepo.findPendingCredentialRecovery();
+		let recovered = 0;
+
+		for (const row of pending) {
+			try {
+				const deal = (await this.getDealById(row.object_id, [
+					'dealname',
+					...DEAL_CREDENTIAL_PROPERTIES,
+				])) as HubSpotDealWithCredentialProperties;
+				if (deal.properties.application_link && deal.properties.application_temporary_password) {
+					await this.dealWebhookRepo.update(row.id, {
+						status: 'processed',
+						error_message: null,
+					});
+					recovered += 1;
+					continue;
+				}
+
+				const contactIds = await this.getDealAssociatedContactIds(row.object_id);
+				if (contactIds.length === 0) continue;
+
+				await this.provisionDealCredentialsFromAssociatedContacts({
+					rowId: row.id,
+					dealObjectId: row.object_id,
+					dealName: deal.properties.dealname,
+				});
+				recovered += 1;
+			} catch (error) {
+				logger.error({ error, dealId: row.object_id, rowId: row.id }, 'Scheduled deal credential recovery failed');
+			}
+		}
+
+		logger.info({ checked: pending.length, recovered }, 'Scheduled deal credential reconciliation complete');
+		return { checked: pending.length, recovered };
+	}
+
+	private async provisionDealCredentialsFromAssociatedContacts(params: {
+		rowId: number;
+		dealObjectId: number;
+		dealName: string | null;
+	}): Promise<void> {
+		const { rowId, dealObjectId, dealName } = params;
+		const contactIds = await this.getDealAssociatedContactIds(dealObjectId);
+		logger.info({ dealId: dealObjectId, contactCount: contactIds.length }, 'Fetched deal associations');
+
+		if (contactIds.length === 0) {
+			await this.dealWebhookRepo.update(rowId, {
+				status: 'skipped',
+				error_message: 'No associated contacts found; waiting for a contact association event',
+			});
+			logger.warn({ rowId, dealId: dealObjectId }, 'Deal webhook skipped because no contacts are associated');
+			return;
+		}
+
+		let primaryContact: { email: string; name: string } | null = null;
+		let primaryPassword: string | null = null;
+		let primaryUserId: number | null = null;
+		let primaryDealApplicationId: number | undefined;
+
+		for (const contactId of contactIds) {
+			try {
+				const contact = await this.getContactById(Number(contactId));
+				const { email, firstname, lastname, phone } = contact.properties;
+				if (!email) {
+					logger.warn({ contactId }, 'Associated contact has no email, skipping');
+					continue;
+				}
+
+				let userId: number;
+				const existingUser = await this.userService.findByEmail(email);
+
+				if (existingUser) {
+					userId = existingUser.id;
+					logger.info({ userId, email }, 'User already exists for deal contact');
+				} else {
+					const password = generateSecurePassword(8);
+					const newUser: NewUser = {
+						email,
+						password,
+						role: 'user',
+						dial_code: '+1',
+						phone: phone || '',
+						first_name: firstname || '',
+						last_name: lastname || '',
+					};
+					const [created] = await this.userService.create(newUser);
+					if (!created) {
+						logger.error({ email }, 'Failed to create user for deal contact');
+						continue;
+					}
+					userId = created.id;
+					logger.info({ userId, email }, 'Created user for deal contact');
+				}
+
+				let dealApplicationId: number | undefined;
+				let applicationPassword: string | null = null;
+				if (this.dealApplicationService) {
+					const dealApplication = await this.dealApplicationService.createForNewDeal({
+						userId,
+						hubspotDealObjectId: dealObjectId,
+						hubspotDealWebhookEventId: rowId,
+						legalName: dealName,
+					});
+					dealApplicationId = dealApplication.id;
+					applicationPassword = await this.dealApplicationService.getOrCreateTemporaryPassword(dealApplication.id);
+				}
+
+				if (!primaryContact) {
+					primaryContact = { email, name: firstname || 'Contact' };
+					primaryPassword = applicationPassword;
+					primaryUserId = userId;
+					primaryDealApplicationId = dealApplicationId;
+				}
+
+				// Disabled: do not auto-email prospects when deals are created internally in HubSpot.
+				// Application links should only go out when the team sends them manually.
+				// await this.sendWarmLeadInvite(email, firstname || 'there', dealName, dealObjectId);
+			} catch (contactErr) {
+				logger.error({ contactId, err: contactErr }, 'Failed to process deal contact');
+			}
+		}
+
+		if (!primaryContact || !primaryPassword || primaryUserId == null) {
+			await this.dealWebhookRepo.update(rowId, {
+				status: 'skipped',
+				error_message: 'No associated contacts with usable email/password found',
+			});
+			return;
+		}
+
+		const webAppUrl = env.WEBAPP_URL || 'https://webapp-omega-rosy.vercel.app';
+		const token = await encodeWarmLeadToken(dealObjectId, null);
+		const applicationLink = `${webAppUrl}/apply?token=${encodeURIComponent(token)}`;
+		await this.setDealApplicationCredentials(dealObjectId, applicationLink, primaryPassword);
+
+		await this.dealWebhookRepo.update(rowId, {
+			user_id: primaryUserId,
+			...(primaryDealApplicationId != null ? { deal_application_id: primaryDealApplicationId } : {}),
+			status: 'processed',
+			error_message: null,
+		});
+		logger.info({ rowId, dealId: dealObjectId, email: primaryContact.email }, 'Application credentials written to HubSpot deal');
 	}
 
 	/**
@@ -335,6 +514,41 @@ export class HubSpotService {
 		}
 
 		logger.info({ dealObjectId, fields: Object.keys(properties) }, 'HubSpot deal updated');
+	}
+
+	/**
+	 * Writes the applicant's portal link + temporary password onto the HubSpot deal
+	 * as custom properties so the originator can copy them into a manual outreach
+	 * email. Additive PATCH — touches ONLY these two properties:
+	 *  - application_link               ("Application Link")
+	 *  - application_temporary_password ("Application Temporary Password")
+	 */
+	public async setDealApplicationCredentials(dealObjectId: number, applicationLink: string, temporaryPassword: string): Promise<void> {
+		if (!this.apiKey) {
+			throw new Error('HubSpot API key not configured');
+		}
+
+		const response = await fetch(`${HUBSPOT_DEALS_URL}/${dealObjectId}`, {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${this.apiKey}`,
+			},
+			body: JSON.stringify({
+				properties: {
+					application_link: applicationLink,
+					application_temporary_password: temporaryPassword,
+				},
+			}),
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			logger.error({ error, dealObjectId }, 'HubSpot deal application-credentials update failed');
+			throw new Error(`HubSpot deal application-credentials update error: ${JSON.stringify(error)}`);
+		}
+
+		logger.info({ dealObjectId }, 'Application link + temp password written to HubSpot deal');
 	}
 
 	/**
@@ -502,48 +716,180 @@ export class HubSpotService {
 		return data.results.map((r) => r.id);
 	}
 
+	private async getContactAssociatedDealIds(contactId: number): Promise<string[]> {
+		if (!this.apiKey) {
+			throw new Error('HubSpot API key not configured');
+		}
+		const url = `${HUBSPOT_CONTACTS_URL}/${contactId}/associations/deals`;
+		const response = await fetch(url, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${this.apiKey}`,
+			},
+		});
+		if (!response.ok) {
+			const error = await response.json();
+			logger.error({ error }, 'HubSpot contact associations API error');
+			throw new Error(`HubSpot contact associations API error: ${JSON.stringify(error)}`);
+		}
+		const data = (await response.json()) as HubSpotAssociationsResponse;
+		return data.results.map((r) => r.id);
+	}
+
 	/**
 	 * Sends an underwriting alert to the deal owner when a warm inbound deal is created or assigned.
 	 */
-	public async sendUnderwritingAlert(params: {
-		ownerEmail: string;
-		ownerName?: string;
-		dealName: string | null;
+	private async sendSlackUnderwritingAlert(params: {
+		dealLabel: string;
 		dealObjectId: number;
-		contactEmail: string;
-		contactName?: string;
-		portalId?: number;
-	}): Promise<void> {
-		const { ownerEmail, ownerName, dealName, dealObjectId, contactEmail, contactName, portalId } = params;
-		const ownerFirstName = ownerName || ownerEmail.split('@')[0] || 'there';
-		const contactLabel = contactName ? `${contactName} (${contactEmail})` : contactEmail;
-		const dealLabel = dealName ?? `Deal #${dealObjectId}`;
-		const hubspotDealLink = portalId != null ? `https://app.hubspot.com/contacts/${portalId}/deal/${dealObjectId}` : undefined;
+		contactLabel: string;
+		ownerEmail?: string;
+		hubspotDealLink?: string;
+	}): Promise<boolean> {
+		if (env.SLACK_NOTIFICATIONS_ENABLED === 'false') {
+			logger.info({ dealObjectId: params.dealObjectId }, 'Slack underwriting alert skipped by flag');
+			return false;
+		}
 
-		await sendTemplateEmail(ownerEmail, ownerFirstName, env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
-			subject: `New warm inbound deal: ${dealLabel}`,
-			title: 'New warm inbound application',
-			subtitle: 'Assembled Brands - Underwriting Alert',
-			name: ownerFirstName,
-			body: `Hi ${ownerFirstName}, a new warm inbound deal has been created and the contact has been invited to apply.\n\nDeal: ${dealLabel}\nContact: ${contactLabel}`,
-			buttonText: hubspotDealLink ? 'View deal in HubSpot' : 'Open Assembled Brands',
-			buttonLink: hubspotDealLink ?? env.FRONTEND_URL,
-		});
-		logger.info({ ownerEmail, dealObjectId, contactEmail }, 'Underwriting alert sent to deal owner');
+		const text = [
+			`New warm inbound application: ${params.dealLabel}`,
+			`Contact: ${params.contactLabel}`,
+			params.ownerEmail ? `Owner: ${params.ownerEmail}` : undefined,
+			params.hubspotDealLink ? `HubSpot: ${params.hubspotDealLink}` : undefined,
+		]
+			.filter(Boolean)
+			.join('\n');
+
+		if (env.SLACK_NOTIFICATION_WEBHOOK_URL) {
+			const response = await fetch(env.SLACK_NOTIFICATION_WEBHOOK_URL, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ text }),
+			});
+			if (!response.ok) {
+				throw new Error(`Slack webhook error: ${response.status} ${await response.text()}`);
+			}
+			logger.info({ dealObjectId: params.dealObjectId }, 'Slack underwriting alert sent via webhook');
+			return true;
+		}
+
+		if (env.SLACK_BOT_TOKEN && env.SLACK_CHANNEL_ID) {
+			const response = await fetch('https://slack.com/api/chat.postMessage', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json; charset=utf-8',
+					Authorization: `Bearer ${env.SLACK_BOT_TOKEN}`,
+				},
+				body: JSON.stringify({
+					channel: env.SLACK_CHANNEL_ID,
+					text,
+				}),
+			});
+			const result = (await response.json()) as { ok?: boolean; error?: string };
+			if (!response.ok || !result.ok) {
+				throw new Error(`Slack API error: ${result.error || response.status}`);
+			}
+			logger.info({ dealObjectId: params.dealObjectId }, 'Slack underwriting alert sent via bot');
+			return true;
+		}
+
+		logger.warn({ dealObjectId: params.dealObjectId }, 'Slack underwriting alert skipped: no Slack destination configured');
+		return false;
+	}
+
+	public async sendSubmissionUnderwritingAlerts(dealApplicationId: number): Promise<{ emailSent: boolean; slackSent: boolean }> {
+		if (!this.dealApplicationService) {
+			throw new Error('Deal application service not configured');
+		}
+		const application = await this.dealApplicationService.findById(dealApplicationId);
+		if (!application) {
+			return { emailSent: false, slackSent: false };
+		}
+		const emailRecipients = (env.UNDERWRITING_ALERT_EMAILS ?? '')
+			.split(',')
+			.map((email) => email.trim())
+			.filter(Boolean);
+		const shouldSendEmail =
+			!application.underwriting_email_sent_at && env.UNDERWRITING_ALERT_EMAILS_ENABLED !== 'false' && emailRecipients.length > 0;
+		const shouldSendSlack = !application.slack_alert_sent_at;
+		if (!shouldSendEmail && !shouldSendSlack) {
+			return { emailSent: false, slackSent: false };
+		}
+
+		const dealObjectId = application.hubspot_deal_object_id;
+		const [deal, dealRow, contactIds] = await Promise.all([
+			this.getDealById(dealObjectId, ['dealname']),
+			this.findProcessedDealByObjectId(dealObjectId),
+			this.getDealAssociatedContactIds(dealObjectId),
+		]);
+		const contact = contactIds[0] ? await this.getContactById(Number(contactIds[0])) : null;
+		const contactName = [contact?.properties.firstname, contact?.properties.lastname].filter(Boolean).join(' ').trim();
+		const contactLabel = contact?.properties.email
+			? contactName
+				? `${contactName} (${contact.properties.email})`
+				: contact.properties.email
+			: 'Applicant';
+		const hubspotDealLink = dealRow?.portal_id ? `https://app.hubspot.com/contacts/${dealRow.portal_id}/deal/${dealObjectId}` : undefined;
+		const dealLabel = deal.properties.dealname ?? application.legal_name ?? `Deal #${dealObjectId}`;
+		const emailResults = shouldSendEmail
+			? await Promise.allSettled(
+					emailRecipients.map((recipient) =>
+						sendTemplateEmail(recipient, 'Underwriting team', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
+							subject: `New warm inbound deal: ${dealLabel}`,
+							title: 'New warm inbound application',
+							subtitle: 'Assembled Brands - Underwriting Alert',
+							name: 'Underwriting team',
+							body: `A warm inbound applicant has submitted their application.\n\nDeal: ${dealLabel}\nContact: ${contactLabel}`,
+							buttonText: hubspotDealLink ? 'View deal in HubSpot' : '',
+							buttonLink: hubspotDealLink ?? '',
+						}),
+					),
+				)
+			: [];
+		const emailSent = shouldSendEmail && emailResults.every((result) => result.status === 'fulfilled');
+		for (const [index, result] of emailResults.entries()) {
+			if (result.status === 'rejected') {
+				logger.error({ error: result.reason, recipient: emailRecipients[index], dealObjectId }, 'Submission underwriting email failed');
+			}
+		}
+		if (emailSent) {
+			await this.dealApplicationService.markUnderwritingEmailSent(application.id);
+		}
+
+		const slackSent = shouldSendSlack
+			? await this.sendSlackUnderwritingAlert({
+					dealLabel,
+					dealObjectId,
+					contactLabel,
+					hubspotDealLink,
+				})
+			: false;
+		if (slackSent) {
+			await this.dealApplicationService.markSlackAlertSent(application.id);
+		}
+		return { emailSent, slackSent };
 	}
 
 	/**
 	 * Sends the warm-lead onboarding invite email to a deal contact.
 	 */
 	private async sendWarmLeadInvite(email: string, firstName: string, dealName: string | null, dealId: number): Promise<void> {
+		// Password-less deep link: a signed token carries the deal so the applicant
+		// lands straight in the new app (no portal, deal id, or password).
+		const webAppUrl = env.WEBAPP_URL || 'https://webapp-omega-rosy.vercel.app';
+		const startToken = await encodeWarmLeadToken(dealId);
+		const startUrl = `${webAppUrl}/apply?token=${encodeURIComponent(startToken)}`;
+
 		await sendTemplateEmail(email, firstName, env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 			subject: "You've been invited to apply to Assembled Brands",
 			title: 'Complete your profile',
-			subtitle: 'Assembled Brands - Warm Lead Application',
+			// Customer-facing eyebrow — keep free of internal CRM/pipeline terms.
+			subtitle: 'Assembled Brands - Application Portal',
 			name: firstName,
 			body: `Hi ${firstName}, we have received a referral for you${dealName ? ` (${dealName})` : ''}. Please click the button below to fill in your company profile and start your application with Assembled Brands.`,
 			buttonText: 'Start my application',
-			buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/warm/onboarding-warm-lead?deal_id=${dealId}`,
+			buttonLink: startUrl,
 		});
 		logger.info({ email, dealId }, 'Warm-lead invite sent');
 	}

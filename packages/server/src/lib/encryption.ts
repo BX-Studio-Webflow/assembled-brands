@@ -43,4 +43,4 @@ const verify = (text: string, encryptedText: string): boolean => {
 	return text === decrypt(encryptedText);
 };
 
-export { encrypt, verify };
+export { encrypt, decrypt, verify };

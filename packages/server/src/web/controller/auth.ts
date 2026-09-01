@@ -32,6 +32,8 @@ import { getErrorPhrase } from '../validator/validator.js';
 import { ERRORS, serveBadRequest, serveInternalServerError, serveUnprocessableEntity } from './resp/error.js';
 import { serializeUser } from './serializer/user.js';
 
+const webAppUrl = (): string => env.WEBAPP_URL || 'https://webapp-omega-rosy.vercel.app';
+
 export class AuthController {
 	private service: UserService;
 	private businessService: BusinessService;
@@ -206,15 +208,11 @@ export class AuthController {
 				return serveInternalServerError(c, new Error(ERRORS.USER_NOT_FOUND));
 			}
 
-			const link = `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/account-setup-finish-verification?token=${token}&email=${user.email}&id=${user.id}`;
-
-			await sendTemplateEmail(user.email, `Dear User`, 'd-3f05d1f7f1604a06a2b9e072c42fec3a', {
-				subject: 'Click the link to verify your email',
-				title: 'Click the link to verify your email',
-				subtitle: `Let's get you verified`,
-				body: `Welcome to ${env.BRAND_NAME}. Let's get you verified. Click the link to verify your email: ${link}`,
-				buttonText: 'Verify email',
-				buttonLink: link,
+			await sendTemplateEmail(user.email, `Dear User`, env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
+				subject: 'Your Assembled Brands verification code',
+				title: 'Verify your email',
+				subtitle: 'Assembled Brands',
+				body: `Welcome to ${env.BRAND_NAME}. Use this verification code to finish setting up your account: ${token}`,
 			});
 
 			return c.json({ message: 'User created successfully, please check your email for your verification code' });
@@ -292,11 +290,11 @@ export class AuthController {
 			await sendTemplateEmail(user.email, user.first_name || 'Dear User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 				subject: 'Welcome to Assembled Brands',
 				title: 'Welcome to Assembled Brands',
-				subtitle: `Welcome to Assembled Brands`,
+				subtitle: 'Account ready',
 				name: user.first_name || 'Dear User',
-				body: `Welcome to Assembled Brands. We have are glad to have you on board.`,
-				buttonText: 'Ok, got it',
-				buttonLink: `${env.FRONTEND_URL}`,
+				body: 'Your account is ready. Sign in with your email to continue to your application workspace.',
+				buttonText: 'Sign in',
+				buttonLink: `${webAppUrl()}/login`,
 			});
 
 			const token = await encodeAuth(user.id, user.email);
@@ -384,11 +382,11 @@ export class AuthController {
 			await sendTemplateEmail(email, firstname || 'Dear User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 				subject: 'Welcome to Assembled Brands',
 				title: 'Welcome to Assembled Brands',
-				subtitle: `Welcome to Assembled Brands`,
+				subtitle: 'Finish your account setup',
 				name: firstname || 'Dear User',
-				body: `Welcome to Assembled Brands. We have are glad to have you on board. We still need you to add more information to your account to complete your onboarding. For your reference, your login credentials are: Password: ${password} and Email: ${email}. Please click the button below to complete your onboarding: ${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/account-setup-finish-verification?email=${email}&id=${createdUser.id}`,
-				buttonText: 'Complete onboarding',
-				buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/login?email=${email}&id=${createdUser.id}`,
+				body: `Welcome to Assembled Brands. Your account has been created for ${email}. Your temporary password is ${password}. Sign in and change this password before continuing.`,
+				buttonText: 'Sign in',
+				buttonLink: `${webAppUrl()}/login`,
 			});
 
 			await this.hubSpotService.markContactWebhookProcessedForNewUser(webhookRowId, createdUser.id);
@@ -423,14 +421,12 @@ export class AuthController {
 			const token = Math.floor(100000 + Math.random() * 900000).toString();
 			await this.userRepository.update(user.id, { email_token: token });
 
-			await sendTemplateEmail(user.email, user.first_name || 'Dear User', 'd-3f05d1f7f1604a06a2b9e072c42fec3a', {
+			await sendTemplateEmail(user.email, user.first_name || 'Dear User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 				subject: 'Your verification code',
 				title: 'Your verification code',
 				subtitle: `${token}`,
 				name: user.first_name || 'Dear User',
-				body: `Welcome to ${env.BRAND_NAME}. Your verification code code is ${token}`,
-				buttonText: 'Ok, got it',
-				buttonLink: `${env.FRONTEND_URL}`,
+				body: `Use this code to verify your email address: ${token}`,
 			});
 
 			return c.json({
@@ -483,9 +479,11 @@ export class AuthController {
 			await sendTemplateEmail(user.email, user.first_name || 'Dear User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 				subject: 'Your account has been verified',
 				title: 'Your account has been verified',
-				subtitle: `Your account has been verified`,
+				subtitle: 'Account ready',
 				name: user.first_name || 'Dear User',
-				body: `Your account has been verified. You can now login to your account.`,
+				body: 'Your account has been verified. Sign in with your email to continue.',
+				buttonText: 'Sign in',
+				buttonLink: `${webAppUrl()}/login`,
 			});
 
 			return c.json({ token, user: serializedUser });
@@ -516,14 +514,12 @@ export class AuthController {
 			}
 			const token = Math.floor(100000 + Math.random() * 900000).toString();
 			await this.userRepository.update(user.id, { reset_token: token });
-			await sendTemplateEmail(user.email, `${user.first_name || 'Dear User'}`, 'd-fd5ab39952154cf6a94b41e57ff87c43', {
+			await sendTemplateEmail(user.email, `${user.first_name || 'Dear User'}`, env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 				subject: 'Reset your password',
 				title: 'Reset your password',
 				subtitle: `${token}`,
 				name: user.first_name || 'User',
-				body: `Please click this link to reset your password: ${env.FRONTEND_URL}/reset-password?token=${token}&email=${user.email}`,
-				buttonText: 'Reset password now',
-				buttonLink: `${env.FRONTEND_URL}${env.NODE_ENV === 'development' ? '/dev' : ''}/reset-password?token=${token}&email=${user.email}`,
+				body: `Use this reset code to choose a new password: ${token}`,
 			});
 			return c.json({
 				message: 'Reset password link sent successfully',
@@ -580,10 +576,10 @@ export class AuthController {
 			await sendTemplateEmail(user.email, user.first_name || 'User', env.TRANSACTIONAL_EMAIL_TEMPLATE_ID, {
 				subject: 'Password reset',
 				title: 'Password reset',
-				subtitle: `Your password has been reset successfully`,
-				body: `Your password has been reset successfully. If this was not you, please contact our support agents. Thanks again for using ${env.FRONTEND_URL}!`,
-				buttonText: 'Ok, got it',
-				buttonLink: `${env.FRONTEND_URL}`,
+				subtitle: 'Your password has been reset successfully',
+				body: 'Your password has been reset successfully. If this was not you, please contact Assembled Brands support.',
+				buttonText: 'Sign in',
+				buttonLink: `${webAppUrl()}/login`,
 			});
 			return c.json({
 				message: 'Password reset successfully',

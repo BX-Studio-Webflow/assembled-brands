@@ -4,6 +4,7 @@ import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core
 export const teamSchema = sqliteTable('teams', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	name: text('name').notNull(),
+	deal_application_id: integer('deal_application_id'),
 	created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 	updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 });
@@ -219,6 +220,9 @@ export const dealApplicationSchema = sqliteTable(
 			.notNull()
 			.default('active'),
 		legal_name: text('legal_name'),
+		temporary_password: text('temporary_password'),
+		underwriting_email_sent_at: integer('underwriting_email_sent_at', { mode: 'timestamp' }),
+		slack_alert_sent_at: integer('slack_alert_sent_at', { mode: 'timestamp' }),
 		created_at: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 		updated_at: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 	},

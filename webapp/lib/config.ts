@@ -8,11 +8,25 @@ export const MOUNT_PATH =
 // Existing Hono/Cloudflare backend. Only ever read server-side (apiFetch runs
 // in route handlers + SSR), so prefer a runtime server var: Webflow Cloud
 // injects env vars at runtime only, and NEXT_PUBLIC_* would be inlined at build
-// (before those vars exist). Falls back to the dev worker.
-export const API_BASE_URL =
-  process.env.API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://assembled-brands-dev.crystal-e8a.workers.dev";
+// (before those vars exist).
+const DEV_API_FALLBACK = "https://assembled-brands-dev.crystal-e8a.workers.dev";
+
+const configuredApiBase =
+  process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+
+// Production must point at an explicit backend. Falling back to the dev worker
+// in production would silently cross-wire prod traffic to the dev DB + dev
+// integrations, so we fail loud instead. Preview/staging and local builds keep
+// the convenient dev fallback. (VERCEL_ENV is "production" only on the prod
+// deployment; "preview" for PRs; undefined locally.)
+if (process.env.VERCEL_ENV === "production" && !configuredApiBase) {
+  throw new Error(
+    "API_BASE_URL (or NEXT_PUBLIC_API_BASE_URL) must be set on the production " +
+      "deployment. Refusing to fall back to the dev backend in production.",
+  );
+}
+
+export const API_BASE_URL = configuredApiBase || DEV_API_FALLBACK;
 
 export const API_VERSION = "/api/v1";
 

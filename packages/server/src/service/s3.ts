@@ -72,11 +72,10 @@ export class S3Service {
 	 * @param {number} [expiresIn=3600] - URL expiration time in seconds
 	 * @returns {Promise<string>} Presigned URL for downloading/viewing
 	 */
-	async generateGetUrl(key: string, contentType: string, expiresIn = 3600) {
+	async generateGetUrl(key: string, _contentType: string, expiresIn = 3600) {
 		const command = new GetObjectCommand({
 			Bucket: this.bucket,
 			Key: key,
-			ResponseContentType: contentType,
 		});
 
 		return getSignedUrl(this.client, command, {

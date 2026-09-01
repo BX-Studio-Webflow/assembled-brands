@@ -32,8 +32,8 @@ export default function ThankYouPage() {
             <a className={styles.primary} href={withBasePath("/documents/financial-reports")}>
               Review my documents
             </a>
-            <a className={styles.secondary} href="mailto:sales@assembledbrands.com">
-              Contact our team
+            <a className={styles.secondary} href="https://assembledbrands.com">
+              Return to home
             </a>
           </div>
         </div>

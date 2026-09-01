@@ -203,6 +203,65 @@
   transition: width 0.3s ease;
 }
 
+/* --- Submit application --- */
+
+.submitWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.submitButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: var(--radius-small);
+  background-color: rgba(255, 251, 245, 0.14);
+  color: rgba(255, 251, 245, 0.55);
+  font-family: var(--font-sans);
+  font-size: var(--text-body-2);
+  font-weight: 700;
+  letter-spacing: var(--ls-2);
+  cursor: not-allowed;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.submitButtonReady {
+  background-color: var(--color-coral);
+  color: var(--color-black);
+  cursor: pointer;
+}
+
+.submitButtonReady:hover {
+  background-color: #f0937f;
+}
+
+.submitButtonDone {
+  background-color: rgba(115, 164, 40, 0.18);
+  color: #9ccb52;
+  cursor: default;
+}
+
+.submitHint {
+  font-family: var(--font-sans);
+  font-size: var(--text-s);
+  font-weight: 400;
+  color: rgba(255, 251, 245, 0.45);
+  text-align: center;
+}
+
+.submitError {
+  font-family: var(--font-sans);
+  font-size: var(--text-s);
+  font-weight: 500;
+  color: var(--color-coral);
+  text-align: center;
+}
+
 .profile {
   position: relative;
   display: flex;
@@ -404,6 +463,20 @@
   .progress {
     flex: 1;
     min-width: 0;
+  }
+  /* Compact submit on the mobile top bar: hug content, hide the helper hint. */
+  .submitWrap {
+    flex-shrink: 0;
+    width: auto;
+  }
+  .submitButton {
+    width: auto;
+    padding: 0.5rem 0.85rem;
+    font-size: var(--text-label);
+    white-space: nowrap;
+  }
+  .submitHint {
+    display: none;
   }
   /* Avatar-only to avoid the profile card overflowing the viewport. */
   .profile {

@@ -22,6 +22,7 @@ export default async function AccountsInventoryPage() {
       companyName={data.companyName}
       contactEmail={data.contactEmail}
       sectionStatuses={data.sectionStatuses}
+      isComplete={data.isComplete}
     >
       <DocumentUploadForm
         config={data.config}

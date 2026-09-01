@@ -64,10 +64,41 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
   return data as T;
 }
 
-export const exchangeWarmLeadSession = (dealId: number) =>
-  apiFetch<WarmLeadSessionResponse>("/onboarding-wizard/warm-lead/session", {
+// Warm-lead deep link: trades a signed token (which carries the deal) plus the
+// HubSpot temporary password for a session.
+export const exchangeWarmLeadTokenSession = (token: string) =>
+  apiFetch<WarmLeadSessionResponse>("/onboarding-wizard/warm-lead/token-session", {
     method: "POST",
-    body: { deal_id: dealId },
+    body: { token },
+  });
+
+export const exchangeWarmLeadPasswordSession = (token: string, password: string) =>
+  apiFetch<WarmLeadSessionResponse>("/onboarding-wizard/warm-lead/password-session", {
+    method: "POST",
+    body: { token, password },
+  });
+
+// Password-less re-login: asks the backend to email a fresh signed sign-in
+// link to the address. Always resolves on a 200 so the UI can't be used to
+// probe which emails have accounts.
+export const requestLoginLink = (email: string) =>
+  apiFetch<{ ok: boolean }>("/onboarding-wizard/login-link", {
+    method: "POST",
+    body: { email },
+  });
+
+// Re-login deep link: trades a signed login token (which carries the user +
+// deal context) for a session — signs the holder in as themselves.
+export const exchangeLoginSession = (token: string) =>
+  apiFetch<WarmLeadSessionResponse>("/onboarding-wizard/login/session", {
+    method: "POST",
+    body: { token },
+  });
+
+export const exchangePasswordLoginSession = (email: string, password: string) =>
+  apiFetch<WarmLeadSessionResponse>("/onboarding-wizard/login/password-session", {
+    method: "POST",
+    body: { email, password },
   });
 
 export type InviteAcceptResponse = {
@@ -106,9 +137,3 @@ export const saveWarmLeadReturning = (values: OnboardingFormValues, token: strin
     body: buildPayload(values),
   });
 
-// First-time invite: creates the session and returns a token + teams.
-export const createWarmLead = (values: OnboardingFormValues, dealId: number) =>
-  apiFetch<WarmLeadSessionResponse>("/onboarding-wizard/warm-lead", {
-    method: "POST",
-    body: { deal_id: dealId, ...buildPayload(values) },
-  });
