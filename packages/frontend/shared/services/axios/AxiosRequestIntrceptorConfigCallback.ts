@@ -32,6 +32,12 @@ const AxiosRequestIntrceptorConfigCallback = (config: InternalAxiosRequestConfig
     config.headers['X-Team-Id'] = teamId;
   }
 
+  // Deal context for team members working on a host's deal application (set when opening an application).
+  const dealId = localStorage.getItem('x-deal-id');
+  if (dealId) {
+    config.headers['X-Deal-Id'] = dealId;
+  }
+
   return config;
 };
 

@@ -86,6 +86,14 @@ const routeMap: RouteMap = {
     nav_attr: 'nav-team-member-link',
     nav_class: 'is-active-financial',
   },
+  '/dev/warm/invite-team-members': {
+    nav_attr: 'nav-team-member-link',
+    nav_class: 'is-active-financial',
+  },
+  '/warm/invite-team-members': {
+    nav_attr: 'nav-team-member-link',
+    nav_class: 'is-active-financial',
+  },
   '/dev/finance-docs-forecasts': {
     nav_attr: 'nav-financial-forecasts-link',
     nav_class: 'is-active-financial',
@@ -192,12 +200,18 @@ const updateSidebarUserDisplay = ({
 export const initSidebarUserControls = () => {
   if (sidebarUserControlsInitialized) return;
 
-  const logout = queryElement<HTMLButtonElement>('[dev-target="logout"]');
-  if (!logout) return;
+  const logout = queryAllElements<HTMLElement>('[dev-target="logout"]');
+  if (!logout.length) {
+    console.error('Ensure [dev-target="logout"] is present.');
+    return;
+  }
 
   sidebarUserControlsInitialized = true;
-  logout.addEventListener('click', () => {
-    logoutUser();
+  logout.forEach((logout) => {
+    logout.addEventListener('click', () => {
+      console.error('Logging out');
+      logoutUser();
+    });
   });
 
   const storedUser = getStoredUser();
@@ -244,10 +258,15 @@ export const checkProgressUserAndTeams = async (userId?: string) => {
     const { financialProgress, user, teams, onboardingProgress } = await fetchProgressData(userId);
 
     const percentage = financialProgress?.percentage ?? 0;
-    const userName =
-      financialProgress?.business?.legal_name ||
-      `${user.first_name || 'Full'} ${user.last_name || 'Name'}`.trim();
-    const userEmail = financialProgress?.business?.email || user.email || 'hello@company.com';
+    const fullName = `${user.first_name || 'Full'} ${user.last_name || 'Name'}`.trim();
+
+    // Team members (no host role on any team) see the host's company name; hosts see their own name.
+    // Either way the email shown is the logged-in user's own email.
+    const isTeamMemberOnly = teams.length > 0 && teams.every((team) => team.role === 'member');
+    const userName = isTeamMemberOnly
+      ? financialProgress?.business?.legal_name || fullName
+      : fullName;
+    const userEmail = user.email || 'hello@company.com';
 
     updateSidebarUserDisplay({ percentage, userName, userEmail });
 

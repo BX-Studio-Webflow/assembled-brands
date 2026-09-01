@@ -22,6 +22,12 @@ export class BusinessController {
 		return user;
 	}
 
+	/** Effective user id for the request: the team host when acting under team access, otherwise the caller. */
+	private getEffectiveUserId(c: Context, userId: number): number {
+		const hostId = c.get('hostId') as number | undefined;
+		return hostId || userId;
+	}
+
 	public getMyBusiness = async (c: Context) => {
 		try {
 			const user = await this.getUser(c);
@@ -29,10 +35,11 @@ export class BusinessController {
 				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
 			}
 
+			const effectiveUserId = this.getEffectiveUserId(c, user.id);
 			const dealApplicationId = getDealApplicationIdFromContext(c);
 			const business = dealApplicationId
 				? await this.service.getBusinessByDealApplicationId(dealApplicationId)
-				: await this.service.getBusinessByUserId(user.id);
+				: await this.service.getBusinessByUserId(effectiveUserId);
 
 			return c.json({
 				business,
@@ -67,12 +74,13 @@ export class BusinessController {
 			}
 
 			const body: BusinessBody = await c.req.json();
+			const effectiveUserId = this.getEffectiveUserId(c, user.id);
 			const dealApplicationId = getDealApplicationIdFromContext(c);
 			const business = await this.service.upsertBusiness(
-				user.id,
+				effectiveUserId,
 				{
 					...body,
-					user_id: user.id,
+					user_id: effectiveUserId,
 				},
 				dealApplicationId ? { dealApplicationId } : undefined,
 			);

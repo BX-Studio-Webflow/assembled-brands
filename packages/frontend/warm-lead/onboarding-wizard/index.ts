@@ -38,6 +38,9 @@ const initWarmLeadOnboardingPage = async () => {
 
   const exchangeWarmLeadSession = async () => {
     if (!dealId) return;
+    // Team members are already authenticated and carry deal scope via X-Team-Id/X-Deal-Id.
+    // Don't swap them into a host-scoped session — they should act as themselves.
+    if (localStorage.getItem('x-team-id')) return;
     try {
       const response = await ApiService.fetchDataWithAxios<WarmLeadSessionResponse>({
         url: '/onboarding-wizard/warm-lead/session',
@@ -46,8 +49,9 @@ const initWarmLeadOnboardingPage = async () => {
       });
       setCookie('accessToken', response.token, 10);
       localStorage.setItem('user', JSON.stringify(response.user));
-      //remove team id
+      //remove team + deal context; the warm-lead token now carries deal scope
       localStorage.removeItem('x-team-id');
+      localStorage.removeItem('x-deal-id');
 
       isLoggedIn = true;
     } catch (error) {

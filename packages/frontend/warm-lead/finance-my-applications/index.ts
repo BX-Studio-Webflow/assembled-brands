@@ -1,13 +1,13 @@
 import type { AxiosError } from 'axios';
-import {
-  apiExchangeWarmLeadSession,
-  apiGetMyDealApplications,
-} from 'shared/services/DealApplicationService';
+import { apiGetMyDealApplications } from 'shared/services/DealApplicationService';
+import { apiGetFinancialProgress } from 'shared/services/FinancialWizardService';
+import { apiGetOnboardingProgress } from 'shared/services/OnboardingService';
 import type { DealApplicationSummary } from 'shared/types/deal-application';
 
-import { processMiddleware, setCookie } from '$utils/auth';
+import { processMiddleware } from '$utils/auth';
 import { navigateToPath } from '$utils/config';
 import {
+  checkProgressUserAndTeams,
   constructNavBarClasses,
   initCollapsibleSidebar,
   resolveWarmDealApplicationPath,
@@ -70,16 +70,26 @@ const populateApplicationRow = (row: HTMLTableRowElement, application: DealAppli
 };
 
 const openApplication = async (dealId: number) => {
-  const response = await apiExchangeWarmLeadSession(dealId);
-  setCookie('accessToken', response.token, 10);
-  localStorage.setItem('user', JSON.stringify(response.user));
-  localStorage.removeItem('x-team-id');
+  // Team members keep their own session + X-Team-Id; the deal scope travels via the X-Deal-Id header.
+  // No session/token swap — the member acts as themselves while the backend authorizes access to the
+  // host's deal application.
+  localStorage.setItem('x-deal-id', String(dealId));
+
+  const [onboardingResult, financialResult] = await Promise.allSettled([
+    apiGetOnboardingProgress(),
+    apiGetFinancialProgress(),
+  ]);
+
+  const onboardingProgress =
+    onboardingResult.status === 'fulfilled' ? onboardingResult.value.progress : null;
+  const financialWizardProgress =
+    financialResult.status === 'fulfilled' ? financialResult.value : null;
+
+  const legalName =
+    onboardingProgress?.progress_data?.legal_name ?? onboardingProgress?.step1?.legal_name ?? null;
+
   navigateToPath(
-    resolveWarmDealApplicationPath(
-      dealId,
-      response.onboardingProgress,
-      response.financialWizardProgress
-    )
+    resolveWarmDealApplicationPath(dealId, { legal_name: legalName }, financialWizardProgress)
   );
 };
 
@@ -87,6 +97,7 @@ const initFinanceMyApplicationsPage = async () => {
   constructNavBarClasses();
   processMiddleware();
   initCollapsibleSidebar();
+  void checkProgressUserAndTeams();
 
   const tableWrapper = document.querySelector('[dev-target="member-table-wrapper"]');
   if (!tableWrapper) {
@@ -141,6 +152,7 @@ const initFinanceMyApplicationsPage = async () => {
         id: 0,
         deal_id: 0,
         legal_name: 'No applications yet',
+        application_link: null,
         status: 'active',
         created_at: null,
         updated_at: null,
@@ -173,6 +185,7 @@ const initFinanceMyApplicationsPage = async () => {
       id: 0,
       deal_id: 0,
       legal_name: 'Unable to load applications',
+      application_link: null,
       status: 'active',
       created_at: null,
       updated_at: null,

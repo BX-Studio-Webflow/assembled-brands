@@ -307,7 +307,7 @@ const initOptionalDocsPage = async () => {
       submitButton.classList.add('is-success');
       submitButton.value = 'Skipped Optional Documents';
       setTimeout(() => {
-        navigateToPath('/thank-you', { useRootPath: true });
+        navigateToPath('/warm/invite-team-members');
       }, 300);
       return;
     }
@@ -329,7 +329,7 @@ const initOptionalDocsPage = async () => {
       businessPlanHelpText.textContent = '';
 
       setTimeout(() => {
-        navigateToPath('/thank-you', { useRootPath: true });
+        navigateToPath('/warm/invite-team-members');
       }, 500);
     } catch (error) {
       const { message } = error as AxiosError;

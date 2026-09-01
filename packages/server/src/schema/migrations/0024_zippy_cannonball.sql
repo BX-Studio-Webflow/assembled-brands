@@ -1,0 +1,1 @@
+ALTER TABLE `deal_applications` ADD `slack_thread_ts` text;

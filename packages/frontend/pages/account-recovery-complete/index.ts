@@ -1,5 +1,5 @@
 import type { AxiosError } from 'axios';
-import { apiResetPassword } from 'shared/services/AuthService';
+import { apiForgotPassword, apiResetPassword } from 'shared/services/AuthService';
 
 import { navigateToPath } from '$utils/config';
 import { queryElement } from '$utils/selectors';
@@ -13,6 +13,9 @@ const initAccountRecoveryCompletePage = () => {
 
   const password = queryElement<HTMLInputElement>('[dev-target="password"]', form);
   const confirmPassword = queryElement<HTMLInputElement>('[dev-target="confirm-password"]', form);
+  const errorText = queryElement<HTMLElement>('[dev-target="error-text"]', form);
+  const resendLinkWrapper = queryElement<HTMLElement>('[dev-target="resend-link_wrapper"]', form);
+  const resendLink = queryElement<HTMLAnchorElement>('[dev-target="resend-link"]', form);
 
   //grab token and email from url params
   const urlParams = new URLSearchParams(window.location.search);
@@ -27,11 +30,40 @@ const initAccountRecoveryCompletePage = () => {
 
   const submitButton = queryElement<HTMLButtonElement>('[dev-target="submit-button"]', form);
 
-  if (!password || !confirmPassword || !submitButton) {
+  if (!password || !confirmPassword || !submitButton || !errorText) {
     console.error(
       'Password input, confirm password input or submit button not found. Elements: [dev-target="password"] or [dev-target="confirm-password"] or [dev-target="submit-button"] not found'
     );
     return;
+  }
+
+  resendLinkWrapper?.classList.add('hide');
+
+  const showExpiredLinkRecovery = (message: string) => {
+    submitButton.classList.add('is-error');
+    submitButton.value = 'SUBMIT';
+    errorText.classList.add('is-error');
+    errorText.textContent = message;
+    resendLinkWrapper?.classList.remove('hide');
+  };
+
+  if (resendLink) {
+    resendLink.addEventListener('click', async (event) => {
+      event.preventDefault();
+
+      const defaultLabel = 'Resend Link';
+      resendLink.textContent = 'Sending...';
+
+      try {
+        await apiForgotPassword({ email });
+        resendLink.textContent = 'Email sent! Check your inbox';
+        errorText.textContent = 'A new recovery link has been sent to your email.';
+      } catch (error) {
+        const { message } = error as AxiosError;
+        resendLink.textContent = defaultLabel;
+        errorText.textContent = message || 'Unable to send a new link. Please try again.';
+      }
+    });
   }
 
   const eyeIconPassword = queryElement<HTMLButtonElement>('[dev-target="eye-icon-password"]', form);
@@ -69,12 +101,14 @@ const initAccountRecoveryCompletePage = () => {
     confirmPassword.classList.remove('is-error');
     submitButton.classList.remove('is-error');
     submitButton.value = 'SUBMIT';
+    errorText.classList.remove('is-error');
 
     // Validate password on change
     if (password.value && password.value.length < 6) {
       password.classList.add('is-error');
       submitButton.classList.add('is-error');
-      submitButton.value = 'Password must be at least 6 characters long';
+      errorText.classList.add('is-error');
+      errorText.innerHTML = 'Password must be at least 6 characters long';
     }
   });
 
@@ -83,12 +117,13 @@ const initAccountRecoveryCompletePage = () => {
     confirmPassword.classList.remove('is-error');
     submitButton.classList.remove('is-error');
     submitButton.value = 'SUBMIT';
-
+    errorText.classList.remove('is-error');
     // Validate password match on change
     if (confirmPassword.value && password.value !== confirmPassword.value) {
       confirmPassword.classList.add('is-error');
       submitButton.classList.add('is-error');
-      submitButton.value = 'Passwords do not match';
+      errorText.classList.add('is-error');
+      errorText.innerHTML = 'Passwords do not match';
     }
   });
 
@@ -98,7 +133,8 @@ const initAccountRecoveryCompletePage = () => {
 
     //validate password
     if (!password.value) {
-      submitButton.value = 'Password cannot be empty';
+      errorText.classList.add('is-error');
+      errorText.innerHTML = 'Password cannot be empty';
       password.classList.add('is-error');
       submitButton.classList.add('is-error');
       return;
@@ -106,7 +142,8 @@ const initAccountRecoveryCompletePage = () => {
 
     //validate password length
     if (password.value.length < 8) {
-      submitButton.value = 'Password must be at least 8 characters long';
+      errorText.classList.add('is-error');
+      errorText.innerHTML = 'Password must be at least 8 characters long';
       password.classList.add('is-error');
       submitButton.classList.add('is-error');
       return;
@@ -114,7 +151,8 @@ const initAccountRecoveryCompletePage = () => {
 
     //validate confirm password
     if (!confirmPassword.value) {
-      submitButton.value = 'Please confirm your password';
+      errorText.classList.add('is-error');
+      errorText.innerHTML = 'Please confirm your password';
       confirmPassword.classList.add('is-error');
       submitButton.classList.add('is-error');
       return;
@@ -122,7 +160,8 @@ const initAccountRecoveryCompletePage = () => {
 
     //validate password and confirm password match
     if (password.value !== confirmPassword.value) {
-      submitButton.value = 'Passwords do not match';
+      errorText.classList.add('is-error');
+      errorText.innerHTML = 'Passwords do not match';
       confirmPassword.classList.add('is-error');
       submitButton.classList.add('is-error');
       return;
@@ -141,10 +180,10 @@ const initAccountRecoveryCompletePage = () => {
       const { message } = error as AxiosError;
       const { code } = (error as AxiosError).response?.data as { code: string };
       console.error(message);
-      if (['INVALID_TOKEN', 'USER_NOT_FOUND'].includes(code)) {
-        submitButton.classList.add('is-error');
-        submitButton.value =
-          code === 'INVALID_TOKEN' ? 'Your link is expired, please request a new one' : message;
+      if (code === 'INVALID_TOKEN') {
+        showExpiredLinkRecovery('Your link is expired.');
+      } else if (code === 'USER_NOT_FOUND') {
+        showExpiredLinkRecovery(message || 'Account not found. Request a new recovery link below.');
       }
     }
   });

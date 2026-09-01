@@ -1,0 +1,1 @@
+ALTER TABLE `deal_applications` ADD `application_link` text;

@@ -40,6 +40,12 @@ export class AssetController {
 		return user;
 	}
 
+	/** Effective owner id for the request: the team host when acting under team access, otherwise the caller. */
+	private getEffectiveUserId(c: Context, userId: number): number {
+		const hostId = c.get('hostId') as number | undefined;
+		return hostId || userId;
+	}
+
 	/**
 	 * Creates a new asset in the system
 	 * @param {Context} c - The Hono context containing asset details
@@ -56,7 +62,8 @@ export class AssetController {
 			const body: CreateAssetBody = await c.req.json();
 			const { fileName, contentType, assetType, fileSize, duration } = body;
 
-			const result = await this.service.createAsset(user.id, fileName.replace(/[^\w.-]/g, ''), contentType, assetType, fileSize, duration);
+			const ownerId = this.getEffectiveUserId(c, user.id);
+			const result = await this.service.createAsset(ownerId, fileName.replace(/[^\w.-]/g, ''), contentType, assetType, fileSize, duration);
 			//get the asset from the database
 			const asset = await this.service.getAsset(result.asset);
 			return c.json({ ...result, asset }, 201);
@@ -375,11 +382,22 @@ export class AssetController {
 	 */
 	public deleteAsset = async (c: Context) => {
 		try {
+			const user = await this.getUser(c);
+			if (!user) {
+				return serveBadRequest(c, ERRORS.USER_NOT_FOUND);
+			}
+
 			const assetId = Number(c.req.param('id'));
 			const asset = await this.service.getAsset(assetId);
 
 			if (!asset) {
 				return serveNotFound(c, ERRORS.ASSET_NOT_FOUND);
+			}
+
+			// Only an admin/master role or the owner (incl. team members acting for the host) can delete the asset
+			const effectiveUserId = this.getEffectiveUserId(c, user.id);
+			if (user.role !== 'admin' && user.role !== 'super-admin' && asset.user_id !== effectiveUserId) {
+				return serveBadRequest(c, ERRORS.NOT_ALLOWED);
 			}
 
 			await this.service.deleteAsset(assetId);
@@ -408,8 +426,9 @@ export class AssetController {
 			if (!asset) {
 				return serveNotFound(c, ERRORS.ASSET_NOT_FOUND);
 			}
-			//only and master role or admin or the owner of the  can update the asset
-			if (user.role !== 'admin' && user.role !== 'super-admin' && asset.user_id !== user.id) {
+			//only and master role or admin or the owner (incl. team members acting for the host) can update the asset
+			const effectiveUserId = this.getEffectiveUserId(c, user.id);
+			if (user.role !== 'admin' && user.role !== 'super-admin' && asset.user_id !== effectiveUserId) {
 				return serveBadRequest(c, ERRORS.NOT_ALLOWED);
 			}
 
@@ -445,7 +464,8 @@ export class AssetController {
 			const body: CreateMultipartAssetBody = await c.req.json();
 			const { fileName, contentType, assetType, fileSize, duration, partSize } = body;
 
-			const result = await this.service.createMultipartAsset(user.id, fileName, contentType, assetType, fileSize, duration, partSize);
+			const ownerId = this.getEffectiveUserId(c, user.id);
+			const result = await this.service.createMultipartAsset(ownerId, fileName, contentType, assetType, fileSize, duration, partSize);
 
 			return c.json(result);
 		} catch (error) {

@@ -212,6 +212,17 @@ const initLoginPage = () => {
         localStorage.setItem('x-team-id', team.team_id.toString());
       }
 
+      // Team members (users with no host membership) skip onboarding and land
+      // directly on the host's financial wizard, accessed via the X-Team-Id header.
+      const isTeamMemberOnly =
+        response.teams &&
+        response.teams.length > 0 &&
+        response.teams.every((t) => t.role === 'member');
+      if (isTeamMemberOnly) {
+        navigateToPath('/warm/finance-my-applications');
+        return;
+      }
+
       if (response.dealApplications && response.dealApplications.length > 0) {
         navigateToPath('/warm/finance-my-applications');
         return;
@@ -242,7 +253,7 @@ const initLoginPage = () => {
       if (nextFinancialWizardStep) {
         navigateToPath(nextFinancialWizardStep);
       } else {
-        navigateToPath('/invite-team-members');
+        navigateToPath('/warm/invite-team-members');
         return;
       }
     } catch (error) {
